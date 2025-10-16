@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "VST",
+    "company_name": "Vistra Corp",
+    "ceo_name": "Jim Burke",
+    "ceo_title": "President and Chief Executive Officer",
+    "tenure_duration": "3 years",
+    "start_date": "August 2022",
+    "linkedin_url": "Not found",
+    "source": "Vistra Corp official records",
+    "past_experience": [
+      {
+        "company": "Vistra",
+        "role": "President and CFO",
+        "duration": "2020-2022",
+        "description": "Led financial operations and strategic initiatives"
+      },
+      {
+        "company": "Vistra/Predecessor companies",
+        "role": "Various Leadership Roles",
+        "duration": "2004-2020",
+        "description": "Multiple executive positions"
+      }
+    ],
+    "education": "MBA and Finance degrees",
+    "career_highlights": [
+      "Over 20 years with Vistra and predecessor companies",
+      "Led company through energy transition",
+      "Focus on renewable and reliable power generation"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:41.434360",
+    "calculated_years": 3
+  },
+  "note": "CEO information compiled from multiple sources"
+}

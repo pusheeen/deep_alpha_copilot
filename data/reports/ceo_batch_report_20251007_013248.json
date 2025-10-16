@@ -1,0 +1,334 @@
+{
+  "batch_info": {
+    "timestamp": "2025-10-07T01:32:48.347525",
+    "total_companies": 18,
+    "successful_fetches": 18,
+    "failed_fetches": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NVDA",
+        "company_name": "NVIDIA CORP",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:03.196289"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "AVGO",
+        "company_name": "Broadcom Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:08.395425"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "MU",
+        "company_name": "MICRON TECHNOLOGY INC",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:13.578109"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "VST",
+        "company_name": "Vistra Corp.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:15.766199"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "VRT",
+        "company_name": "Vertiv Holdings Co",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:17.922344"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "CCJ",
+        "company_name": "CAMECO CORP",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:20.073725"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "SMCI",
+        "company_name": "Super Micro Computer, Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:22.242351"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "OKLO",
+        "company_name": "Oklo Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:24.405451"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "IREN",
+        "company_name": "IREN Ltd",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:26.571661"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "RIOT",
+        "company_name": "Riot Platforms, Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:28.749901"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "QS",
+        "company_name": "QuantumScape Corp",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:30.918502"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "SMR",
+        "company_name": "NUSCALE POWER Corp",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:33.069015"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NXE",
+        "company_name": "NexGen Energy Ltd.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:35.233804"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "CIFR",
+        "company_name": "Cipher Mining Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:37.512855"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "EOSE",
+        "company_name": "Eos Energy Enterprises, Inc.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:39.690800"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "INOD",
+        "company_name": "INNODATA INC",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:41.854378"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "RR",
+        "company_name": "RICHTECH ROBOTICS INC.",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:44.023281"
+      },
+      "note": "CEO information compiled from multiple sources"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "TSM",
+        "company_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+        "ceo_name": "Not found",
+        "ceo_title": "Not found",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "Multiple sources",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-07T01:32:46.194707"
+      },
+      "note": "CEO information compiled from multiple sources"
+    }
+  ]
+}

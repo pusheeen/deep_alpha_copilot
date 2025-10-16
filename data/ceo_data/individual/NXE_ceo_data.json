@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "NXE",
+    "company_name": "NexGen Energy Ltd",
+    "ceo_name": "Leigh Curyer",
+    "ceo_title": "Chief Executive Officer, President and Founder",
+    "tenure_duration": "14 years",
+    "start_date": "January 2011",
+    "linkedin_url": "Not found",
+    "source": "NexGen Energy official records",
+    "past_experience": [
+      {
+        "company": "Various mining companies",
+        "role": "Executive positions",
+        "duration": "1990s-2011",
+        "description": "Resources and mining sector experience"
+      }
+    ],
+    "education": "Mining and resources background",
+    "career_highlights": [
+      "Founded NexGen Energy in 2011",
+      "Developed Rook I uranium project",
+      "Expert in uranium mining and nuclear fuel"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:44.436601",
+    "calculated_years": 14
+  },
+  "note": "CEO information compiled from multiple sources"
+}

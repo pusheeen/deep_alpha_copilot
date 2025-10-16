@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "VRT",
+    "company_name": "Vertiv Holdings Co",
+    "ceo_name": "Giordano Albertazzi",
+    "ceo_title": "Chief Executive Officer",
+    "tenure_duration": "2 years",
+    "start_date": "January 2023",
+    "linkedin_url": "Not found",
+    "source": "Vertiv Holdings official records",
+    "past_experience": [
+      {
+        "company": "ABB",
+        "role": "President of Electrification Business",
+        "duration": "2018-2022",
+        "description": "Led global electrification products division"
+      },
+      {
+        "company": "ABB",
+        "role": "Various Leadership Roles",
+        "duration": "1996-2018",
+        "description": "Multiple executive positions across regions"
+      }
+    ],
+    "education": "University of Bologna (BS Mechanical Engineering)",
+    "career_highlights": [
+      "Led major transformation at ABB Electrification",
+      "Expert in critical infrastructure and data center solutions"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:11.390584",
+    "calculated_years": 2
+  },
+  "note": "CEO information compiled from multiple sources"
+}

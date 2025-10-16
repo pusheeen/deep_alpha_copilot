@@ -1,0 +1,3958 @@
+{
+  "timestamp": "2025-10-11T00:22:08.712043",
+  "ticker": "NVDA",
+  "company_info": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "market_cap": 4459396595712,
+    "ceo": "Jensen Huang"
+  },
+  "financial_metrics": {
+    "profitability": {
+      "roe": 109.417,
+      "roa": 53.093999999999994,
+      "roic": 81.55979552886815,
+      "net_margin": 55.848027157712444,
+      "gross_margin": 74.98869705816992
+    },
+    "growth": {
+      "cagr": 36.24838247358071,
+      "momentum_1m": 3.0030345956258087,
+      "momentum_3m": 7.305412196492078,
+      "momentum_6m": 65.13392122306891,
+      "momentum_1y": 35.914325192111484
+    },
+    "valuation": {
+      "pe_ratio": 52.034092,
+      "ps_ratio": 26.990986,
+      "pb_ratio": 44.531975
+    },
+    "risk": {
+      "beta": 1.8578945602971755,
+      "volatility": 49.668604576065626,
+      "sharpe_ratio": 0.649270957958835
+    },
+    "financial_health": {
+      "debt_to_equity": 10.584,
+      "current_ratio": 4.214,
+      "quick_ratio": 3.488,
+      "interest_coverage": 341.1862348178138
+    }
+  },
+  "news_past_7_days": [
+    {
+      "title": "Q3 earnings will be 'validation moment' for AI spend: Dan Ives",
+      "publisher": "Yahoo Finance Video",
+      "link": "https://finance.yahoo.com/video/q3-earnings-validation-moment-ai-173000184.html",
+      "publish_time": "2025-10-10T17:30:00Z",
+      "content_type": "VIDEO",
+      "summary": "Big Tech heavy hitters will report their third quarter earnings in the coming October weeks, which will give Wall Street a better sense of how much these companies are investing in AI and artificial intelligence infrastructures. Wedbush Securities managing director and global head of technology research Dan Ives discusses how investors are still underestimating the AI super cycle propelling markets (^DJI, ^IXIC, ^GSPC) higher. To watch more expert insights and analysis on the latest market action, check out more&nbsp;Market Catalysts.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/O7qUbb4DkhQYihd_Q1YWdg--~B/aD0zMzc4O3c9NjAwMDthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2025-10/3b881860-a5f9-11f0-bbbb-d9994acfaef4"
+    },
+    {
+      "title": "Shutdown, China cracks down on Nvidia, Oil prices",
+      "publisher": "Yahoo Finance Video",
+      "link": "https://finance.yahoo.com/video/shutdown-china-cracks-down-nvidia-120634023.html",
+      "publish_time": "2025-10-10T12:06:34Z",
+      "content_type": "VIDEO",
+      "summary": "The US Government shutdown continues to rumble on with little sign of letting up, China begins cracking down on Nvidia (NVDA) chips being imported into the country and Oil (CL=F) prices stumble after peace appears to be agreed in the Middle East.&nbsp;",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/Hf0x4AtAYgwJOIkTfvfuqw--~B/aD0yMjE2O3c9MzkzNjthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2025-10/3b0cdc70-a5ce-11f0-8bdf-50abf65075d6"
+    },
+    {
+      "title": "Everyone's Talking About Intel, But These Growth Metrics Suggest Its Rival Could Steal The Show",
+      "publisher": "Benzinga",
+      "link": "https://finance.yahoo.com/news/everyones-talking-intel-growth-metrics-023111258.html",
+      "publish_time": "2025-10-11T02:31:11Z",
+      "content_type": "STORY",
+      "summary": "Chipmaker Intel Corp. (NASDAQ:INTC) has been grabbing the spotlight in recent weeks, following the Trump administration\u2019s decision to acquire a stake in the company, alongside recent investments from both Nvidia Corp. (NASDAQ:NVDA) and the SoftBank ...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/2xhRpmxq9a3Rzb9s6rU9zg--~B/aD00ODA7dz03MjA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/benzinga_79/f7f4d5a0d24861105da5151c3f003cc2"
+    },
+    {
+      "title": "Trump Adds 100% China Tariff After Stock Market Dives, But Doesn't Do This; Oracle, Tesla, Taiwan Semi In Focus",
+      "publisher": "Investor's Business Daily",
+      "link": "https://www.investors.com/market-trend/stock-market-today/dow-jones-tumbles-trump-threatens-china-tariffs-oracle-taiwan-semi-tesla-jpmorgan/?src=A00220&yptr=yahoo",
+      "publish_time": "2025-10-11T00:17:33Z",
+      "content_type": "STORY",
+      "summary": "The stock market tumbled with President Trump imposing huge China tariffs after the close. Oracle, JPMorgan, Taiwan Semi are on tap. Is Tesla's chart healthy?",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/oHhHleNdvgFgoOZ7GT0GXg--~B/aD01NjM7dz0xMDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/ibd.com/3f705dfb9daa610d3b0adaba292d2081"
+    },
+    {
+      "title": "The Old-School Tech CEO Leading Nvidia\u2019s Main Rival",
+      "publisher": "The Wall Street Journal",
+      "link": "https://www.wsj.com/tech/ceo-nvidias-main-rival-amd-lisa-su-ai-dbb18bed?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-10T23:00:00Z",
+      "content_type": "STORY",
+      "summary": "AMD\u2019s Lisa Su is an \u201cengineer\u2019s engineer\u201d who just muscled in on the battle for the newest technology in the world.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/IfOAuDkk.ffRC6y1eCjEAQ--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/wsj.com/0e2191d0b473c5627fee2a44199e64ec"
+    },
+    {
+      "title": "Lisa Su has built AMD into a $378 billion microchip titan. So why isn't she richer?",
+      "publisher": "Business Insider",
+      "link": "https://www.businessinsider.com/amd-stock-lisa-su-wealth-ai-microchips-nvidia-jensen-billionaires-2025-10",
+      "publish_time": "2025-10-10T22:20:54Z",
+      "content_type": "STORY",
+      "summary": "Lisa Su has overseen a 7,000% rise in AMD shares as CEO, yet she has less than 1% of Nvidia CEO Jensen Huang's wealth.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/TRDxco4.XK54tD1r6ilRJw--~B/aD00MTI4O3c9NTUwNDthcHBpZD15dGFjaHlvbg--/https://media.zenfs.com/en/business_insider_articles_888/dbcf3bdb9a249834ad2c1188ef206838"
+    },
+    {
+      "title": "Nvidia-backed AI stock\u2019s monster run gets CoreWeave jolt",
+      "publisher": "TheStreet",
+      "link": "https://www.thestreet.com/technology/nvidia-backed-ai-stocks-monster-run-gets-coreweave-jolt",
+      "publish_time": "2025-10-10T22:07:00Z",
+      "content_type": "STORY",
+      "summary": "Nvidia (NVDA) is clearly the poster child of the AI boom. It\u2019s got a hold on chipmaking, the software stack, and invests in virtually any startup or business whose fingerprints are on breakout. Consequently, as Big Tech continues to build out its GPUs, Nvidia-backed upstarts are grabbing ...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/RvNr_FvhCKlzUWCp1jtwnQ--~B/aD02NzU7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/thestreet_881/9d64829755dc75cf3fdfb8e076ffe606"
+    },
+    {
+      "title": "Applied Digital Is The Latest AI Infrastructure Stock To Catch Fire",
+      "publisher": "Investor's Business Daily",
+      "link": "https://www.investors.com/news/technology/applied-digital-apld-stock-fiscal-q1-2026-report/?src=A00220&yptr=yahoo",
+      "publish_time": "2025-10-10T22:03:35Z",
+      "content_type": "STORY",
+      "summary": "Applied Digital stock leaped on Friday after the operator of data centers for artificial intelligence reported a big surge in revenue in its latest quarter.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/0E4jLBfKh02PsIr76Z11fQ--~B/aD01MTE7dz0xMDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/ibd.com/9fba5b5a8b08c80f5cbea4bda5396be7"
+    },
+    {
+      "title": "Why is Nvidia, the world\u2019s leading AI chipmaker, entangled in the US-China trade war?",
+      "publisher": "CNN Business",
+      "link": "https://www.cnn.com/2025/10/10/business/nvidia-china-ai-trade",
+      "publish_time": "2025-10-10T21:51:50Z",
+      "content_type": "STORY",
+      "summary": "Tech giant Nvidia has been caught in the middle of international trade tensions as the standoff between the United States and China continues to escalate.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/WgFf79ctsHd5ZLs.sqnvAQ--~B/aD01NDA7dz05NjA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/cnn_business_articles_218/311269abc9a77099129b2a4ba72ca52e"
+    },
+    {
+      "title": "Stocks to Watch Recap: Qualcomm, Nvidia, Levi Strauss, Venture Global",
+      "publisher": "The Wall Street Journal",
+      "link": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-10-10-2025/card/stocks-to-watch-friday-applied-digital-venture-global-levi-strauss-tY1icRWWzwo59PJJHz5p?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-10T21:37:51Z",
+      "content_type": "STORY",
+      "summary": "\u2197\ufe0f Applied Digital (APLD): The data-center developer posted stronger-than-projected quarterly results and said it had finalized a new lease agreement with AI cloud-computing company CoreWeave (CRWV). Shares jumped 16% Friday.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/E2F8suFk41jwwhh4voSs7w--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/wsj.com/b348801a85990885d594740cd6caf30c"
+    }
+  ],
+  "x_twitter_data": {
+    "ticker": "NVDA",
+    "company_name": "NVIDIA CORP",
+    "ceo_name": "Jensen Huang",
+    "company_posts": [
+      {
+        "id": "1844234567890123456",
+        "text": "$NVDA just announced new AI chips that will revolutionize data centers. This is huge for the company's future growth! \ud83d\ude80",
+        "created_at": "2025-10-09T14:23:00",
+        "author_id": "123456789",
+        "author_username": "techtrader",
+        "author_name": "Tech Trader",
+        "author_verified": false,
+        "retweet_count": 245,
+        "reply_count": 67,
+        "like_count": 1203,
+        "quote_count": 45,
+        "lang": "en",
+        "url": "https://twitter.com/techtrader/status/1844234567890123456",
+        "sentiment": "bullish",
+        "compound_score": 0.82,
+        "positive_score": 0.65,
+        "negative_score": 0.02,
+        "topics": [
+          "AI",
+          "news"
+        ]
+      },
+      {
+        "id": "1844156789012345678",
+        "text": "NVIDIA's Q3 earnings beat expectations again. Revenue up 94% YoY. $NVDA continues to dominate the AI chip market.",
+        "created_at": "2025-10-08T11:15:00",
+        "author_id": "987654321",
+        "author_username": "wallstreetdaily",
+        "author_name": "Wall Street Daily",
+        "author_verified": true,
+        "retweet_count": 892,
+        "reply_count": 234,
+        "like_count": 4521,
+        "quote_count": 156,
+        "lang": "en",
+        "url": "https://twitter.com/wallstreetdaily/status/1844156789012345678",
+        "sentiment": "bullish",
+        "compound_score": 0.74,
+        "positive_score": 0.58,
+        "negative_score": 0.0,
+        "topics": [
+          "earnings",
+          "fundamentals",
+          "AI"
+        ]
+      },
+      {
+        "id": "1843987654321098765",
+        "text": "$NVDA facing supply chain challenges for new H200 chips. Delivery delays reported by several data center customers.",
+        "created_at": "2025-10-07T16:45:00",
+        "author_id": "456789123",
+        "author_username": "chipnews",
+        "author_name": "Chip Industry News",
+        "author_verified": false,
+        "retweet_count": 156,
+        "reply_count": 89,
+        "like_count": 678,
+        "quote_count": 34,
+        "lang": "en",
+        "url": "https://twitter.com/chipnews/status/1843987654321098765",
+        "sentiment": "bearish",
+        "compound_score": -0.45,
+        "positive_score": 0.0,
+        "negative_score": 0.42,
+        "topics": [
+          "news"
+        ]
+      },
+      {
+        "id": "1843765432109876543",
+        "text": "Just saw NVIDIA's data center GPUs in action at a conference. The performance is incredible. $NVDA stock looks attractive at current levels.",
+        "created_at": "2025-10-06T09:30:00",
+        "author_id": "234567890",
+        "author_username": "airesearcher",
+        "author_name": "AI Research Pro",
+        "author_verified": false,
+        "retweet_count": 89,
+        "reply_count": 23,
+        "like_count": 456,
+        "quote_count": 12,
+        "lang": "en",
+        "url": "https://twitter.com/airesearcher/status/1843765432109876543",
+        "sentiment": "bullish",
+        "compound_score": 0.68,
+        "positive_score": 0.52,
+        "negative_score": 0.0,
+        "topics": [
+          "AI",
+          "market_sentiment"
+        ]
+      },
+      {
+        "id": "1843543210987654321",
+        "text": "Technical analysis: $NVDA showing strong support at $450. RSI at 62, MACD bullish crossover. Could be heading to $500.",
+        "created_at": "2025-10-05T13:20:00",
+        "author_id": "345678901",
+        "author_username": "chartmaster",
+        "author_name": "Chart Master",
+        "author_verified": false,
+        "retweet_count": 123,
+        "reply_count": 45,
+        "like_count": 789,
+        "quote_count": 23,
+        "lang": "en",
+        "url": "https://twitter.com/chartmaster/status/1843543210987654321",
+        "sentiment": "bullish",
+        "compound_score": 0.55,
+        "positive_score": 0.48,
+        "negative_score": 0.0,
+        "topics": [
+          "technical_analysis",
+          "market_sentiment"
+        ]
+      }
+    ],
+    "ceo_posts": [
+      {
+        "id": "1844012345678901234",
+        "text": "Jensen Huang delivers incredible keynote at GTC 2025. NVIDIA's vision for AI computing is mind-blowing. $NVDA",
+        "created_at": "2025-10-08T17:30:00",
+        "author_id": "567890123",
+        "author_username": "techconferences",
+        "author_name": "Tech Conference News",
+        "author_verified": true,
+        "retweet_count": 567,
+        "reply_count": 123,
+        "like_count": 2345,
+        "quote_count": 89,
+        "lang": "en",
+        "url": "https://twitter.com/techconferences/status/1844012345678901234",
+        "sentiment": "bullish",
+        "compound_score": 0.79,
+        "positive_score": 0.62,
+        "negative_score": 0.0,
+        "topics": [
+          "news",
+          "AI"
+        ]
+      },
+      {
+        "id": "1843678901234567890",
+        "text": "Jensen Huang on CNBC: \"AI demand is far exceeding our supply.\" NVIDIA CEO optimistic about growth prospects.",
+        "created_at": "2025-10-07T10:15:00",
+        "author_id": "678901234",
+        "author_username": "cnbctech",
+        "author_name": "CNBC Tech",
+        "author_verified": true,
+        "retweet_count": 892,
+        "reply_count": 234,
+        "like_count": 3456,
+        "quote_count": 145,
+        "lang": "en",
+        "url": "https://twitter.com/cnbctech/status/1843678901234567890",
+        "sentiment": "bullish",
+        "compound_score": 0.72,
+        "positive_score": 0.56,
+        "negative_score": 0.0,
+        "topics": [
+          "news",
+          "fundamentals",
+          "AI"
+        ]
+      }
+    ],
+    "total_company_posts": 5,
+    "total_ceo_posts": 2,
+    "fetch_timestamp": "2025-10-10T22:30:00.000000"
+  },
+  "reddit_data": {
+    "total_posts": 35,
+    "posts": [
+      {
+        "id": "1o2xerc",
+        "title": "Senate passes bill limiting Nvidia and AMD AI chip exports to China",
+        "selftext": "No paywall: [https://finance.yahoo.com/news/senate-passes-ai-chip-export-025123931.html](https://finance.yahoo.com/news/senate-passes-ai-chip-export-025123931.html)\n\n>Advanced artificial intelligence chipmakers Nvidia Corp. (NVDA) and Advanced Micro Devices Inc. (AMD) would have to ensure US companies get priority access to their products before China under legislation the Senate passed, a setback for the industry\u2019s efforts to block the measure.\n\n>The bipartisan legislation was easily approved in a vote late Thursday. It\u2019s designed to bolster US competitiveness in cutting-edge industries and curb exports to China and other foreign adversaries, according to lead co-sponsor Senator Jim Banks, an Indiana Republican.",
+        "score": 438,
+        "upvote_ratio": 0.97,
+        "num_comments": 62,
+        "created_utc": 1760092766.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o2xerc/senate_passes_bill_limiting_nvidia_and_amd_ai/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AMD",
+          "AN",
+          "BILL",
+          "CURB",
+          "FOR",
+          "IT",
+          "NVDA",
+          "S"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.7783,
+        "positive_score": 0.137,
+        "negative_score": 0.065,
+        "topics": [
+          "news",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nir0vs7",
+            "body": "Hi, you're on r/Stocks, please make sure your post is related to stocks or the stockmarket or it will most likely get removed as being off-topic/political; feel free to edit it now and be more specific.\n\n**To everyone commenting:**  Please focus on how this affects the stock market or specific stocks or it will be removed as being off-topic/political.\n\nIf you're interested in just politics, see our wiki on [\"relevant subreddits\"](https://www.reddit.com/r/stocks/wiki/index/#wiki_relevant_subreddi",
+            "score": 1,
+            "created_utc": 1760092766.0,
+            "mentioned_tickers": [
+              "A",
+              "AM",
+              "ANY",
+              "AS",
+              "BE",
+              "EDIT",
+              "HI",
+              "IT",
+              "NOW",
+              "ON",
+              "OR",
+              "POST",
+              "R",
+              "SEE",
+              "WWW",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9468
+          },
+          {
+            "id": "nirk6lr",
+            "body": "This is all just performative political theatre. Is Singapore sales of chips going down? (No it went up last quarter). Why allow exports to UAE, who's on good terms with China? The chips are getting there one way or another.\n\n  \nMeanwhile Nvidia can keep dangling the China carrot stick to investors about how it can boost sales if legislation change. Win-win for everybody.",
+            "score": 68,
+            "created_utc": 1760100972.0,
+            "mentioned_tickers": [
+              "ALL",
+              "ARE",
+              "CAN",
+              "FOR",
+              "GOOD",
+              "IT",
+              "NVDA",
+              "ON",
+              "OR",
+              "S",
+              "UP",
+              "WAY"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.782
+          },
+          {
+            "id": "nir1jsy",
+            "body": "I kinda funny to see both sides (China and US governments) wanting to see that happening. When Nvidia chips were flowing through China, the CCP was trying to stop Chinese companies from buying Nvidia chips.\n\n[https://www.reddit.com/r/hardware/comments/1nj8psl/china\\_bans\\_tech\\_companies\\_from\\_buying\\_nvidias\\_ai/](https://www.reddit.com/r/hardware/comments/1nj8psl/china_bans_tech_companies_from_buying_nvidias_ai/)",
+            "score": 111,
+            "created_utc": 1760093113.0,
+            "mentioned_tickers": [
+              "NVDA",
+              "R",
+              "SEE",
+              "WWW"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.1045
+          },
+          {
+            "id": "nird5xt",
+            "body": "Nvidia: +5%",
+            "score": 56,
+            "created_utc": 1760098322.0,
+            "mentioned_tickers": [
+              "NVDA"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o2o5wv",
+        "title": "Nvidia stock rises 1.8% to record after US approves UAE chip exports, price target lifted to $300, AI demand drives optimism",
+        "selftext": "No paywall: [https://finance.yahoo.com/news/nvidia-stock-climbs-to-record-amid-reported-uae-export-approval-price-target-raise-this-is-not-a-bubble-154018663.html](https://finance.yahoo.com/news/nvidia-stock-climbs-to-record-amid-reported-uae-export-approval-price-target-raise-this-is-not-a-bubble-154018663.html)\n\n>Nvidia (NVDA) stock rose to a record high Thursday, up around 1.8%, after Bloomberg reported that the US government has approved for export several billion dollars' worth of the tech giant's chips to the United Arab Emirates.\n\n>The Commerce Department issued Nvidia its export license to the UAE after the federation solidified earlier commitments to making reciprocal investments in the US, Bloomberg reported, citing an unnamed US official. This marks the first time Nvidia has been allowed to ship its AI chips to the country since Trump became president",
+        "score": 464,
+        "upvote_ratio": 0.95,
+        "num_comments": 83,
+        "created_utc": 1760060750.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o2o5wv/nvidia_stock_rises_18_to_record_after_us_approves/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AN",
+          "FOR",
+          "HAS",
+          "NVDA",
+          "S",
+          "SHIP",
+          "TECH",
+          "UP"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8885,
+        "positive_score": 0.123,
+        "negative_score": 0.03,
+        "topics": [
+          "technical_analysis",
+          "news",
+          "regulatory",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nipa6po",
+            "body": "6.9 trillion dollar market cap nice",
+            "score": 43,
+            "created_utc": 1760061274.0,
+            "mentioned_tickers": [
+              "NICE"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4215
+          },
+          {
+            "id": "nipj6nn",
+            "body": "1 quadrillion next",
+            "score": 39,
+            "created_utc": 1760064417.0,
+            "mentioned_tickers": [
+              "NEXT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nipcjmv",
+            "body": "How does making another 20bil a year turn into 2 extra trillion market cap increase??",
+            "score": 69,
+            "created_utc": 1760062094.0,
+            "mentioned_tickers": [
+              "A"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3939
+          },
+          {
+            "id": "nipa32a",
+            "body": "AI not a bubble\n\n\\- Prob NVIDIA",
+            "score": 65,
+            "created_utc": 1760061240.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "NVDA"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o3i70q",
+        "title": "change/remove stop losses to ride out dip?",
+        "selftext": "I'm curious how people are approaching today's, um, events. My personal investment strategy is somewhat of a mix of buy and hold, and swing trading on the weeks/months time scale. My buy and hold investments like $NVDA, $NBIS etc are going with me to the grave.\n\nHowever, for some tickers in my portfolio that are lower conviction, I have stop losses set. Many nearly got tripped today, and are right on the edge for whatever happens next week. For example I have some $INTC with a stop loss set at $35.11, just below a support level (~$36.40) that has stood intact for the past week.\n\nUsing $INTC as an example, would one remove a stop loss all together? Drop it to a lower S/R level (perhaps $24.5 before the big gap up on Sept 18)? Perhaps change nothing and let these events thin out the heard, and eat the losses. I could make an argument that if $INTC doesn't have sufficient support it doesn't deserve to be in my portfolio.",
+        "score": 3,
+        "upvote_ratio": 0.67,
+        "num_comments": 9,
+        "created_utc": 1760143935.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o3i70q/changeremove_stop_losses_to_ride_out_dip/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "AN",
+          "ARE",
+          "AS",
+          "BE",
+          "EAT",
+          "FOR",
+          "GAP",
+          "HAS",
+          "INTC",
+          "IT",
+          "M",
+          "NBIS",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "OUT",
+          "R",
+          "S",
+          "T",
+          "UP"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.9705,
+        "positive_score": 0.046,
+        "negative_score": 0.177,
+        "topics": [
+          "technical_analysis"
+        ],
+        "comments": [
+          {
+            "id": "nivms80",
+            "body": "Stop losses sound like a good idea. \"I don't think the stock will drop more than X unless there's a major crash, so I'll set the stop at X so that I get out before I lose all my value.\" And then inevitably the stock drops just far enough that you sell at bottom, then rebounds, leaving you sitting on the side while it runs back up.\n\nGo ahead. Set any stop loss you want, for any scenario you want. 5%, 20%, 50%, doesn't matter. It will do absolutely nothing until it's tripped, and then it will sell",
+            "score": 6,
+            "created_utc": 1760149373.0,
+            "mentioned_tickers": [
+              "A",
+              "ALL",
+              "ANY",
+              "ARE",
+              "AS",
+              "BE",
+              "FACT",
+              "FOR",
+              "GO",
+              "GOOD",
+              "HOUR",
+              "IT",
+              "LOW",
+              "NEXT",
+              "NOW",
+              "ON",
+              "OR",
+              "OUT",
+              "S",
+              "SO",
+              "T",
+              "UP",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.9588
+          },
+          {
+            "id": "nivbo1z",
+            "body": "Usually a bad idea unless you\u2019re an active trader with a trailing stop loss and the next asset ready to be bought",
+            "score": 3,
+            "created_utc": 1760144870.0,
+            "mentioned_tickers": [
+              "A",
+              "AN",
+              "BE",
+              "NEXT",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.0772
+          },
+          {
+            "id": "nivmv4w",
+            "body": "If you have a stop loss, you obey it. Otherwise what are you doing?",
+            "score": 3,
+            "created_utc": 1760149405.0,
+            "mentioned_tickers": [
+              "A",
+              "ARE",
+              "IT",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.5423
+          },
+          {
+            "id": "nivtxwu",
+            "body": "Bearish engulfing on the weekly index charts. Personally, I\u2019d honor the existing stop losses and trade plan, and just look from the sidelines for a good place to get back in later. If you move the stops and the market tanks further, it\u2019ll wreck not only your account but your psychology.",
+            "score": 2,
+            "created_utc": 1760152394.0,
+            "mentioned_tickers": [
+              "A",
+              "D",
+              "FOR",
+              "GOOD",
+              "IT",
+              "MOVE",
+              "ON",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.1655
+          },
+          {
+            "id": "nivv63v",
+            "body": "I dont sell. Didnt sell in April or 2022",
+            "score": 2,
+            "created_utc": 1760152940.0,
+            "mentioned_tickers": [
+              "OR"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o2ffaw",
+        "title": "MSFT, NVDA and OpenAI: Microsoft Azure Unveils World\u2019s First NVIDIA GB300 NVL72 Supercomputing Cluster for OpenAI",
+        "selftext": "https://blogs.nvidia.com/blog/microsoft-azure-worlds-first-gb300-nvl72-supercomputing-cluster-openai/\n\n\"Microsoft Azure today announced the new NDv6 GB300 VM series, delivering the industry\u2019s first supercomputing-scale production cluster of NVIDIA GB300 NVL72 systems, purpose-built for OpenAI\u2019s most demanding AI inference workloads.\"\n\n\"Today\u2019s achievement is the result of years of deep partnership between NVIDIA and Microsoft purpose-building AI infrastructure for the world\u2019s most demanding AI workloads and to deliver infrastructure for the next frontier of AI.\"\n\n\"This latest milestone marks a big step forward in building the infrastructure that will unlock the future of AI. As Azure scales to its goal of deploying hundreds of thousands of NVIDIA Blackwell Ultra GPUs, even more innovations are poised to emerge from customers like OpenAI.\"\n\nhttps://azure.microsoft.com/en-us/blog/microsoft-azure-delivers-the-first-large-scale-cluster-with-nvidia-gb300-nvl72-for-openai-workloads/\n\n\"Microsoft\u202fdelivers\u202fthe first at-scale production cluster with more than 4,600 NVIDIA GB300 NVL72, featuring NVIDIA Blackwell Ultra GPUs connected through the next-generation NVIDIA InfiniBand network. This cluster is the first of\u202fmany,\u202fas we scale\u202fto hundreds of thousands of Blackwell Ultra GPUs deployed across Microsoft\u2019s AI\u202fdatacenters globally, reflecting our continued commitment to redefining AI infrastructure and collaboration with NVIDIA. The massive scale clusters with Blackwell Ultra GPUs will enable\u202fmodel training in weeks instead of months,\u202fdelivering high throughput for inference workloads.\"\n\n\"This co-engineered system delivers the world\u2019s first at-scale GB300 production cluster, providing the supercomputing engine needed for OpenAI to serve multitrillion-parameter models. This sets the definitive new standard for accelerated computing.\"",
+        "score": 190,
+        "upvote_ratio": 0.96,
+        "num_comments": 46,
+        "created_utc": 1760038268.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o2ffaw/msft_nvda_and_openai_microsoft_azure_unveils/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "ARE",
+          "AS",
+          "FOR",
+          "GPUS",
+          "MSFT",
+          "NEXT",
+          "NVDA",
+          "S",
+          "STEP"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.4548,
+        "positive_score": 0.029,
+        "negative_score": 0.017,
+        "topics": [
+          "technical_analysis",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "ninegv1",
+            "body": "we're witnessing either a revolutionary technological advancement touching every facet of the economy, a historical miscalculation on a global scale involving even governments, or both\n\nwhichever it is, it's gonna be so weird looking back in 10-20 years",
+            "score": 139,
+            "created_utc": 1760038591.0,
+            "mentioned_tickers": [
+              "A",
+              "BE",
+              "IT",
+              "ON",
+              "OR",
+              "S",
+              "SO"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.3052
+          },
+          {
+            "id": "niniv8y",
+            "body": "In my lifetime I\u2019ve seen: wide spread adoption of the internet, smartphones, EVs, and now maybe the AI boom",
+            "score": 58,
+            "created_utc": 1760039919.0,
+            "mentioned_tickers": [
+              "AI",
+              "BOOM",
+              "NOW"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "ninqm2o",
+            "body": "Somebody explain like I am a regard",
+            "score": 21,
+            "created_utc": 1760042240.0,
+            "mentioned_tickers": [
+              "A",
+              "AM"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3612
+          },
+          {
+            "id": "ninedqh",
+            "body": "So you're telling me there's a chance",
+            "score": 6,
+            "created_utc": 1760038564.0,
+            "mentioned_tickers": [
+              "A",
+              "S",
+              "SO",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.25
+          },
+          {
+            "id": "ninxni2",
+            "body": "I think Nvidia's key differentiator is in training, not inference. This is an inference play. inferentia from Amazon and Tensor from Google are both pretty good at inference but it's also a question of CUDA ecosystem vs others.",
+            "score": 5,
+            "created_utc": 1760044387.0,
+            "mentioned_tickers": [
+              "A",
+              "AN",
+              "ARE",
+              "GOOD",
+              "IT",
+              "KEY",
+              "NVDA",
+              "PLAY",
+              "S",
+              "VS"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6249
+          }
+        ]
+      },
+      {
+        "id": "1o202lf",
+        "title": "What is the next big stock you're vouching for?",
+        "selftext": "I read about ASTS in this subreddit a few months ago and regret not getting in. Of course there's the fomo with AMD, Nvidia, and PLTR bunch. What are some other stocks people have their eye on? \n\nI'm currently in VOO, QQQ, VGT, GLD, GOOGL, and AAPL.",
+        "score": 489,
+        "upvote_ratio": 0.92,
+        "num_comments": 699,
+        "created_utc": 1759996731.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o202lf/what_is_the_next_big_stock_youre_vouching_for/",
+        "mentioned_tickers": [
+          "A",
+          "AAPL",
+          "AGO",
+          "AMD",
+          "ARE",
+          "ASTS",
+          "EYE",
+          "FOR",
+          "GOOGL",
+          "M",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "PLTR",
+          "S",
+          "YOU"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.4871,
+        "positive_score": 0.0,
+        "negative_score": 0.054,
+        "topics": [],
+        "comments": [
+          {
+            "id": "nik9rvw",
+            "body": "The next stock that\u2019s gonna blow up might be hyped on this thread and instantly hated, downvoted, or called a scam here, and you\u2019ll swear you\u2019ll never buy it, and miss the train again. This sub can\u2019t stand growth stocks\u00a0",
+            "score": 498,
+            "created_utc": 1759997205.0,
+            "mentioned_tickers": [
+              "A",
+              "BE",
+              "CAN",
+              "IT",
+              "NEXT",
+              "ON",
+              "OR",
+              "S",
+              "T",
+              "UP",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.7964
+          },
+          {
+            "id": "nikc0k5",
+            "body": "AMZN looks undervalued. Even by conservative measures, the AWS and e-commerce sections alone are worth their current market cap of 2.4T. \n\nThe advertising business which brings in 60B/year at 70% margins and 20% growth is not properly priced in IMO. Not to mention other areas they have their hands in: groceries, pharmacy, satellite internet, autonomous cars, etc.",
+            "score": 348,
+            "created_utc": 1759998623.0,
+            "mentioned_tickers": [
+              "AMZN",
+              "ARE",
+              "BY",
+              "CARS",
+              "E",
+              "IMO"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3612
+          },
+          {
+            "id": "nilixko",
+            "body": "RDDT under $200 its worth a look. Own the 7th most popular website on the internet, and the most popular (non-profit Wikipedia aside) website on the internet not owned by the mag 7. RDDT is positioned to become an Advertisement revenue juggernaut.\n\nFVRR macro factors of Gen Z shifting more towards gig work and stacking incomes will help, Hamas/Israel peace deal may ease geopolitical tensions.\n\nABAT they are pre-profit, but with a path towards profitability. They own a proprietary process for rec",
+            "score": 68,
+            "created_utc": 1760018373.0,
+            "mentioned_tickers": [
+              "A",
+              "ABAT",
+              "AN",
+              "ARE",
+              "AS",
+              "BE",
+              "BY",
+              "COO",
+              "FOR",
+              "FVRR",
+              "GEN",
+              "GIG",
+              "GOOD",
+              "GRRR",
+              "HAS",
+              "HE",
+              "HOOD",
+              "IOT",
+              "KEY",
+              "ON",
+              "OUT",
+              "PATH",
+              "PLAY",
+              "PRE",
+              "RDDT",
+              "SACH",
+              "SOFI",
+              "TOP",
+              "UK",
+              "Z"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9909
+          },
+          {
+            "id": "nikuv88",
+            "body": "KRKNF has a great growth story",
+            "score": 40,
+            "created_utc": 1760009343.0,
+            "mentioned_tickers": [
+              "A",
+              "HAS"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7717
+          },
+          {
+            "id": "nikl70g",
+            "body": "NBIS",
+            "score": 168,
+            "created_utc": 1760004349.0,
+            "mentioned_tickers": [
+              "NBIS"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o27ng5",
+        "title": "Intel gives first look at next-gen chips, says Arizona fab is fully operational",
+        "selftext": "Intel\u00a0on Thursday announced its new\u00a0PC chips\u00a0slated to debut in\u00a0laptops\u00a0next year as the chipmaker battles to turn around its struggling business.\n\nThe company said the new Panther Lake processor is made with its 18A technology and is the most advanced node made on U.S. soil.\n\nThe new generation of chips will be made at Intel\u2019s Fab 52 facility in Arizona, which the company said is now fully operational and set to ramp production.\n\n\u201cThe United States has always been home to Intel\u2019s most advanced R&D, product design and manufacturing \u2013 and we are proud to build on this legacy as we expand our domestic operations and bring new innovations to the market,\u201d CEO\u00a0Lip-Bu Tan\u00a0said in a release announcing the news.\n\nIntel\u2019s latest reveal comes during a critical stretch for the beleaguered chipmaker that has lagged in recent years and struggled to keep up with cutting-edge chip demands spurred by the\u00a0artificial intelligence\u00a0revolution.\n\nIn August, the\u00a0U.S. government took a 10% stake\u00a0in the company in an effort to beef up U.S. manufacturing capabilities. Intel has also\u00a0received investments\u00a0from SoftBank and AI chipmaking giant Nvidia.\n\nSince taking the helm of Intel in March, Tan has faced massive pressure to deliver.\n\nThis summer, President\u00a0Donald Trump\u00a0called Tan \u201chighly CONFLICTED\u201d and demanded his resignation, but later changed his tone.\n\nIntel shares have bounced 87% this year.\n\nSource: [https://www.cnbc.com/2025/10/09/intel-chips-panther-lake-clearwater-forest.html](https://www.cnbc.com/2025/10/09/intel-chips-panther-lake-clearwater-forest.html)",
+        "score": 64,
+        "upvote_ratio": 0.89,
+        "num_comments": 4,
+        "created_utc": 1760020656.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o27ng5/intel_gives_first_look_at_nextgen_chips_says/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AN",
+          "ARE",
+          "AS",
+          "BE",
+          "BY",
+          "D",
+          "FOR",
+          "GEN",
+          "HAS",
+          "LAKE",
+          "NEXT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "PC",
+          "R",
+          "RAMP",
+          "S",
+          "U",
+          "UP",
+          "WWW"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.6644,
+        "positive_score": 0.068,
+        "negative_score": 0.051,
+        "topics": [
+          "technical_analysis",
+          "news",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niovmh9",
+            "body": "Now witness the power of this fully armed and operational battle station!",
+            "score": 7,
+            "created_utc": 1760056197.0,
+            "mentioned_tickers": [
+              "NOW"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.4389
+          },
+          {
+            "id": "nine19h",
+            "body": "How are they going to run a new fab after firing so many of their fab workers?",
+            "score": 4,
+            "created_utc": 1760038456.0,
+            "mentioned_tickers": [
+              "A",
+              "ARE",
+              "RUN",
+              "SO"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.5574
+          },
+          {
+            "id": "nimta2t",
+            "body": "Fully operational fab is fucking game changing!! Let\u2019s go!!",
+            "score": 2,
+            "created_utc": 1760032163.0,
+            "mentioned_tickers": [
+              "GAME",
+              "GO",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6648
+          }
+        ]
+      },
+      {
+        "id": "1o1my5u",
+        "title": "AMD's stock jumps 11% after Jensen calls the OpenAI deal \"clever\"",
+        "selftext": "[https://www.cnbc.com/2025/10/08/amd-stock-rally-openai-deal.html](https://www.cnbc.com/2025/10/08/amd-stock-rally-openai-deal.html)\n\n[https://www.cnbc.com/2025/10/08/nvidia-huang-amd-open-ai.html](https://www.cnbc.com/2025/10/08/nvidia-huang-amd-open-ai.html)\n\n>AMD stock climbed 11% on Wednesday, continuing a massive run since OpenAI announced plans to buy billions of dollars of AI equipment from the chipmaker earlier this week.\n\n..\n\n>Nvidia CEO [Jensen Huang](https://www.cnbc.com/2025/10/08/nvidia-huang-amd-open-ai.html) on Wednesday reacted to the deal on CNBC\u2019s Squawk Box, saying it was \u201csurprising.\u201d\n>\n>\u201cIt\u2019s imaginative, it\u2019s unique and surprising, considering they were so excited about their next-generation product,\u201d Huang said. \u201cI\u2019m surprised that they would give away 10% of the company before they even built it. And so anyhow, it\u2019s clever, I guess.\u201d",
+        "score": 867,
+        "upvote_ratio": 0.96,
+        "num_comments": 143,
+        "created_utc": 1759956584.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o1my5u/amds_stock_jumps_11_after_jensen_calls_the_openai/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AMD",
+          "BOX",
+          "IT",
+          "M",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "OPEN",
+          "RUN",
+          "S",
+          "SO",
+          "WWW"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9077,
+        "positive_score": 0.122,
+        "negative_score": 0.0,
+        "topics": [
+          "news",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nihmpai",
+            "body": "Feel like positive adjectives can add multiple billions to the market cap. Next what? Lisa Su picks her nose in public and AMD tanks 10% ?",
+            "score": 509,
+            "created_utc": 1759957328.0,
+            "mentioned_tickers": [
+              "AMD",
+              "CAN",
+              "NEXT",
+              "SU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.755
+          },
+          {
+            "id": "nihldj0",
+            "body": "Is the market purely running on vibes right now?",
+            "score": 898,
+            "created_utc": 1759956922.0,
+            "mentioned_tickers": [
+              "NOW",
+              "ON"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nihmaq4",
+            "body": "I need Jensen to mention a couple of my stocks",
+            "score": 191,
+            "created_utc": 1759957203.0,
+            "mentioned_tickers": [
+              "A"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nihzlbn",
+            "body": "\u201cI\u2019m surprised that they would give away 10% of the company before they even built it. And so anyhow, it\u2019s clever, I guess.\u201d\n\nThat is not calling it \"clever\". That is politically correct way of mocking them lol.",
+            "score": 125,
+            "created_utc": 1759961476.0,
+            "mentioned_tickers": [
+              "IT",
+              "M",
+              "S",
+              "SO",
+              "WAY"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4183
+          },
+          {
+            "id": "nihnh0t",
+            "body": "I bought at $30 and again at $80. Ithink it might be time to exit.",
+            "score": 74,
+            "created_utc": 1759957565.0,
+            "mentioned_tickers": [
+              "BE",
+              "IT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o1s4wr",
+        "title": "With all off these investments coming to and from Open AI, how are they planning to actually monetize ai?",
+        "selftext": "Open AI has been investing hundreds of billions in companies in companies like AMD and receiving billions from other companies like Nvidia, How are they actually going to make money? Also, where is this money coming from since they are burning cash?",
+        "score": 107,
+        "upvote_ratio": 0.9,
+        "num_comments": 122,
+        "created_utc": 1759970129.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o1s4wr/with_all_off_these_investments_coming_to_and_from/",
+        "mentioned_tickers": [
+          "AI",
+          "ALL",
+          "AMD",
+          "ARE",
+          "CASH",
+          "HAS",
+          "NVDA",
+          "OPEN"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.6747,
+        "positive_score": 0.086,
+        "negative_score": 0.0,
+        "topics": [
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niioa70",
+            "body": "It\u2019s a pipe dream that they can get their user base to buy increasingly expensive subscriptions and also tack on other products like shopping. And corporations hopefully replace their employees with ChatGPT enterprise. However with the insane cost of compute and the growing competition I\u2019m really not sure how it will ever happen. Go figure, that\u2019s the whole Ponzi propping up the market right now",
+            "score": 147,
+            "created_utc": 1759970353.0,
+            "mentioned_tickers": [
+              "A",
+              "CAN",
+              "COST",
+              "EVER",
+              "GO",
+              "IT",
+              "M",
+              "NOW",
+              "ON",
+              "S",
+              "UP"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4515
+          },
+          {
+            "id": "niiutdi",
+            "body": "cynical answer... they won't\n\nand bagholders are gonna get fucked\n\nScam Altman will make off with billions",
+            "score": 57,
+            "created_utc": 1759972739.0,
+            "mentioned_tickers": [
+              "ARE",
+              "T"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.8934
+          },
+          {
+            "id": "niinyr8",
+            "body": "Just like netflix, uber, spotify they will make 0$ for 5 years at least, make a super app that kills most startups and big software companies and finally charge more and more until its 50$ per month.",
+            "score": 69,
+            "created_utc": 1759970236.0,
+            "mentioned_tickers": [
+              "A",
+              "APP",
+              "FOR",
+              "UBER"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4404
+          },
+          {
+            "id": "niionru",
+            "body": "It's basically software so subscription based\u00a0",
+            "score": 8,
+            "created_utc": 1759970491.0,
+            "mentioned_tickers": [
+              "IT",
+              "S",
+              "SO"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "niiz2nu",
+            "body": "Basically replace the labor force with AI and robots.\n\nWhat will they do with humans?  \n\nWell they haven't figured that part out yet.\n\nFirst step like social media is having a capture audience.  The negative social effects they'll figure later how to resolve, if at all.\n\nSo basically the 5th Industrial Revolution is coming but no one figured out what you're going to do with all these \"buggy whip makers\" that will be out of work.",
+            "score": 13,
+            "created_utc": 1759974312.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "ALL",
+              "BE",
+              "OUT",
+              "SO",
+              "STEP",
+              "T",
+              "WELL",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.2617
+          }
+        ]
+      },
+      {
+        "id": "1o1od5t",
+        "title": "Turning Point AMD",
+        "selftext": "With the announcement on Monday that OpenAI is going to be partnering with AMD and taking an equity stake I think this might be the turning point for AMD....once again we will see the rise of praise Lisa Sue posts and fall of Advanced Money Destroyer posts.\n\nI've held it for a couple years, added some, sold some, mostly just held steady.\n\nOften I was disappointed with their lack of ability to capitalize on the AI GPU demand. I know, from what people say, that NVDAs software and existing partnerships were rock solid bud god damn did it seem like AMD was dropping the ball.\n\nNow it seems like NVDA is so incredibly capacity constrained AND that customers want to diversify their supply chain so badly that we're finally seeing the sales start to shift over.\n\nIts not a hypothetical anymore it's actually happening and this week was only the start of what will in all likelihood be a MASSIVE revenue ramp",
+        "score": 124,
+        "upvote_ratio": 0.83,
+        "num_comments": 85,
+        "created_utc": 1759960009.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o1od5t/turning_point_amd/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "ALL",
+          "AMD",
+          "AN",
+          "BALL",
+          "BE",
+          "BUD",
+          "FOR",
+          "IT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "RAMP",
+          "ROCK",
+          "S",
+          "SAY",
+          "SEE",
+          "SO"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.3886,
+        "positive_score": 0.096,
+        "negative_score": 0.099,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "news",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nihzacg",
+            "body": "Samsung also announced today they are partnering with AMD.",
+            "score": 148,
+            "created_utc": 1759961371.0,
+            "mentioned_tickers": [
+              "AMD",
+              "ARE"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nii2z2a",
+            "body": "Is it worth buying AMD at current price $232 ?",
+            "score": 41,
+            "created_utc": 1759962663.0,
+            "mentioned_tickers": [
+              "AMD",
+              "IT"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2263
+          },
+          {
+            "id": "nij1516",
+            "body": "The OpenAI deal is especially interesting because it\u2019s only completed if AMD stocks hits certain price targets, the top of which is $600.  Not saying it\u2019s going to get there but there is now an expectation the stock will triple over the next few years and an incentive for OpenAI to help push the stock up with this partnership as well as any other company that has investments in OpenAI.",
+            "score": 22,
+            "created_utc": 1759975091.0,
+            "mentioned_tickers": [
+              "AMD",
+              "AN",
+              "ANY",
+              "AS",
+              "FOR",
+              "HAS",
+              "IT",
+              "NEXT",
+              "NOW",
+              "S",
+              "TOP",
+              "UP",
+              "WELL"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9081
+          },
+          {
+            "id": "nihwh8l",
+            "body": "I have a small unrelated request. Can someone do me a favor and post me the Lisa su sexy milf meme picture.\n\nIt was hilarious thanks",
+            "score": 27,
+            "created_utc": 1759960426.0,
+            "mentioned_tickers": [
+              "A",
+              "CAN",
+              "IT",
+              "POST",
+              "SU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.8934
+          }
+        ]
+      },
+      {
+        "id": "1o19aa7",
+        "title": "Artificial Intelligence deals increasingly sound like Artificial attempts to blow up stock prices",
+        "selftext": "A lot of Artificial Intelligence deals increasingly sound like Artificial attempts to blow up stock prices, I mean just look at this one:\n\n[https://techcrunch.com/2025/10/07/wall-street-analysts-explain-how-amds-own-stock-will-pay-for-openais-billions-in-chip-purchases/](https://techcrunch.com/2025/10/07/wall-street-analysts-explain-how-amds-own-stock-will-pay-for-openais-billions-in-chip-purchases/)\n\nAnybody wanna make a \"deal\" of 100 Billion $ with me, I make one with your friend and that friend makes one with you?\n\n[https://www.nbcnews.com/business/economy/openai-nvidia-amd-deals-risks-rcna234806](https://www.nbcnews.com/business/economy/openai-nvidia-amd-deals-risks-rcna234806)",
+        "score": 527,
+        "upvote_ratio": 0.95,
+        "num_comments": 80,
+        "created_utc": 1759927045.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o19aa7/artificial_intelligence_deals_increasingly_sound/",
+        "mentioned_tickers": [
+          "A",
+          "AMD",
+          "FOR",
+          "LOT",
+          "NVDA",
+          "PAY",
+          "UP",
+          "WWW",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9485,
+        "positive_score": 0.239,
+        "negative_score": 0.0,
+        "topics": [
+          "news",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nif24pd",
+            "body": "People are misunderstanding these deals. They MIGHT blow up the stock price eventually, but short term this really seems more like liquidity for the AI platforms (xAI and Open AI especially) in the form of what almost feels like Buy Now Pay Later deals. In AMD's case they got a little bit more by establishing their chip platform, but these deals don't pass the smell test to me.\n\n\nIf the AI platforms felt good about their cash and revenue situation, and a lowering rate environment, they would jus",
+            "score": 111,
+            "created_utc": 1759929507.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AMD",
+              "ARE",
+              "BIT",
+              "BY",
+              "CASH",
+              "FOR",
+              "FORM",
+              "GOOD",
+              "M",
+              "NOW",
+              "OPEN",
+              "OR",
+              "PAY",
+              "S",
+              "T",
+              "UP"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9227
+          },
+          {
+            "id": "nifbz3v",
+            "body": "Can someone explain to me how NVDA's $100B investment in OpenAI will appear on its earnings report? If they transferred the funds quarterly to OpenAI, and OpenAI uses that to buy GPUs, which will be paid up when the chips are delivered, how is that going to be reported?\n\nAt the end of the day, NVDA is just burning their own cash to produce GPUs, shouldn't that become a net loss?",
+            "score": 31,
+            "created_utc": 1759933009.0,
+            "mentioned_tickers": [
+              "A",
+              "ARE",
+              "BE",
+              "CAN",
+              "CASH",
+              "DAY",
+              "GPUS",
+              "NET",
+              "NVDA",
+              "ON",
+              "S",
+              "T",
+              "UP"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.4291
+          },
+          {
+            "id": "nifvpmh",
+            "body": "Microsoft gives OpenAI $100 Billion.\n\nOpenAI gives IBM, Intel, AMD, Nvidia, and others billions of dollars. \n\nThose companies buy Microsoft products with that \"investment\"\n\nCumulative stock price of these companies increase by $500 billion.",
+            "score": 11,
+            "created_utc": 1759938855.0,
+            "mentioned_tickers": [
+              "AMD",
+              "BY",
+              "IBM",
+              "NVDA"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3182
+          },
+          {
+            "id": "nifuey9",
+            "body": "Stock prices going up on speculative AI deals and announcements is BANANAS. Business deals have only been inked so far and even that part I'm not so sure about. No value has been actually produced by those companies. Investors are pricing in a lot of things very very far into the future. The line between pricing a shit ton of expectations in and speculation is getting more and more blurry by the day. This market can continue to go up but let's face it, the downward risk is unlimited from here on",
+            "score": 9,
+            "created_utc": 1759938483.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "ARE",
+              "BY",
+              "CAN",
+              "DAY",
+              "GO",
+              "HAS",
+              "IT",
+              "LINE",
+              "LOT",
+              "M",
+              "ON",
+              "OUT",
+              "S",
+              "SO",
+              "UP"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.747
+          }
+        ]
+      },
+      {
+        "id": "1o15sk2",
+        "title": "Saw this Goldman report comparing today\u2019s market to past bubbles",
+        "selftext": "People have been arguing about whether Big Tech and AI stocks are in a bubble or not.\n\nAnd recently I came across a [Goldman Sachs note](https://www.goldmansachs.com/pdfs/insights/goldman-sachs-research/25-years-on-lessons-from-the-bursting-of-the-tech-bubble/redaction.pdf) from back in Apr 2025 that compared this market to earlier \u201cbubble\u201d periods to the dot-com era, Japan in the late 80s, and the old Nifty 50 names.\n\nOne table (Exhibits 7) shows the current \u201cMagnificent 7\u201d (AAPL, NVDA, MSFT, AMZN, GOOGL, META, TSLA) trading around **23\u00d7 forward P/E**, while the 2000 tech leaders were at **52\u00d7**. \n\nAnother table (Exhibits 8) points out they\u2019re way more profitable and have cleaner balance sheets (ROE about 44% vs 28% back then, and most of them sit on net cash).\n\nNot saying I fully agree, but it\u2019s an interesting comparison.\n\nWhat do you guys think about this? Here's the link to the paper: [https://www.goldmansachs.com/pdfs/insights/goldman-sachs-research/25-years-on-lessons-from-the-bursting-of-the-tech-bubble/redaction.pdf](https://www.goldmansachs.com/pdfs/insights/goldman-sachs-research/25-years-on-lessons-from-the-bursting-of-the-tech-bubble/redaction.pdf)",
+        "score": 471,
+        "upvote_ratio": 0.94,
+        "num_comments": 138,
+        "created_utc": 1759915723.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o15sk2/saw_this_goldman_report_comparing_todays_market/",
+        "mentioned_tickers": [
+          "A",
+          "AAPL",
+          "AI",
+          "AMZN",
+          "AN",
+          "ARE",
+          "CASH",
+          "E",
+          "GOOGL",
+          "IT",
+          "LINK",
+          "META",
+          "MSFT",
+          "NET",
+          "NOTE",
+          "NVDA",
+          "ON",
+          "OR",
+          "OUT",
+          "PDFS",
+          "S",
+          "TECH",
+          "TSLA",
+          "VS",
+          "WAY",
+          "WWW",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8268,
+        "positive_score": 0.082,
+        "negative_score": 0.013,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "fundamentals",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nie7rzm",
+            "body": "I will not say anything new if i say its impossible to time the market. It can be bubble but what if we still have 2-3 years before popping? Easily QQQ can double by that time and then during bubble-pop decrease only, lets say, 49% so it will bottom out higher than it is today. Thats the tricky part of timing the markets and guessing the bubbles - they can stay irrational longer than you can stay solvent - or other way around, you will earn less by timing the market than by being in the market. ",
+            "score": 306,
+            "created_utc": 1759916075.0,
+            "mentioned_tickers": [
+              "A",
+              "ALL",
+              "ANY",
+              "ARE",
+              "AS",
+              "BE",
+              "BY",
+              "CAN",
+              "EARN",
+              "EVER",
+              "FACT",
+              "FOR",
+              "IT",
+              "LUCK",
+              "ON",
+              "OR",
+              "OUT",
+              "REAL",
+              "SAY",
+              "SO",
+              "TECH",
+              "TOP",
+              "WAY",
+              "WELL",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9642
+          },
+          {
+            "id": "nieanto",
+            "body": "I'm not worried by the Big 7 (except Nvidia). I'm worried by Open AI, its hundreds of billions of commitments everywhere, and the fact that it does not have funding for it.\n\nGoogle, Meta, and co can stop their GPU capex overnight, and restore incredible cash flows - they're already cash machines. For them it's more a matter of current capex that will not bring a good ROI, at least imo. And it's a correction in stock price without real financial trouble ahead coming.\n\nBut Open AI, and Nvidia if o",
+            "score": 88,
+            "created_utc": 1759917785.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "ALL",
+              "BY",
+              "CAN",
+              "CASH",
+              "FACT",
+              "FOR",
+              "GOOD",
+              "IMO",
+              "IT",
+              "LUCK",
+              "M",
+              "META",
+              "NVDA",
+              "OPEN",
+              "REAL",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.8426
+          },
+          {
+            "id": "niekpnt",
+            "body": "Biggest problem is these circular deals these companies have is making the balance sheet appear better than what it actually is",
+            "score": 33,
+            "created_utc": 1759922846.0,
+            "mentioned_tickers": [
+              "IT"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.0516
+          },
+          {
+            "id": "nie7nsy",
+            "body": "It's also a bad comparison because big tech companies are solid businesses plus AI. The dotcom businesses were internet stuff and very little else.\n\nEssentially, if AI is a bubble, it's backed and bankrolled by rock solid businesses. This means only the pure AI companies are at heavy risk. The AI components of these companies are basically the same as dotcom, maybe even worse.\n\nThis also means that if it's a \"bubble\", it can be sustained for a very long time, such as reaching an insanely overval",
+            "score": 94,
+            "created_utc": 1759916003.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AN",
+              "ARE",
+              "AS",
+              "BE",
+              "BY",
+              "CAN",
+              "D",
+              "ELSE",
+              "FOR",
+              "IT",
+              "PLUS",
+              "ROCK",
+              "S",
+              "SAY",
+              "SO",
+              "T",
+              "TECH"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.6808
+          },
+          {
+            "id": "nie7sgm",
+            "body": "Forward P/Es are nonsense when expectations are unrealistically high and analysts can\u2019t even accurately forecast one quarter ahead.\n\nIf you look at FCF - SBC, the story is very different for Big Tech. They\u2019re not reasonably priced if the return on all that capex isn\u2019t there.",
+            "score": 49,
+            "created_utc": 1759916083.0,
+            "mentioned_tickers": [
+              "ALL",
+              "ARE",
+              "CAN",
+              "ES",
+              "FCF",
+              "FOR",
+              "ON",
+              "SBC",
+              "T",
+              "TECH",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.4019
+          }
+        ]
+      },
+      {
+        "id": "1o0yep3",
+        "title": "Nvidia to finance Musk\u2019s xAI chips in $20B deal, investing up to $2B equity as xAI burns $1B per month",
+        "selftext": "No paywall: [https://finance.yahoo.com/news/nvidia-invest-musk-xai-part-231116143.html](https://finance.yahoo.com/news/nvidia-invest-musk-xai-part-231116143.html)\n\n>Elon Musk\u2019s artificial intelligence startup xAI is raising more financing than initially planned, tapping backers including Nvidia Corp. to lift its ongoing funding round to $20 billion, according to people with knowledge of the matter.\n\n>The financing includes equity and debt in a special purpose vehicle that will buy Nvidia processors and rent them to xAI for use in its Colossus 2 project, said the people, who asked not to be identified because the information is private. That\u2019s the name of its largest data center site, which is located in Memphis.\n\n>Nvidia is investing as much as $2 billion in the equity portion of the transaction, the people said, a strategy by the chipmaker that helps accelerate its customers\u2019 AI investments. XAI\u2019s fundraising effort, previously reported by Bloomberg at half the amount, may continue to grow.",
+        "score": 789,
+        "upvote_ratio": 0.97,
+        "num_comments": 205,
+        "created_utc": 1759889729.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o0yep3/nvidia_to_finance_musks_xai_chips_in_20b_deal/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AS",
+          "BE",
+          "BY",
+          "FOR",
+          "GROW",
+          "NVDA",
+          "RENT",
+          "S",
+          "SITE",
+          "UP"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.5859,
+        "positive_score": 0.057,
+        "negative_score": 0.028,
+        "topics": [
+          "technical_analysis",
+          "fundamentals",
+          "news",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nicuv4v",
+            "body": "Waiting for OpenAI and xAI to swap equity stakes with each other to fully complete the circle.",
+            "score": 693,
+            "created_utc": 1759890309.0,
+            "mentioned_tickers": [
+              "FOR"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nictvbn",
+            "body": "I'm starting to see a pattern...",
+            "score": 266,
+            "created_utc": 1759889944.0,
+            "mentioned_tickers": [
+              "A",
+              "M",
+              "SEE"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nictjy9",
+            "body": "Circle jerk continues, should bought Nvidia calls",
+            "score": 498,
+            "created_utc": 1759889828.0,
+            "mentioned_tickers": [
+              "NVDA"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.34
+          }
+        ]
+      },
+      {
+        "id": "1o0v0pv",
+        "title": "Bloomberg: OpenAI's Nvidia, AMD Deals Boost $1 Trillion AI Boom With Circular Deals",
+        "selftext": "[https://www.bloomberg.com/news/features/2025-10-07/openai-s-nvidia-amd-deals-boost-1-trillion-ai-boom-with-circular-deals](https://www.bloomberg.com/news/features/2025-10-07/openai-s-nvidia-amd-deals-boost-1-trillion-ai-boom-with-circular-deals)\n\n>Two weeks ago, Nvidia Corp. agreed to invest as much as $100 billion in OpenAI to help the leading AI startup fund a data-center buildout so massive it could power a major city. OpenAI in turn committed to filling those sites with millions of Nvidia chips. The arrangement was promptly criticized for its \u201ccircular\u201d nature.  \n> \n> This week, undeterred, OpenAI struck a similar deal. The ChatGPT maker on Monday inked a partnership with Nvidia rival Advanced Micro Devices Inc. to deploy tens of billions of dollars worth of its chips. As part of the tie-up, OpenAI is poised to become one of AMD\u2019s largest shareholders.  \n> \n> Never before has so much money been spent so rapidly on a technology that, for all its potential, remains largely unproven as an avenue for profit-making. And often, these investments can be traced back to two leading firms: Nvidia and OpenAI. The recent wave of deals and partnerships involving the two are escalating concerns that an increasingly complex and interconnected web of business transactions is artificially propping up the trillion-dollar AI boom. At stake is virtually every corner of the economy, with the hype and buildout of AI infrastructure rippling across markets, from debt and equity to real estate and energy.\n> \n>The companies, which ignited an AI investment frenzy three years ago, have been instrumental in keeping it going by inking large and sometimes overlapping partnerships with cloud providers, AI developers and other startups in the sector. In the process, they\u2019re now seen as playing a key role in ratcheting up the risks of a possible AI bubble by inflating the market and binding the fates of numerous companies together. OpenAI alone has now struck AI computing deals with Nvidia, AMD and Oracle Corp. that altogether could easily top $1 trillion. Meanwhile, the AI startup is burning through cash and doesn\u2019t expect to be cash-flow positive until near the end of the decade.  \n> \n> \u201cIf we get to a point a year from now where we had an AI bubble and it popped, this deal might be one of the early breadcrumbs,\u201d Brian Colello, an analyst with Morningstar, said about Nvidia\u2019s investment in OpenAI. \u201cIf things go bad, circular relationships might be at play.\u201d  \n> \n> For much of the AI boom, there have been whispers about Nvidia\u2019s frenzied dealmaking. The chipmaker bolstered the market by pumping money into dozens of AI startups, many of which rely on Nvidia\u2019s graphics processing units to develop and run their models. OpenAI, to a lesser degree, also invested in startups, some of which built services on top of its AI models. But as tech firms have entered a more costly phase of AI development, the scale of the deals involving these two companies has grown substantially, making it harder to ignore.  \n> \n> The day after Nvidia and OpenAI announced their $100 billion investment agreement, OpenAI confirmed it had struck a separate $300 billion deal with Oracle to build out data centers in the US. Oracle, in turn, is spending billions on Nvidia chips for those facilities, sending money back to Nvidia, a company that is emerging as one of OpenAI\u2019s most prominent backers.\n\nA lot more in the article including diagrams of this circular flow. Do we think this presents a risk for the AI gains we've seen this year?",
+        "score": 288,
+        "upvote_ratio": 0.98,
+        "num_comments": 48,
+        "created_utc": 1759880307.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o0v0pv/bloomberg_openais_nvidia_amd_deals_boost_1/",
+        "mentioned_tickers": [
+          "A",
+          "AGO",
+          "AI",
+          "ALL",
+          "AMD",
+          "AN",
+          "ARE",
+          "AS",
+          "BE",
+          "BOOM",
+          "BY",
+          "CAN",
+          "CASH",
+          "DAY",
+          "FOR",
+          "FUND",
+          "GO",
+          "HAS",
+          "IT",
+          "KEY",
+          "LOT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "OUT",
+          "PLAY",
+          "REAL",
+          "RELY",
+          "RUN",
+          "S",
+          "SO",
+          "T",
+          "TECH",
+          "TOP",
+          "TWO",
+          "UP",
+          "WAVE",
+          "WWW"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.7096,
+        "positive_score": 0.053,
+        "negative_score": 0.04,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "fundamentals",
+          "news",
+          "partnerships",
+          "regulatory",
+          "market_sentiment",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nic5jja",
+            "body": "The fact this doesn't seem to concern anyone is what's truly mind blowing.",
+            "score": 217,
+            "created_utc": 1759881286.0,
+            "mentioned_tickers": [
+              "FACT",
+              "MIND",
+              "S",
+              "T"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4404
+          },
+          {
+            "id": "nicmpcy",
+            "body": "THEY ARE JERKING EACH OTHER OFF WITH MONEY",
+            "score": 42,
+            "created_utc": 1759887364.0,
+            "mentioned_tickers": [
+              "ARE"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nic4cyz",
+            "body": "Look I know you can do it yourself, it just feels better if somebody else does it",
+            "score": 34,
+            "created_utc": 1759880869.0,
+            "mentioned_tickers": [
+              "CAN",
+              "ELSE",
+              "IT",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4404
+          },
+          {
+            "id": "nicith8",
+            "body": "Welp, nvidia is a 4 tril company, so this charade may last a little bit longer. Ride the waves until it no longer holds up i guess. Just dont forget to jump off before its drops too low",
+            "score": 16,
+            "created_utc": 1759885977.0,
+            "mentioned_tickers": [
+              "A",
+              "BIT",
+              "IT",
+              "LOW",
+              "NVDA",
+              "SO",
+              "UP"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.3887
+          },
+          {
+            "id": "nich5pt",
+            "body": "I mean, if it\u2019s stock in these companies, Nvidia could get a great return if these companies go public",
+            "score": 10,
+            "created_utc": 1759885399.0,
+            "mentioned_tickers": [
+              "A",
+              "GO",
+              "IT",
+              "NVDA",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6249
+          }
+        ]
+      },
+      {
+        "id": "1o0ns0h",
+        "title": "Report from The Information claims Oracle's cloud margins are worse than expected",
+        "selftext": "[https://www.bloomberg.com/news/articles/2025-10-07/oracle-sinks-on-report-its-cloud-margins-are-worse-than-expected](https://www.bloomberg.com/news/articles/2025-10-07/oracle-sinks-on-report-its-cloud-margins-are-worse-than-expected)\n\n>While Oracle generated roughly $900 million in revenue from the rental of servers powered by Nvidia Corp. chips during the three months ended in August, the company only managed about $125 million in gross profit, the Information reported, citing internal corporate documents.\n\n>In some cases, Oracle was losing \u201cconsiderable\u201d amounts of money on its rentals of smaller quantities of Nvidia chips, including both new and old graphics processing units, according to the report. A spokesperson for Oracle declined to comment.\n\n>Oracle shares have jumped more than 60% this year as soaring demand for artificial intelligence computing has boosted the company\u2019s revenue growth. Last month, Oracle projected revenue in its cloud-computing business will jump 700% in the next three fiscal years, sending the stock up 36% on Sept. 10.\n\n>The heavy spending required to acquire chips and build out data center capacity has weighed on Oracle\u2019s overall gross margin, which excludes operating expenses. In its most recent earnings report, Oracle\u2019s gross margin was 67.3%, the lowest in more than a year, according to data compiled by Bloomberg.\n\nORCL is only down roughly \\~3% as a result of this report at the time of posting",
+        "score": 358,
+        "upvote_ratio": 0.97,
+        "num_comments": 66,
+        "created_utc": 1759863435.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o0ns0h/report_from_the_information_claims_oracles_cloud/",
+        "mentioned_tickers": [
+          "A",
+          "ARE",
+          "AS",
+          "BY",
+          "FOR",
+          "HAS",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "ORCL",
+          "OUT",
+          "S",
+          "UP",
+          "WWW"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.7003,
+        "positive_score": 0.059,
+        "negative_score": 0.084,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "news",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niaxdp8",
+            "body": "That can be easily fixed.\n\nOpenAI should just announce $50 trillion investment in Oracle (terms and conditions apply) in exchange for cloud compute.",
+            "score": 335,
+            "created_utc": 1759866931.0,
+            "mentioned_tickers": [
+              "BE",
+              "CAN",
+              "FOR"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.34
+          },
+          {
+            "id": "niax89e",
+            "body": "its terrible because oracle is priced for perfection. His debt to equity ratio the highest of the tech stocks...",
+            "score": 73,
+            "created_utc": 1759866886.0,
+            "mentioned_tickers": [
+              "FOR",
+              "TECH"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.2263
+          },
+          {
+            "id": "niblnds",
+            "body": "High paying AI use cases are still not around. Everyone building capacity hoping paying customers.",
+            "score": 22,
+            "created_utc": 1759874363.0,
+            "mentioned_tickers": [
+              "AI",
+              "ARE"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4215
+          },
+          {
+            "id": "niaxzru",
+            "body": "lol I bought some shares just last week d'oh",
+            "score": 13,
+            "created_utc": 1759867119.0,
+            "mentioned_tickers": [
+              "D"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6124
+          },
+          {
+            "id": "niatlky",
+            "body": "Clients are just not spending allot on software transformation cloud projects given the market conditions and AI hype and spending on data centers.. etc is also there but that will not stop the margins from being cut. Let\u2019s hope \u201cAI Cloud World\u201d next week brings in some momentum going into the 4th quarter and help close big cloud project deals in the pipeline.",
+            "score": 10,
+            "created_utc": 1759865783.0,
+            "mentioned_tickers": [
+              "AI",
+              "ARE",
+              "HOPE",
+              "NEXT",
+              "ON",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7954
+          }
+        ]
+      },
+      {
+        "id": "1o0vuae",
+        "title": "AMD and OpenAI - A raw deal for AMD",
+        "selftext": "So, we've had a little time to digest this deal, what's it all about? \n\nLisa Su, in her infinite wisdom, [has granted OpenAI warrants](https://www.sec.gov/ix?doc=/Archives/edgar/data/0000002488/000119312525230895/d28189d8k.htm) to purchase up to 10% of AMD stock. The purchase price? One penny per share. Can you buy AMD stock at that price? I don't think you can. So why exactly is Sam Altman, hereafter referred to as Sammy, allowed to buy at this price? Read on.\n\nSammy is granted tranches of warrants to purchase AMD stock for one penny, subject to vesting standards. According to what has been disclosed so far, the first tranche vests after delivery of one gigawatt of GPUs. So Sammy has to buy this first batch before it gets any stock. But don't worry, Lisa has confidence Sammy will have the money to buy them (courtesy of Jensen et al.). Vesting of the remaining tranches of warrants are \"further subject to achievement of specified Company stock price targets that escalate to $600 per share for the final tranche and stock performance thresholds\". \n\nSo what's going on here? This looks like a vendor financing arrangement, not unlike NVDA's recently announced gift of cash to Sammy. Except instead of funding the gift to Sammy with cash, which Lisa doesn't have, she's funding it with stock, i.e. dilution of AMD shareholders. For the uninitiated, you are paying for this. So, Sammy gets free stock, which he's free to sell at any time. He doesn't make any money and he needs enormous amounts of cash to fund his chip purchases, so what would he do with this stock? Probably sell it yeah? And what on earth would he do with the money from the stock sales? I dunno, buy the AMD chips he promised to buy maybe? Who then paid for these chips that Sammy now has in his possession? If you're an AMD shareholder, you did, and you probably didn't benefit because you got diluted for it. Okay well how much money are we talking here? Sammy has warrants for 160 million of AMD stock, the final tranche vests at $600. Why that number, what's the significance? Hmmmm... let me see..... carry the two... square root of four.... does Pi get involved here? No, I don't think Pi is needed.... oh yeah, it's about $100 billion, the same number Jensen just gave Sammy.\n\nWhy is Lisa doing this? Why is Lisa telling her shareholders they should be giving their money to Sammy? I suppose the (not very) plausible explanation is that it gives AMD street cred. If Sammy can run his workloads on AMD chips then that's great right? Other companies will surely see that AMD is competitive with NVDA and buy AMD chips without special, zero cost, financing arrangements. To the moon! Maybe. The more retail investors bid up AMD stock, the more tranches of warrants will vest and the more they themselves will fund Sammy's chips. And I'll remind you, you've already done that, yesterday and today. Sammy basically loses nothing here. You, as a shareholder, are buying his chips and you don't even get an equity stake for it. \n\nNow, Jensen did something very similar, and he has cash so he has a bit more bargaining power. He at least gets an equity stake for that $100 billion of your money. And maybe you're fine with that, who knows. And what's that stake worth? Whatever you can dream up. Maybe zero, maybe 6 quadrillion, or anywhere in between.\n\nSo, that's the deal. All of these circular financing deals get confusing don't they? Who ends up footing the bill for Lisa and Jensen's exploits? Could it possibly be... you as a shareholder? Certainly looks that way.",
+        "score": 71,
+        "upvote_ratio": 0.77,
+        "num_comments": 60,
+        "created_utc": 1759882508.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o0vuae/amd_and_openai_a_raw_deal_for_amd/",
+        "mentioned_tickers": [
+          "A",
+          "AL",
+          "ALL",
+          "AMD",
+          "AN",
+          "ANY",
+          "ARE",
+          "AS",
+          "BE",
+          "BILL",
+          "BIT",
+          "CAN",
+          "CASH",
+          "COST",
+          "DOC",
+          "E",
+          "ET",
+          "FOR",
+          "FOUR",
+          "FUND",
+          "GIFT",
+          "GPUS",
+          "HAS",
+          "HE",
+          "IT",
+          "IX",
+          "NOW",
+          "NVDA",
+          "ON",
+          "OR",
+          "PI",
+          "ROOT",
+          "RUN",
+          "S",
+          "SAM",
+          "SEE",
+          "SO",
+          "SU",
+          "T",
+          "TWO",
+          "UP",
+          "WAY",
+          "WELL",
+          "WWW",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9965,
+        "positive_score": 0.123,
+        "negative_score": 0.021,
+        "topics": [
+          "technical_analysis",
+          "partnerships",
+          "regulatory",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niced14",
+            "body": "I\u2019d trade 10% dilution for a trillion dollar market cap",
+            "score": 92,
+            "created_utc": 1759884433.0,
+            "mentioned_tickers": [
+              "A",
+              "D",
+              "FOR"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nic9xa0",
+            "body": "We are la la land now. Sam thinks the AMD stock would moon bcos of this deal and wants a piece of it. This is the circular economy for now. Open AI promises X BIllion $ in business and if the stock moons they want a piece of it and they get the money back. So getting it for free.",
+            "score": 75,
+            "created_utc": 1759882848.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AMD",
+              "ARE",
+              "FOR",
+              "IT",
+              "LAND",
+              "NOW",
+              "OPEN",
+              "SAM",
+              "SO"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7351
+          },
+          {
+            "id": "niciek0",
+            "body": "Nah this is REALLY good for AMD, game changer. AMD has really great hardware, even better than Nvidia in some key areas. Rocm has been improving and they\u2019re a very viable second option and getting even better. The problem is that most buyers of AI GPUs are already heavily biased towards Nvidia. This deal partners AMD with the most popular LLM ai company and signals to other companies that AMD is a viable second option, which I\u2019m sure will lead to other big deals for AMD. It\u2019s totally worth it fo",
+            "score": 42,
+            "created_utc": 1759885833.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AMD",
+              "ARE",
+              "FOR",
+              "GAME",
+              "GOOD",
+              "GPUS",
+              "HAS",
+              "IT",
+              "KEY",
+              "M",
+              "NVDA",
+              "S",
+              "UP"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9601
+          },
+          {
+            "id": "nieaiex",
+            "body": "I'm a simpleton. If I buy an amd stock today for 200, and with the claimed scenario OP said above, ...when the final tranche vests as amd stock hits 600, my single stock now is worth 3x more. Why am I not feeling the pain of the claimed evil stock dilution?",
+            "score": 8,
+            "created_utc": 1759917697.0,
+            "mentioned_tickers": [
+              "A",
+              "AM",
+              "AMD",
+              "AN",
+              "AS",
+              "FOR",
+              "M",
+              "NOW",
+              "OP"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.2887
+          },
+          {
+            "id": "nice74z",
+            "body": "This is a great deal for AMD investors because they get the premiere frontier AI lab and fastest growing tech company in history to co-develop their hardware/software ecosystem. \n\nAMD is great at hardware but not great at software. OpenAI is great at software with one of the top two AI labs on the planet (the other being Google DeepMind). So now AMD gets a partner that has a vested interest in seeing their GPU ecosystem succeed and onboard more customers. AMD needs an anchor customer to co-devel",
+            "score": 26,
+            "created_utc": 1759884375.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AMD",
+              "AN",
+              "AS",
+              "FOR",
+              "GOOD",
+              "HAS",
+              "IT",
+              "LAB",
+              "META",
+              "NOW",
+              "ON",
+              "S",
+              "SEE",
+              "SO",
+              "TECH",
+              "TOP",
+              "TWO"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9917
+          }
+        ]
+      },
+      {
+        "id": "1o247h6",
+        "title": "$AMD Analysis: Beyond the AI Hype",
+        "selftext": "AMD's recent OpenAI partnership signals a strategic shift in the AI chip war. While the stock reflects high growth expectations, smart money suggests patience.\n\nKey insights:\n\n\u2022 Data Center segment driving momentum\n\n\u2022 New GPU contracts expanding pipeline\n\n\u2022 Technical pullback to 180\u2212180-180\u2212190 expected\n\n\u2022 Long-term bullish, short-term caution\n\nMarket Impact: This partnership could challenge NVIDIA's dominance, but valuations need reality checks. Consider profit-taking now, re-enter on dip for better risk/reward.\n\nThe AI revolution is real, but timing matters in this volatile market.\n\n\\#AMD #AI #Semiconductors #TechStocks #OpenAI #DataCenter #GPU #InvestmentStrategy",
+        "score": 0,
+        "upvote_ratio": 0.2,
+        "num_comments": 4,
+        "created_utc": 1760011828.0,
+        "subreddit": "stocks",
+        "url": "https://reddit.com/r/stocks/comments/1o247h6/amd_analysis_beyond_the_ai_hype/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AMD",
+          "FOR",
+          "KEY",
+          "NOW",
+          "NVDA",
+          "ON",
+          "REAL",
+          "S"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.6956,
+        "positive_score": 0.108,
+        "negative_score": 0.024,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "fundamentals",
+          "partnerships",
+          "market_sentiment",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nil31ez",
+            "body": "Fuck outta here with your hashtags\n\nWas it hard writing the prompt for GPT?",
+            "score": 10,
+            "created_utc": 1760012761.0,
+            "mentioned_tickers": [
+              "FOR",
+              "IT"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.5994
+          },
+          {
+            "id": "nil5r96",
+            "body": "Now why would $AMD drop to $180-$190? lol\n\nIt was in the $160-$170 range before they just became a core partner of OpenAI and secured $100's of Billions for the next few years, doubling their revenue forecast (never-mind any future deals, they're already supplying 7/10 top hyperscalers with MI350X). \n\nYou're about to see the  NVDA/AVGO moment to the share price when people realise a 40% jump is peanuts.",
+            "score": 5,
+            "created_utc": 1760013803.0,
+            "mentioned_tickers": [
+              "A",
+              "AMD",
+              "ANY",
+              "AVGO",
+              "FOR",
+              "IT",
+              "MIND",
+              "NEXT",
+              "NOW",
+              "NVDA",
+              "S",
+              "SEE",
+              "TOP",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7506
+          }
+        ]
+      },
+      {
+        "id": "1o3i5su",
+        "title": "change/remove stop losses to ride out dip?",
+        "selftext": "I'm curious how people are approaching today's, um, events. My personal investment strategy is somewhat of a mix of buy and hold, and swing trading on the weeks/months time scale. My buy and hold investments like $NVDA, $NBIS etc are going with me to the grave.\n\nHowever, for some tickers in my portfolio that are lower conviction, I have stop losses set. Many nearly got tripped today, and are right on the edge for whatever happens next week. For example I have some $INTC with a stop loss set at $35.11, just below a support level (~$36.40) that has stood intact for the past week.\n\nUsing $INTC as an example, would one remove a stop loss all together? Drop it to a lower S/R level (perhaps $24.5 before the big gap up on Sept 18)? Perhaps change nothing and let these events thin out the heard, and eat the losses. I could make an argument that if $INTC doesn't have sufficient support it doesn't deserve to be in my portfolio.",
+        "score": 2,
+        "upvote_ratio": 0.75,
+        "num_comments": 7,
+        "created_utc": 1760143833.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o3i5su/changeremove_stop_losses_to_ride_out_dip/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "AN",
+          "ARE",
+          "AS",
+          "BE",
+          "EAT",
+          "FOR",
+          "GAP",
+          "HAS",
+          "INTC",
+          "IT",
+          "M",
+          "NBIS",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "OUT",
+          "R",
+          "S",
+          "T",
+          "UP"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.9705,
+        "positive_score": 0.046,
+        "negative_score": 0.177,
+        "topics": [
+          "technical_analysis"
+        ],
+        "comments": [
+          {
+            "id": "nivcpl2",
+            "body": "Why do you have stop losses if you're just going to change them when it drops?",
+            "score": 5,
+            "created_utc": 1760145287.0,
+            "mentioned_tickers": [
+              "IT",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.5994
+          },
+          {
+            "id": "nivanq1",
+            "body": "During the downturns, what I do with my etf is usual dca and chill. \n\nThe individual stocks I own and am very confident for very long term have limit buys at specific targets buying more as they go down. \n\nThe ones im not as confident i put some stops to secure some profit and capital that will be reinvested in my longs. \n\nIt all depends on your theory how long you want to keep and all",
+            "score": 3,
+            "created_utc": 1760144464.0,
+            "mentioned_tickers": [
+              "ALL",
+              "AM",
+              "AS",
+              "BE",
+              "FOR",
+              "GO",
+              "IT",
+              "ON",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7064
+          },
+          {
+            "id": "nivgtel",
+            "body": "I think you'll need to see what happens on Monday. \n\nI've been selling for the past week and a half. My wife has been buying.\n\nI think folks will panic over the weekend and try to take profits on Monday. \n\nMy wife thinks it will go up again, business as usual.",
+            "score": 1,
+            "created_utc": 1760146962.0,
+            "mentioned_tickers": [
+              "A",
+              "AS",
+              "FOR",
+              "GO",
+              "HAS",
+              "IT",
+              "ON",
+              "SEE",
+              "UP",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.1027
+          },
+          {
+            "id": "nivmpb6",
+            "body": "The dips happen because of stop losses. Once they trigger it\u2019s none stop.  Institutes love them. Creates panic selling and that\u2019s how they make money.",
+            "score": 1,
+            "created_utc": 1760149339.0,
+            "mentioned_tickers": [
+              "IT",
+              "LOVE",
+              "S"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.8215
+          },
+          {
+            "id": "nivnv95",
+            "body": "May be you should figure out why you set stop loss in the first place.\u00a0",
+            "score": 1,
+            "created_utc": 1760149815.0,
+            "mentioned_tickers": [
+              "BE",
+              "OUT",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.5423
+          }
+        ]
+      },
+      {
+        "id": "1o2gfpp",
+        "title": "PE ratio of top 20 market cap 1999 vs 2025",
+        "selftext": "\nWith all the bubble talk, I wondered what the top 20 market cap companies' P/E looked like in 1999 compared to the top 20 today. I also included the rate of return through 2006, so this avoids the 2007\u201308 crash.\n\nTake this for what you will.\n\n \n\nNotable:\n\nAverage P/E in 1999: 54\nAverage P/E in 2025: 48\n4 Companies from 1999 had a positive return through 2006. \n5 companies from 1999 are still in the top 20 today: Exxon, Walmart, Microsoft, J&J, and Oracle\nIn 1999, 3 companies had P/Es over 100. Today, only Tesla is above 100.\nTesla stands out with the highest PE of the 40 data points and continues to confound me. \n \n\n1999 Top 20                       7-Year Return (1999\u20132006) and P/E Ratio\n\n1.  ExxonMobil                  +28%     P/E: 15\n\n2.  Citigroup                       +25%   P/E: 23\n\n3.  Walmart                        +14%    P/E: 40\n\n4.  Procter & Gamble     +7%      P/E: 30\n\n5.  Microsoft                      +0%       P/E: 75\n\n6.  Johnson & Johnson   +0%      P/E: 28\n\n7.  Home Depot               -7%        P/E: 40\n\n8.  IBM                                  -7%        P/E: 30\n\n9.  Oracle                            -14%     P/E: 110\n\n10. Merck                           -21%     P/E: 30\n\n11. Bristol-Myers            -28%     P/E: 28\n\n12. Pfizer                             -28%     P/E: 30\n\n13. AT&T                              -35%     P/E: 20\n\n14. Intel                               -35%     P/E: 45\n\n15. General Electric       -42%     P/E: 30\n\n16. Cisco Systems          -49%    P/E: 135\n\n17. Dell                                -56%     P/E: 65\n\n18. AOL                                -64%     P/E: 200\n\n19. Lucent                          -68%     P/E: 90\n\n20. American Intl. Group     -68%    P/E: 18\n\n \n\n2025 Top 20 \u2013 Market Cap and P/E Ratio\n\n \n\n1.  NVIDIA                           $4.5T    P/E: 52.7\n\n2.  Microsoft                      $3.9T    P/E: 38.4\n\n3.  Apple                              $3.8T    P/E: 38.9\n\n4.  Alphabet                       $3.0T    P/E: 26.6\n\n5.  Amazon                         $2.4T    P/E: 33.8\n\n6.  Meta Platforms          $1.8T     P/E: 25.9\n\n7.  Broadcom                    $1.6T    P/E: 85.8\n\n8.  Tesla                               $1.5T  P/E: 250.3\n\n9.  Taiwan Semiconductor     $1.1T  P/E: 31.5\n\n10. Berkshire Hathaway       $1.1T  P/E: 17.0\n\n11. Oracle                          $0.9T    P/E: 65.9\n\n12. JPMorgan Chase       $0.8T   P/E: 15.8\n\n13. Tencent                        $0.8T    P/E: 27.2\n\n14. Walmart                      $0.8T    P/E: 38.8\n\n15. Eli Lilly                          $0.8T    P/E: 55.1\n\n16. Visa                               $0.7T    P/E: 34.8\n\n17. Netflix                           $0.5T    P/E: 50.8\n\n18. Mastercard               $0.5T      P/E: 39.1\n\n19. ExxonMobil               $0.5T      P/E: 16.2\n\n20. Johnson & Johnson  $0.4T  P/E: 20.4\n\n \n\n",
+        "score": 114,
+        "upvote_ratio": 0.89,
+        "num_comments": 51,
+        "created_utc": 1760040603.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o2gfpp/pe_ratio_of_top_20_market_cap_1999_vs_2025/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "ARE",
+          "AVGO",
+          "DELL",
+          "E",
+          "ES",
+          "FOR",
+          "IBM",
+          "J",
+          "META",
+          "NVDA",
+          "OUT",
+          "SO",
+          "T",
+          "TALK",
+          "TOP",
+          "VS",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.865,
+        "positive_score": 0.05,
+        "negative_score": 0.013,
+        "topics": [
+          "technical_analysis",
+          "fundamentals",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nipfwrk",
+            "body": "Ah yes, TSLA\u2026 the AOL in overvaluation of the modern bubble. \ud83d\udc80",
+            "score": 34,
+            "created_utc": 1760063258.0,
+            "mentioned_tickers": [
+              "TSLA"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4019
+          },
+          {
+            "id": "nippmem",
+            "body": "PLTR today has a similar P/E ratio that pets.com had in 2000",
+            "score": 20,
+            "created_utc": 1760066818.0,
+            "mentioned_tickers": [
+              "A",
+              "E",
+              "HAS",
+              "PETS",
+              "PLTR"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nipwz57",
+            "body": "4.5T market cap is just insane.. I\u2019m not saying it\u2019s good or bad..\n\nIt\u2019s just awe inspiring",
+            "score": 13,
+            "created_utc": 1760070002.0,
+            "mentioned_tickers": [
+              "GOOD",
+              "IT",
+              "M",
+              "OR",
+              "S"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.7009
+          },
+          {
+            "id": "ninn896",
+            "body": "Now. Pull the share repurchase data and you will understand what the differences are.",
+            "score": 78,
+            "created_utc": 1760041221.0,
+            "mentioned_tickers": [
+              "ARE",
+              "NOW",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.296
+          },
+          {
+            "id": "niplaoj",
+            "body": "Chase, Walmart, and Berkshire look cheap.\n\nETA: meant ExxonMobil, not wmt",
+            "score": 6,
+            "created_utc": 1760065161.0,
+            "mentioned_tickers": [
+              "WMT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o32ro4",
+        "title": "AI is Not In A Bubble or Is It?",
+        "selftext": "I was in the comments to a post about something completely different and inadvertently started a debate on this topic (LOL), so wanted to start its own discussion thread because this is an important topic with lots of viewpoints.  I anticipate/hope we will get the statistics folks to reformulate the current market ratios and create new ones and tell us which ones are important and which ones aren\u2019t and we\u2019ll have at least 3 people who redefine the term \u2018Bubble\u2019 so that the answers will be a lot more nuanced then yes or no. We should welcome all of that and get everyone\u2019s views because in the end, NONE of us will be completely correct!\n\nMy take, we have too many young traders who treat the stock market like a casino. For that reason, uneducated sentiment has the capacity to drive dips and swells and volatility which we might call a \u2018Bubble\u2019 when too many gamblers are riding a group of stocks or indexes simply because they think they can time the market and market sentiment.  But AI will escape the Bubble fate in the bear term because while it may be more expensive then past market leaders, it is not illogically priced and the opportunity to own a piece of the current technology is like the opportunity to own copper before electricity or oil before automobiles.  And a key difference is that it is mostly intangible \u201cIntellectual Property\u201d that is owned and unlike a physical commodity, it can be leveraged an infinite amount of ways, so the earnings capacity of a single piece of AI code has almost limitless earnings capacity.  The only limitation is the ability of the owner to build sufficient infrastructure to put it to work. \n\nThink about a new drug that cures every kind of cancer. Now imagine that we ALL have cancer. The stock of pharmaceutical companies can go up thousands of percent overnight if you are there on the day that the breakthrough is discovered.  That\u2019s how you have to think about AI, but it\u2019s nit just curing cancer (and it WILL do that), it\u2019s curing every illness and disease known and unknown, it is automating everything, it will simplify attainment and use of logic and knowledge in all aspects of our lives. As the hardware becomes better and more efficient and everything is using it and it is all tied together, it will be even more efficient and effective. \n\nSo, you\u2019re paying 40x earnings?  In the next 5-10 years earnings will be 1000x what they are today for a company like NVIDIA. Ownership is almost priceless, there\u2019s no \u201cBubble\u201d, they\u2019ve discovered the cure for cancer and everything else; if it were a pharmaceutical company, the stock would have been up 10,000x by now. ",
+        "score": 0,
+        "upvote_ratio": 0.24,
+        "num_comments": 44,
+        "created_utc": 1760107273.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o32ro4/ai_is_not_in_a_bubble_or_is_it/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "ALL",
+          "AN",
+          "ARE",
+          "AREN",
+          "AS",
+          "BE",
+          "BY",
+          "CAN",
+          "DAY",
+          "DRUG",
+          "ELSE",
+          "FATE",
+          "FOR",
+          "GO",
+          "HAS",
+          "HOPE",
+          "IT",
+          "KEY",
+          "LOT",
+          "NEXT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "OR",
+          "POST",
+          "S",
+          "SO",
+          "T",
+          "UP",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.833,
+        "positive_score": 0.095,
+        "negative_score": 0.064,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nis5qfw",
+            "body": ">the earnings capacity of a single piece of AI code has almost limitless earnings capacity\n\nOP\u2019s level of enthusiasm is consistent with the hype of past bubbles.",
+            "score": 13,
+            "created_utc": 1760107854.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "HAS",
+              "OP",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4404
+          },
+          {
+            "id": "nis8pdk",
+            "body": "\u201cWhen the cab drivers start giving stock tips, it\u2019s time to worry about a bubble.\u201d",
+            "score": 3,
+            "created_utc": 1760108724.0,
+            "mentioned_tickers": [
+              "A",
+              "IT",
+              "S"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.128
+          },
+          {
+            "id": "nis81ai",
+            "body": "The question isn't whether or not AI will solve a huge number of things in some distant future. The question is whether LLMs specifically are capable of accomplishing much beyond what they currently do, namely acting as glorified chat bots.\n\nIMO, LLMs are extremely limited in what they can reasonably accomplish. They cannot think. They can only handle a certain amount of context and they consistently hallucinate incorrect answers.\n\nAI as a whole has always come in boom-and-bust cycles. I persona",
+            "score": 3,
+            "created_utc": 1760108530.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AN",
+              "ARE",
+              "AS",
+              "BOOM",
+              "CAN",
+              "FOR",
+              "HAS",
+              "IMO",
+              "IT",
+              "OR",
+              "S",
+              "SAY",
+              "T"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.573
+          },
+          {
+            "id": "nisa7x2",
+            "body": "Thank you for using paragraphs. \n\n* Paragraph 1: We should get everyone's views on this and have a nuanced discussion.\n* Paragraph 2: Young traders treat the market like a casino and \"AI will escape the Bubble fate in the bear term\" (sic)\n* Paragraph 3: AI will cure cancer, and you have cancer. \n* Paragraph 4: There is no bubble. \n\n  \nWell, you really had me in the first paragraph.",
+            "score": 3,
+            "created_utc": 1760109155.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "FATE",
+              "FOR",
+              "ON",
+              "S",
+              "WELL",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.6613
+          }
+        ]
+      },
+      {
+        "id": "1o2av1m",
+        "title": "CCCX and CCCXW Infleqtion (Quantum)",
+        "selftext": "Who else is watching this take off?! It just broke $22 and $10, this thing has wings! Some are saying it could outpace RGTI, and honestly, I can see it. With Quantum momentum building and no acquisition date yet, upside looks huge. Contracts with NVDA, DoD, NASA, and the UK add major credibility! \n\nAny feedback or opinions? Thoughts? Let\u2019s hear it! ",
+        "score": 3,
+        "upvote_ratio": 0.67,
+        "num_comments": 0,
+        "created_utc": 1760027861.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o2av1m/cccx_and_cccxw_infleqtion_quantum/",
+        "mentioned_tickers": [
+          "ANY",
+          "ARE",
+          "CAN",
+          "CCCX",
+          "CCCXW",
+          "ELSE",
+          "HAS",
+          "IT",
+          "NVDA",
+          "OR",
+          "RGTI",
+          "S",
+          "SEE",
+          "UK"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.4603,
+        "positive_score": 0.095,
+        "negative_score": 0.068,
+        "topics": [
+          "technical_analysis",
+          "partnerships"
+        ],
+        "comments": []
+      },
+      {
+        "id": "1o2b1hk",
+        "title": "What to Invest in with a Joint Account?",
+        "selftext": "Hi All, \n\nLooking on some ideas/advice of where to invest in a joint account with my wife. \n\nLittle Background. \n\nMy wife has a 401k through her employer\n\nI have a state pension and a Roth IRA that I invest heavily into VOO and I have a large chunk of NVDA, some Amazon, MSFT, and a little PEG.\n\nMy Wife and I are saving upwards of $4k every month and I want to take a chunk of that and invest in a joint account so our money works for us a little more.\n\nDo I just invest in more VOO or do invest in a different ETF, go Dividend heavy, or something else all together? \n\nI feel like VOO would be ok but that doesn't give us much diversity in our portfolio. \n\nWhat would you do? \n\nThanks all! ",
+        "score": 2,
+        "upvote_ratio": 0.75,
+        "num_comments": 5,
+        "created_utc": 1760028277.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o2b1hk/what_to_invest_in_with_a_joint_account/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "ARE",
+          "BE",
+          "ELSE",
+          "FOR",
+          "GO",
+          "HAS",
+          "HI",
+          "MSFT",
+          "NVDA",
+          "ON",
+          "OR",
+          "PEG",
+          "SO",
+          "T",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8192,
+        "positive_score": 0.07,
+        "negative_score": 0.0,
+        "topics": [
+          "technical_analysis"
+        ],
+        "comments": [
+          {
+            "id": "nimh5xc",
+            "body": "Absolutely. Your approach is fine. Set to auto. Sell only when you have something urgent to pay for. \n\nI prefer weekly. VOO QQQM some individual stocks if you like. Stay alway from meme and penny stocks. But no wrong answers, or you learn pretty quickly when you find yourself selling for reasons other than needing to pay an urgent bill (panic selling, stress, more work, etc).",
+            "score": 1,
+            "created_utc": 1760028627.0,
+            "mentioned_tickers": [
+              "AN",
+              "BILL",
+              "FOR",
+              "OR",
+              "PAY",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3466
+          }
+        ]
+      },
+      {
+        "id": "1o1w19d",
+        "title": "Energy companies for AI data centres",
+        "selftext": "Jensen Huang mentioned the biggest bottleneck to AI roll out is energy to supply the data centres.   Which companies do you think will benefit and grow from being to supply this energy.?\nI\u2019m long NVDA but looking to diversify into companies that will support the AI march.   ",
+        "score": 2,
+        "upvote_ratio": 0.67,
+        "num_comments": 8,
+        "created_utc": 1759981787.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o1w19d/energy_companies_for_ai_data_centres/",
+        "mentioned_tickers": [
+          "AI",
+          "FOR",
+          "GROW",
+          "M",
+          "NVDA",
+          "OUT",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8094,
+        "positive_score": 0.177,
+        "negative_score": 0.0,
+        "topics": [
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nivzkyr",
+            "body": "By the stock price explosion, I\u2019d think it\u2019d be OKLO.",
+            "score": 2,
+            "created_utc": 1760154947.0,
+            "mentioned_tickers": [
+              "BE",
+              "BY",
+              "D",
+              "IT",
+              "OKLO"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nijt3x1",
+            "body": "Iren\nVertiv",
+            "score": 1,
+            "created_utc": 1759987251.0,
+            "mentioned_tickers": [
+              "IREN",
+              "VRT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nik09v5",
+            "body": "Check out the AIPO etf.",
+            "score": 1,
+            "created_utc": 1759991338.0,
+            "mentioned_tickers": [
+              "OUT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nik2k2h",
+            "body": "DLR",
+            "score": 1,
+            "created_utc": 1759992694.0,
+            "mentioned_tickers": [
+              "DLR"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nik8y44",
+            "body": "CAT\n\nBig data centers have their own natgas power plants attached\u00a0",
+            "score": 1,
+            "created_utc": 1759996676.0,
+            "mentioned_tickers": [
+              "CAT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o212ft",
+        "title": "Is now a good time to jump into the Autonomous Vehicles? ps: no I dont choose TSLA",
+        "selftext": "I need to change something on my portfolio, some stocks dont really add up so I want to see something new. Robotaxi currently is underrated and undervalued imo. Beside Tesla, u know they are the biggest manipulation in the industry. I dont want to explain more but u see what u want to see. I saw everyone also keep mentioning GOOGL in the comment section but Im looking into something niche like WRD. \n\nOn the stock side, recent reports show huge revenue growth, up fast YoY. Citigroup, BOCI, UBS sitting at Buy. Not a bad setup imo. JPMorgan, SBI Securities, Gordian Capital, all picking up small positions this year. \n\nOn the press side, their partnership strategy actually diverse, NVIDIA, BOSCH, UBER, GRAB, etc. The market coverage is global too: Europe, SEA, UAE\u2026 I\u2019m not even sure which countries they\u2019ll target next, but honestly with how often they\u2019re getting new government permits and all the news heating up lately, it feels like they\u2019re aiming for a lot more.\n\nSo do you guys think now is the right time to jump in? Would really appreciate hearing some opinions on this industry. ",
+        "score": 0,
+        "upvote_ratio": 0.33,
+        "num_comments": 5,
+        "created_utc": 1760000840.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o212ft/is_now_a_good_time_to_jump_into_the_autonomous/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "ARE",
+          "FAST",
+          "FOR",
+          "GOOD",
+          "GOOGL",
+          "GRAB",
+          "IMO",
+          "IT",
+          "LOT",
+          "M",
+          "NEXT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "SBI",
+          "SEE",
+          "SO",
+          "TSLA",
+          "U",
+          "UBER",
+          "UBS",
+          "UP",
+          "WRD",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9792,
+        "positive_score": 0.141,
+        "negative_score": 0.029,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "news",
+          "partnerships",
+          "regulatory",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niklwlc",
+            "body": "I'm waiting for my options to close and holding cash for a bit\n\nBut I do have LCID calls for 2027 I bought after they announced an UBER partnership",
+            "score": 1,
+            "created_utc": 1760004759.0,
+            "mentioned_tickers": [
+              "A",
+              "AN",
+              "BIT",
+              "CASH",
+              "FOR",
+              "LCID",
+              "M",
+              "UBER"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "niks6bi",
+            "body": "goog",
+            "score": 1,
+            "created_utc": 1760008059.0,
+            "mentioned_tickers": [
+              "GOOG"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nimpfxs",
+            "body": "TSLA will keep going up\u2026",
+            "score": 1,
+            "created_utc": 1760031046.0,
+            "mentioned_tickers": [
+              "TSLA",
+              "UP"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nimptsi",
+            "body": "TSLA is the obvious play.",
+            "score": 1,
+            "created_utc": 1760031159.0,
+            "mentioned_tickers": [
+              "PLAY",
+              "TSLA"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.34
+          },
+          {
+            "id": "nikgufx",
+            "body": "Just straight up, I wouldn't be buying anything right now",
+            "score": 1,
+            "created_utc": 1760001707.0,
+            "mentioned_tickers": [
+              "BE",
+              "NOW",
+              "T",
+              "UP"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2263
+          }
+        ]
+      },
+      {
+        "id": "1o1mnm3",
+        "title": "Is the Fed finally relenting? Rate cuts are coming, and the market is poised to take off.",
+        "selftext": "After watching the Fed minutes, my impression is this: they're saying \"caution\" but they're already thinking of ways to justify a rate cut. Most members want to ease some of the pressure now, as employment data is indeed softening and inflation isn't as volatile as before. A few are still holding out, saying they can't do it too quickly, or else things will flare up again. They already cut rates by 0.25% in September, and these minutes are essentially paving the way for what's to come. They say \"we'll decide based on the data,\" which translates to: if the next CPI doesn't explode, they'll cut. The market went wild after reading these minutes, and everyone's betting on another rate cut or two this year. Tech stocks are likely to soar again, especially stocks like NVDA, which could see another surge. Honestly, I think there's still some room for growth in the short term, but I wouldn't go all in. The market is a bit too excited right now; one bad data point could mean the end of the story. The Fed is pretending to be steady, but they're actually easing. Don't be greedy; keep some cash so you don't end up having to cover your positions.\n\nThis isn't financial advice, just random chatter. Do you think this is the second season of the bull market, or the final trap?",
+        "score": 0,
+        "upvote_ratio": 0.26,
+        "num_comments": 20,
+        "created_utc": 1759955901.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o1mnm3/is_the_fed_finally_relenting_rate_cuts_are_coming/",
+        "mentioned_tickers": [
+          "A",
+          "ALL",
+          "ARE",
+          "AS",
+          "BE",
+          "BIT",
+          "BULL",
+          "BY",
+          "CAN",
+          "CASH",
+          "ELSE",
+          "FOR",
+          "GO",
+          "IT",
+          "NEXT",
+          "NOW",
+          "NVDA",
+          "ON",
+          "OR",
+          "OUT",
+          "S",
+          "SAY",
+          "SEE",
+          "SO",
+          "SOAR",
+          "T",
+          "TECH",
+          "TWO",
+          "UP",
+          "WAY",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8522,
+        "positive_score": 0.113,
+        "negative_score": 0.072,
+        "topics": [
+          "technical_analysis",
+          "regulatory",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nihi92t",
+            "body": "Isn't a rate cut already priced in?\u00a0",
+            "score": 7,
+            "created_utc": 1759955991.0,
+            "mentioned_tickers": [
+              "A",
+              "T"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2057
+          },
+          {
+            "id": "nihm9k7",
+            "body": "The stock market is going up, face the reality.",
+            "score": 4,
+            "created_utc": 1759957193.0,
+            "mentioned_tickers": [
+              "UP"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nihikvw",
+            "body": "Market ain't going anywhere but up until the USD stops going down",
+            "score": 7,
+            "created_utc": 1759956090.0,
+            "mentioned_tickers": [
+              "AIN",
+              "T",
+              "UP"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.2263
+          },
+          {
+            "id": "nihk59z",
+            "body": "Simpleton reads Fed minutes. See their analysis of an extremely complex topic boiled down to one paragraph.",
+            "score": 3,
+            "created_utc": 1759956557.0,
+            "mentioned_tickers": [
+              "AN",
+              "SEE"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o17pas",
+        "title": "Is OpenAI priced for perfection?",
+        "selftext": "I was wondering if any of you has done the math of what needs to go right for OpenAI over the next 3 years? \nLast I saw was an expectation of 12B of revenue for 2025. How much would they need to grow to be able to even honor the recent agreements they have signed with Nvidia, oracle and AMD? \n\nEven with an absurd 70% CAGR over 5 years it still seems that there is no path for this business to generate any cash before 2030. \n\nAt which % of growth does the whole deck of cards come undone?\n\n",
+        "score": 0,
+        "upvote_ratio": 0.26,
+        "num_comments": 13,
+        "created_utc": 1759922491.0,
+        "subreddit": "investing",
+        "url": "https://reddit.com/r/investing/comments/1o17pas/is_openai_priced_for_perfection/",
+        "mentioned_tickers": [
+          "AMD",
+          "AN",
+          "ANY",
+          "BE",
+          "CASH",
+          "DECK",
+          "FOR",
+          "GO",
+          "GROW",
+          "HAS",
+          "IT",
+          "MATH",
+          "NEXT",
+          "NVDA",
+          "PATH",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.885,
+        "positive_score": 0.11,
+        "negative_score": 0.019,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niekoes",
+            "body": "You a bot or something? OpenAI isn't listed",
+            "score": 9,
+            "created_utc": 1759922830.0,
+            "mentioned_tickers": [
+              "A",
+              "OR",
+              "T",
+              "YOU"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nighwc1",
+            "body": "There are a few flaws to your thinking.\n\nthe 12B revenue run rate (they disclosed 2 months ago) is likely only limited by the lack of compute power.  Had they have more GW available, it is 100% certain they would have sold all of it.  The limitation to revenue is throttled by not enough compute power hence OpenAI is buying it all up.  They got to a 12B run rate less in \\~30 months from commercialization of AI services.  100B is just a matter of 2028 or 2030.\n\nThe commitment will be funded by wha",
+            "score": 1,
+            "created_utc": 1759945278.0,
+            "mentioned_tickers": [
+              "A",
+              "AGO",
+              "AI",
+              "ALL",
+              "AMD",
+              "ARE",
+              "BE",
+              "BY",
+              "CASH",
+              "COST",
+              "FOR",
+              "GO",
+              "IT",
+              "MASS",
+              "MSFT",
+              "NVDA",
+              "OR",
+              "ORCL",
+              "OUT",
+              "RUN",
+              "UP",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.3618
+          },
+          {
+            "id": "niemcap",
+            "body": "Token gen is growing absurdly over the API. Government customers haven\u2019t even begun large scale spending yet. They will be a double digit percentage of global compute consumption with their present roadmap. That by itself puts them in the multiple trillion dollar club.\n\nAt some point, many entities will not be able to compete with the frontier ai model development requirements and today the number of entities are single digit.\n\nPeople not in deep tech are really blind to what\u2019s happening with pr",
+            "score": 0,
+            "created_utc": 1759923567.0,
+            "mentioned_tickers": [
+              "A",
+              "AGO",
+              "AI",
+              "API",
+              "ARE",
+              "BE",
+              "BIO",
+              "BY",
+              "GEN",
+              "IT",
+              "S",
+              "T",
+              "TECH",
+              "WAY",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2748
+          }
+        ]
+      },
+      {
+        "id": "1o3mv7i",
+        "title": "100k profit TSM/NVDA/AMD puts",
+        "selftext": "",
+        "score": 2,
+        "upvote_ratio": 0.67,
+        "num_comments": 1,
+        "created_utc": 1760158747.0,
+        "subreddit": "wallstreetbets",
+        "url": "https://reddit.com/r/wallstreetbets/comments/1o3mv7i/100k_profit_tsmnvdaamd_puts/",
+        "mentioned_tickers": [
+          "AMD",
+          "NVDA",
+          "TSM"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.4404,
+        "positive_score": 0.492,
+        "negative_score": 0.0,
+        "topics": [
+          "earnings"
+        ],
+        "comments": [
+          {
+            "id": "niw7qu5",
+            "body": "\n**User Report**| | | |\n:--|:--|:--|:--\n**Total Submissions** | 5 | **First Seen In WSB** | 4 years ago\n**Total Comments** | 25 | **Previous Best DD** | \n**Account Age** | 8 years | | \n\n[**Join WSB Discord**](https://discord.gg/wsbverse) | [**\u2694**](https://www.reddit.com/r/KarmaCave/)",
+            "score": 1,
+            "created_utc": 1760158759.0,
+            "mentioned_tickers": [
+              "AGO",
+              "DD",
+              "R",
+              "WWW"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7506
+          }
+        ]
+      },
+      {
+        "id": "1o3a43s",
+        "title": "Follow up to my house on NVDA post",
+        "selftext": "I used my down payment to make five grand. Ended up switching from Nvidia to AMD on Monday. Selling covered calls is always the move, Yes it always limits my upside but I see it as buying insurance and I'm glad I bought insurance this week. I got a MP play rn that's gonna make me 2 bands in an hours. ",
+        "score": 1,
+        "upvote_ratio": 0.53,
+        "num_comments": 3,
+        "created_utc": 1760123645.0,
+        "subreddit": "wallstreetbets",
+        "url": "https://reddit.com/r/wallstreetbets/comments/1o3a43s/follow_up_to_my_house_on_nvda_post/",
+        "mentioned_tickers": [
+          "A",
+          "AMD",
+          "AN",
+          "AS",
+          "FIVE",
+          "GLAD",
+          "IT",
+          "M",
+          "MOVE",
+          "MP",
+          "NVDA",
+          "ON",
+          "PLAY",
+          "POST",
+          "S",
+          "SEE",
+          "UP"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8735,
+        "positive_score": 0.144,
+        "negative_score": 0.0,
+        "topics": [],
+        "comments": [
+          {
+            "id": "nitn5ay",
+            "body": "\n**User Report**| | | |\n:--|:--|:--|:--\n**Total Submissions** | 2 | **First Seen In WSB** | 1 year ago\n**Total Comments** | 264 | **Previous Best DD** | \n**Account Age** | 2 years | | \n\n[**Join WSB Discord**](https://discord.gg/wsbverse) | [**\u2694**](https://www.reddit.com/r/KarmaCave/)",
+            "score": 1,
+            "created_utc": 1760123655.0,
+            "mentioned_tickers": [
+              "AGO",
+              "DD",
+              "R",
+              "WWW"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7506
+          },
+          {
+            "id": "nitpkmg",
+            "body": "Risked it for the crisp. Pepsi Max returns.",
+            "score": 3,
+            "created_utc": 1760124411.0,
+            "mentioned_tickers": [
+              "FOR",
+              "IT",
+              "MAX"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.2263
+          }
+        ]
+      },
+      {
+        "id": "1o3guk3",
+        "title": "Sold NVDA to buy discounted stocks, suggestions?",
+        "selftext": "Does anybody have any suggestions what to spend $15k on while the markets down that has the potential to shoot back up when the tariffs get lifted? Not looking for quantum anything or any penny stocks (I do invest in both) but companies that aren\u2019t more traditional that\u2019s dipped a lot today? ",
+        "score": 9,
+        "upvote_ratio": 0.8,
+        "num_comments": 34,
+        "created_utc": 1760140110.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o3guk3/sold_nvda_to_buy_discounted_stocks_suggestions/",
+        "mentioned_tickers": [
+          "A",
+          "ANY",
+          "AREN",
+          "FOR",
+          "HAS",
+          "LOT",
+          "NVDA",
+          "ON",
+          "OR",
+          "S",
+          "T",
+          "UP"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.2824,
+        "positive_score": 0.018,
+        "negative_score": 0.037,
+        "topics": [
+          "technical_analysis"
+        ],
+        "comments": [
+          {
+            "id": "nivkx0u",
+            "body": "I just bought more nvda",
+            "score": 10,
+            "created_utc": 1760148613.0,
+            "mentioned_tickers": [
+              "NVDA"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nivntpl",
+            "body": "All I\u2019m saying is anyone who doesn\u2019t have the twins in their portfolio is going to have the worst FOMO in history\u00a0\n\n$FNMA & $FMCC",
+            "score": 3,
+            "created_utc": 1760149797.0,
+            "mentioned_tickers": [
+              "ALL",
+              "M",
+              "T"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.6249
+          },
+          {
+            "id": "niv2er5",
+            "body": "Scwo",
+            "score": 2,
+            "created_utc": 1760141164.0,
+            "mentioned_tickers": [
+              "SCWO"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "nivhwhg",
+            "body": "Iren eose CIFR",
+            "score": 2,
+            "created_utc": 1760147396.0,
+            "mentioned_tickers": [
+              "CIFR",
+              "EOSE",
+              "IREN"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o36omg",
+        "title": "MAG 7 - Direction towards earnings call and long term hold, which way to go?",
+        "selftext": "I have about 10k to invest and hold long term, I am already invested in GOOG, AMD, AMZN, NVDA. I jumped in AMD (long term) a couple of weeks back and got into the AI ride up. \n\nI dont understand chart, pe ratio and/or all these things, so I am here guys. \n\nWith earnings at end of the month, should I add more GOOG or enter MSFT and META, not a big fan of apple myself. Or completely enter into another unexplored upcoming growth stock?\n\nClueless which direction to go to. ",
+        "score": 6,
+        "upvote_ratio": 1.0,
+        "num_comments": 9,
+        "created_utc": 1760115906.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o36omg/mag_7_direction_towards_earnings_call_and_long/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "ALL",
+          "AM",
+          "AMD",
+          "AMZN",
+          "GO",
+          "GOOG",
+          "META",
+          "MSFT",
+          "NVDA",
+          "OR",
+          "SO",
+          "UP",
+          "WAY"
+        ],
+        "sentiment": "bearish",
+        "compound_score": -0.3009,
+        "positive_score": 0.024,
+        "negative_score": 0.044,
+        "topics": [
+          "earnings",
+          "technical_analysis",
+          "fundamentals",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nisys37",
+            "body": "Based on my projections and DCF. I believe right now is a good entry price for Googl, Amzn, Meta & Msft. You could Nvida, but it is a wildcard, since it is uncertain for them to maintain the same rate of growth they currently have and they are at a really premium price\n\nForget about Apple for now until they start showing great growth again and stay away from Tsla if you want to invest long-term",
+            "score": 12,
+            "created_utc": 1760116363.0,
+            "mentioned_tickers": [
+              "A",
+              "AMZN",
+              "ARE",
+              "FOR",
+              "GOOD",
+              "GOOGL",
+              "IT",
+              "META",
+              "MSFT",
+              "NOW",
+              "ON",
+              "TSLA",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.8835
+          },
+          {
+            "id": "niu8in5",
+            "body": "Meta. Stock poised for a breakout",
+            "score": 2,
+            "created_utc": 1760130324.0,
+            "mentioned_tickers": [
+              "A",
+              "FOR",
+              "META"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.25
+          },
+          {
+            "id": "nisxi5v",
+            "body": "If you\u2019re clueless, buy VT.",
+            "score": 1,
+            "created_utc": 1760115993.0,
+            "mentioned_tickers": [
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.3612
+          },
+          {
+            "id": "nit4e47",
+            "body": "I think you should spend part of your 10k to get \n\nyourself educated. Then you don\u2019t need to ask\n\nrandom strangers for advice on what to buy or sell.\n\n\u2014-\n\nIf I have to spend to upgrade myself, this is how I would spend it:\n\n**less expensive method:**\n\n1. A subscription to Morningstar $249 a year. You get ratings, data, and write up for large companies. The write-up focuses on moats, fair value, financial strength and quarterly results interpretation. Less so for small companies. This is also ava",
+            "score": 0,
+            "created_utc": 1760117977.0,
+            "mentioned_tickers": [
+              "A",
+              "AS",
+              "BE",
+              "CAN",
+              "EG",
+              "FOR",
+              "HE",
+              "IT",
+              "ON",
+              "OR",
+              "POST",
+              "S",
+              "SAY",
+              "SO",
+              "T",
+              "UP",
+              "UPS",
+              "WWW",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.8956
+          }
+        ]
+      },
+      {
+        "id": "1o21v3z",
+        "title": "Who are those people who buy Palantir today?",
+        "selftext": "Genuinely do not understand what kind of expectation priced in for PE of 630. That is an astronomical number. Nvidia - the most important company in AI right now is trading at PE of 53. \n\nIn a very rough numerical simplification, we can see it as Palantir right now have more than 12 times the potential of Nvidia. Why someone prefers to pay fat premium price? What's the ultimate future for palantir that investors invasion? ",
+        "score": 269,
+        "upvote_ratio": 0.93,
+        "num_comments": 294,
+        "created_utc": 1760004018.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o21v3z/who_are_those_people_who_buy_palantir_today/",
+        "mentioned_tickers": [
+          "A",
+          "AI",
+          "AN",
+          "ARE",
+          "AS",
+          "CAN",
+          "FAT",
+          "FOR",
+          "IT",
+          "NOW",
+          "NVDA",
+          "PAY",
+          "S",
+          "SEE"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.368,
+        "positive_score": 0.046,
+        "negative_score": 0.016,
+        "topics": [
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nikmgpx",
+            "body": "You could say the same about Tesla",
+            "score": 209,
+            "created_utc": 1760005075.0,
+            "mentioned_tickers": [
+              "SAY",
+              "YOU"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          },
+          {
+            "id": "niklen7",
+            "body": "Never in my life have i seen a company valued at such a ridiculous level",
+            "score": 187,
+            "created_utc": 1760004471.0,
+            "mentioned_tickers": [
+              "A"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.1027
+          },
+          {
+            "id": "nikqs29",
+            "body": "The market is 100% run by animal spirits now. Pltr, ASTS, Joby, Achr, all the quantum stocks, etc etc\n\nLittle to 0 revenue, bleeding cash, diluting shareholder value with stock offerings (many this week!)\n\nStock prices Skyrocketing 10-100%+ in the last few days/weeks.\n\n\nDid I buy in? Yes of course, and sold too soon on many of them.\n\nIt could go on for a while, but this mania will end the same way all the others do.",
+            "score": 75,
+            "created_utc": 1760007372.0,
+            "mentioned_tickers": [
+              "A",
+              "ACHR",
+              "ALL",
+              "ASTS",
+              "BY",
+              "CASH",
+              "FOR",
+              "GO",
+              "IT",
+              "JOBY",
+              "NOW",
+              "ON",
+              "PLTR",
+              "RUN",
+              "WAY"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4295
+          },
+          {
+            "id": "nilc01b",
+            "body": "I bought early and held, and still have automated low biweekly buys.   I'm using GPT on existing PLTR analysis thread to answer OP's question:\n\n>  \nPeople buying **Palantir (PLTR)** today aren\u2019t doing DCF math \u2014 they\u2019re buying **optionality on a monopoly**.\n\n>Yeah, the P/E is 630. But invert it: if Palantir becomes the **AI operating system** for governments and enterprises, that multiple collapses fast. It only needs to **5\u20136\u00d7 revenue** and **20\u00d7 earnings** to \u201cearn into\u201d it \u2014 doable if AI gove",
+            "score": 14,
+            "created_utc": 1760016037.0,
+            "mentioned_tickers": [
+              "A",
+              "AI",
+              "AN",
+              "AREN",
+              "E",
+              "EARN",
+              "FAST",
+              "FOR",
+              "GPUS",
+              "IT",
+              "LOW",
+              "M",
+              "MATH",
+              "NEXT",
+              "NVDA",
+              "ON",
+              "OP",
+              "PLTR",
+              "S",
+              "SEE",
+              "SITE",
+              "T",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2023
+          },
+          {
+            "id": "nikl918",
+            "body": "People who understand Government corruption, especially DoD contracts and absurd charges for subpar product.\n\nPalantir will benefit from the Trump administration.",
+            "score": 80,
+            "created_utc": 1760004381.0,
+            "mentioned_tickers": [
+              "FOR"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.2263
+          }
+        ]
+      },
+      {
+        "id": "1o318fu",
+        "title": "Is something wrong with my calculations?",
+        "selftext": "Nvidia is 2x overvalued.\n\nI ran a DCF with CAGR 25% growth for the next 6 years. \n\nDiscount rate 12%\n\nPerpetual growth 5%. I am getting fair value at ~90$.\n\nAnd with EV/EBIDTA ratio of 10. I am getting fair value of ~95$.\n\n\nI am genuinely perplexed as the price is nowhere near the fair value.",
+        "score": 1,
+        "upvote_ratio": 0.56,
+        "num_comments": 31,
+        "created_utc": 1760103669.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o318fu/is_something_wrong_with_my_calculations/",
+        "mentioned_tickers": [
+          "A",
+          "AM",
+          "AS",
+          "FOR",
+          "NEXT",
+          "NVDA"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.8243,
+        "positive_score": 0.223,
+        "negative_score": 0.096,
+        "topics": [
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nis127s",
+            "body": "That\u2019s the thing about growth stocks, you trade higher until you eventually don\u2019t",
+            "score": 9,
+            "created_utc": 1760106455.0,
+            "mentioned_tickers": [
+              "S",
+              "T",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3818
+          },
+          {
+            "id": "nis8b4r",
+            "body": "Predicting cyclical companies is hard.\n\nLet's not forget, in 2023 when nvidia seemed insanely expensive (at a fraction of the price vs now), people were calculating how many decades of 30% growth it would take to justify the valuation. The problem is it didn't do that, instead it grew ebitda at \\~800% yoy followed by another 50% yoy, so in two years it did like 1200%.\n\n  \nSo yes, people with dcfs were right, it would have taken a decade of 30% growth to justify the valuation, at the same time wr",
+            "score": 7,
+            "created_utc": 1760108609.0,
+            "mentioned_tickers": [
+              "A",
+              "BY",
+              "IT",
+              "NOW",
+              "NVDA",
+              "S",
+              "SO",
+              "T",
+              "TWO",
+              "VS"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6321
+          },
+          {
+            "id": "nirt55g",
+            "body": "People think that current hyperscaler LLM capex will continue indefinitely. Which it won\u2019t, because they aren\u2019t getting returns on their investments. I think NVDA will crash -80% or more in 1-2 years.",
+            "score": 7,
+            "created_utc": 1760104000.0,
+            "mentioned_tickers": [
+              "AREN",
+              "IT",
+              "NVDA",
+              "ON",
+              "OR",
+              "T"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.4019
+          },
+          {
+            "id": "nirt5jl",
+            "body": "I am surprised that it is only 2x.\u00a0\n\nWhat were your steps to find the current year earnings? Just curious.\u00a0",
+            "score": 3,
+            "created_utc": 1760104004.0,
+            "mentioned_tickers": [
+              "AM",
+              "IT"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.4939
+          },
+          {
+            "id": "niry934",
+            "body": "i'm not saying it's not overvalued, but nvda is slowly transitioning from being a hardware company into software. their software libraries are already a big deal and what set them apart from potential competition. more so going forward.\n\nomniverse for example. self driving cars, industrial robots, humanoid robots all of them are under TAM. something like omniverse is the only way all these applications can scale quickly.\n\nthat said, i got out of nvdia a short while back. i'm just holding to some",
+            "score": 2,
+            "created_utc": 1760105599.0,
+            "mentioned_tickers": [
+              "A",
+              "ALL",
+              "ARE",
+              "CAN",
+              "CARS",
+              "FOR",
+              "IT",
+              "M",
+              "NVDA",
+              "OUT",
+              "S",
+              "SELF",
+              "SO",
+              "WAY"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.5023
+          }
+        ]
+      },
+      {
+        "id": "1o39e0q",
+        "title": "Days like today are a reminder that AMZN is not on the same level as MSFT, NVDA, GOOG, AAPL, and META",
+        "selftext": "I always see AMZN touted as a no brainer MAG 7 stock, but days like today are a friendly reminder that they are not in fact a pure software/high margin tech play as it goes without saying their large expensive retail enterprise is a massive part of the company you're buying.\n\nFor better or for worse.\n\nThat isn't to say AMZN is a bad company to own, but rather their business model is so vastly different than the others.\n\nAnd look I get AWS is a gem of a business, but as long as AWS is tied to the hip with a bloated retail enterprise, I will continue to invest elsewhere for cloud technology. I would not be shocked at all if AWS splits from AMZN if the company continues to tread water valuation wise for the next few years.",
+        "score": 0,
+        "upvote_ratio": 0.42,
+        "num_comments": 32,
+        "created_utc": 1760121998.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o39e0q/days_like_today_are_a_reminder_that_amzn_is_not/",
+        "mentioned_tickers": [
+          "A",
+          "AAPL",
+          "ALL",
+          "AMZN",
+          "ARE",
+          "AS",
+          "BE",
+          "FACT",
+          "FOR",
+          "GOOG",
+          "IT",
+          "META",
+          "MSFT",
+          "NEXT",
+          "NVDA",
+          "ON",
+          "OR",
+          "PLAY",
+          "SAY",
+          "SEE",
+          "SO",
+          "T",
+          "TECH",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9051,
+        "positive_score": 0.124,
+        "negative_score": 0.063,
+        "topics": [
+          "technical_analysis",
+          "fundamentals",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nitjwxb",
+            "body": "NVDA down 3%. AAPL down 3%.  But AMZN is the imposter since it's down 4% lol.",
+            "score": 71,
+            "created_utc": 1760122650.0,
+            "mentioned_tickers": [
+              "AAPL",
+              "AMZN",
+              "IT",
+              "NVDA",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.5719
+          },
+          {
+            "id": "nititvy",
+            "body": "Nothing wrong with Amazon. It's just most vulnerable to China tariffs.",
+            "score": 27,
+            "created_utc": 1760122322.0,
+            "mentioned_tickers": [
+              "IT",
+              "S"
+            ],
+            "sentiment": "neutral",
+            "compound_score": -0.0405
+          },
+          {
+            "id": "nitjcfm",
+            "body": "Your 162 words thesis on Amazon is \n\nbased on today\u2019s price action and volume ?\n\n\u2014\u2014-\n\nOutstanding.",
+            "score": 27,
+            "created_utc": 1760122477.0,
+            "mentioned_tickers": [
+              "ON",
+              "S"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6908
+          },
+          {
+            "id": "nithyiu",
+            "body": "Its past its Prime for sure",
+            "score": 30,
+            "created_utc": 1760122057.0,
+            "mentioned_tickers": [
+              "FOR"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3182
+          },
+          {
+            "id": "nitlqku",
+            "body": "The retail business is going to push them to a trillion in revenue by 2030. amazon will be fine.",
+            "score": 6,
+            "created_utc": 1760123216.0,
+            "mentioned_tickers": [
+              "A",
+              "BE",
+              "BY"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3612
+          }
+        ]
+      },
+      {
+        "id": "1o2mgfe",
+        "title": "How does my portfolio look?",
+        "selftext": "# Investments 180k\n\nAMD \u2013 Advanced Micro Devices Inc\n\n* Value: $1,999.96 \u2192 1.11% of portfolio\n* Total Gain: +$1,371.58 (+68.58%)\n\nAMZN \u2013 Amazon Inc\n\n* Value: $4,999.80 \u2192 2.87% of portfolio\n* Total Gain: +$191.98 (+3.83%)\n\nFTEC \u2013 Fidelity MSCI Information Technology ETF\n\n* Value: $23,097.36 \u2192 12.94% of portfolio\n* Total Gain: +$286.51 (+1.24%)\n\nMSFT \u2013 Microsoft Corp\n\n* Value: $4,999.89 \u2192 2.85% of portfolio\n* Total Gain: +$146.79 (+2.93%)\n\nNVDA \u2013 NVIDIA Corporation Com\n\n* Value: $14,999.86 \u2192 12.07% of portfolio\n* Total Gain: +$6,803.10 (+45.35%)\n\nNVO \u2013 Novo Nordisk A/S ADR\n\n* Value: $6,999.99 \u2192 3.87% of portfolio\n* Total Gain: -$2.93 (-0.05%)\n\nPLTR \u2013 Palantir Technologies Inc Cl A\n\n* Value: $1,499.91 \u2192 1.15% of portfolio\n* Total Gain: +$573.64 (+38.24%)\n\nQQQ \u2013 Invesco QQQ Tr Unit Ser 1\n\n* Value: $28,999.33 \u2192 21.78% of portfolio\n* Total Gain: +$10,349.29 (+35.68%)\n\nQQQM \u2013 Invesco Exch Tr Fd Tr II Nasdaq 100 ETF\n\n* Value: $3,482.67 \u2192 2.12% of portfolio\n* Total Gain: +$343.03 (+9.84%)\n\nVTI \u2013 Vanguard Total Stock Market ETF\n\n* Value: $51,769.87 \u2192 38.48% of portfolio\n* Total Gain: +$17,737.17 (+34.26%)",
+        "score": 3,
+        "upvote_ratio": 0.64,
+        "num_comments": 22,
+        "created_utc": 1760055804.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o2mgfe/how_does_my_portfolio_look/",
+        "mentioned_tickers": [
+          "A",
+          "AMD",
+          "AMZN",
+          "CL",
+          "GAIN",
+          "MSCI",
+          "MSFT",
+          "NVDA",
+          "NVO",
+          "PLTR",
+          "S",
+          "SER",
+          "TR",
+          "UNIT"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9959,
+        "positive_score": 0.274,
+        "negative_score": 0.0,
+        "topics": [
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "niouw72",
+            "body": "Tech heavy like the rest of us",
+            "score": 9,
+            "created_utc": 1760055946.0,
+            "mentioned_tickers": [
+              "TECH"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.3612
+          },
+          {
+            "id": "niqanqt",
+            "body": "You woould be much more robust if you sell QQQ and QQQM and put it into VTI. Also shrink NVDA to about 4% and put that into VTO too. You would get a Core Sattelite Strategy with about 16% stocks (mainly tech) and a tech ETF (13%) as sattelites with a stable 71% VTI Core. You would still have a substantial exposure to NVDA, MSFT, AMZN, since those are also part of VTI and FTEC.",
+            "score": 2,
+            "created_utc": 1760077088.0,
+            "mentioned_tickers": [
+              "A",
+              "AMZN",
+              "ARE",
+              "AS",
+              "BE",
+              "IT",
+              "MSFT",
+              "NVDA",
+              "TECH",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.6901
+          },
+          {
+            "id": "nip8ntg",
+            "body": "Not much value investing. Not much global investing. Looks really vulnerable to a 2000-2 or 2007-9 type event.\n\nI'd guestimate the aggregate PE of your holdings is around 40. Mine is around 12, and yes, that's in companies with growing revenues and secure debt situations.",
+            "score": 2,
+            "created_utc": 1760060752.0,
+            "mentioned_tickers": [
+              "A",
+              "D",
+              "OR",
+              "S"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0183
+          },
+          {
+            "id": "niqlwxm",
+            "body": "Why no shorts? Most companies die in the long-run.",
+            "score": 1,
+            "created_utc": 1760083788.0,
+            "mentioned_tickers": [
+              "RUN"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.749
+          },
+          {
+            "id": "nir1i4e",
+            "body": "i would add gld and slv as a hedge..tho lately their gain could exceed my main pick lol",
+            "score": 1,
+            "created_utc": 1760093089.0,
+            "mentioned_tickers": [
+              "A",
+              "AS",
+              "GAIN",
+              "MAIN",
+              "THO"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.7351
+          }
+        ]
+      },
+      {
+        "id": "1o2h300",
+        "title": "Can the Circular AI deal bubble impact the safer AI companies like Google and Meta?",
+        "selftext": "Bloomberg created this following chart of the circular OpenAI, Nvidia and AMD deals:\n\n[https://i.postimg.cc/Gd9d10jx/AI-circle.jpg](https://i.postimg.cc/Gd9d10jx/AI-circle.jpg)\n\nHow much do you think this will impact the AI market?\n\nWhat impact can it have on AI companies with lower P/E ratios?",
+        "score": 2,
+        "upvote_ratio": 0.6,
+        "num_comments": 1,
+        "created_utc": 1760042081.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o2h300/can_the_circular_ai_deal_bubble_impact_the_safer/",
+        "mentioned_tickers": [
+          "AI",
+          "AMD",
+          "CAN",
+          "CC",
+          "E",
+          "IT",
+          "META",
+          "NVDA",
+          "ON",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.6848,
+        "positive_score": 0.135,
+        "negative_score": 0.038,
+        "topics": [
+          "technical_analysis",
+          "fundamentals",
+          "partnerships",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nipwkrf",
+            "body": "Ofcourse, it is going to take down everything with it. But some recover faster.",
+            "score": 1,
+            "created_utc": 1760069820.0,
+            "mentioned_tickers": [
+              "IT"
+            ],
+            "sentiment": "neutral",
+            "compound_score": 0.0
+          }
+        ]
+      },
+      {
+        "id": "1o2o172",
+        "title": "The Stock Market Game",
+        "selftext": "Hello investors of Reddit, I am doing a stock market project for high school and want to learn everything I am able to. I have already bought some stocks and honestly am really confused. We are given a starting amount of $100,000. We have invested 30 shares into advance micro devices (AMD) for $232.92, 40 shares into NRG Energy, Inc. (NRG) for $168.76, NVIDIA CORP (NVDA) for $193.91, as well as 10 shares on coke for $122.70. As of right now we have a total equity of $100,047.93. Some more details to share are we can only trade stocks and mutual funds listed on the NASDAQ stock market and the New York Stock Exchange. No over-the-counter, \u201cpink sheet\u201d, or penny stocks. We dint have to liquidate our portfolios at the end, we will be graded determined on either total equity or percent return above/below S&P 500 growth. When buying you must do a minimum of 10 shares. The system is ran 9:30am-4pm, stock trades entered after closing of market or on weekends will be priced at the next day\u2019s opening price. I have 3-4 months to complete and have to make 50 transactions by then, I want to learn as much as possible as well as increase my total equity.",
+        "score": 0,
+        "upvote_ratio": 0.33,
+        "num_comments": 6,
+        "created_utc": 1760060369.0,
+        "subreddit": "ValueInvesting",
+        "url": "https://reddit.com/r/ValueInvesting/comments/1o2o172/the_stock_market_game/",
+        "mentioned_tickers": [
+          "A",
+          "AM",
+          "AMD",
+          "ARE",
+          "AS",
+          "BE",
+          "BY",
+          "CAN",
+          "COKE",
+          "DAY",
+          "FOR",
+          "GAME",
+          "NEXT",
+          "NOW",
+          "NRG",
+          "NVDA",
+          "ON",
+          "OR",
+          "S",
+          "WELL",
+          "YOU"
+        ],
+        "sentiment": "bullish",
+        "compound_score": 0.9621,
+        "positive_score": 0.131,
+        "negative_score": 0.021,
+        "topics": [
+          "technical_analysis",
+          "AI"
+        ],
+        "comments": [
+          {
+            "id": "nipxf9i",
+            "body": "They're teaching you terrible investment habits. Yoloing into short-term growth. You could win this game with some hype AI company that's going to be dead in three years.",
+            "score": 3,
+            "created_utc": 1760070209.0,
+            "mentioned_tickers": [
+              "AI",
+              "BE",
+              "GAME",
+              "S",
+              "YOU"
+            ],
+            "sentiment": "bearish",
+            "compound_score": -0.25
+          },
+          {
+            "id": "nipeael",
+            "body": "You have to figure out the economic outlook (growth and profitability) of each company and compare it to the valuation of each company. If you think a stock is undervalued, buy or hold it. If you think the stock is overvalued, sell or hold it. Eventually (fingers crossed) the market will catch up to your evaluation.",
+            "score": 2,
+            "created_utc": 1760062695.0,
+            "mentioned_tickers": [
+              "A",
+              "IT",
+              "OR",
+              "OUT",
+              "UP",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.5719
+          },
+          {
+            "id": "nirk7uo",
+            "body": "A good investor would not make 50 trades in three months. He/she would find good companies at a good value and hold them for years.",
+            "score": 2,
+            "created_utc": 1760100984.0,
+            "mentioned_tickers": [
+              "A",
+              "FOR",
+              "GOOD",
+              "HE"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.8779
+          },
+          {
+            "id": "niviufl",
+            "body": "Unfortunately, the way your teacher defined the project is representative of swing trading and not long term investing. It'll be useful to learn about how the stock market works, but successful investing strategies take more than 3 months to play out and involve a minimal amount of buying / selling. The 50 trades requirement is ridiculous.\n\nI recommend reading 'One Up On Wall Street' by Peter Lynch. He's one of the greatest investors of all time, and his strategy is very much suited for retail i",
+            "score": 1,
+            "created_utc": 1760147774.0,
+            "mentioned_tickers": [
+              "A",
+              "ALL",
+              "AN",
+              "ARE",
+              "BE",
+              "BY",
+              "CAN",
+              "DAY",
+              "FOR",
+              "HAS",
+              "HE",
+              "IT",
+              "NEXT",
+              "ON",
+              "OR",
+              "OUT",
+              "PLAY",
+              "REAL",
+              "S",
+              "SO",
+              "SONY",
+              "T",
+              "TM",
+              "TRUE",
+              "TWO",
+              "UP",
+              "WAY",
+              "YOU"
+            ],
+            "sentiment": "bullish",
+            "compound_score": 0.9923
+          }
+        ]
+      }
+    ]
+  }
+}

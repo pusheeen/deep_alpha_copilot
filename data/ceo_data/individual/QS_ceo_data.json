@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "QS",
+    "company_name": "QuantumScape Corp",
+    "ceo_name": "Siva Sivaram",
+    "ceo_title": "President and Chief Executive Officer",
+    "tenure_duration": "1 year",
+    "start_date": "February 2024",
+    "linkedin_url": "Not found",
+    "source": "QuantumScape official records",
+    "past_experience": [
+      {
+        "company": "Western Digital",
+        "role": "President, Technology and Strategy",
+        "duration": "2019-2023",
+        "description": "Led corporate strategy and growth technologies"
+      },
+      {
+        "company": "Western Digital",
+        "role": "Various Executive Roles",
+        "duration": "2016-2019",
+        "description": "Technology and engineering leadership"
+      }
+    ],
+    "education": "PhD in Materials Science",
+    "career_highlights": [
+      "Semiconductor and data storage industry veteran",
+      "Expert in solid-state battery technology",
+      "Leading QuantumScape commercialization"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:50.446938",
+    "calculated_years": 1
+  },
+  "note": "CEO information compiled from multiple sources"
+}

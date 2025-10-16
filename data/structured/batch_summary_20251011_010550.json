@@ -1,0 +1,43 @@
+{
+  "timestamp": "2025-10-11T01:05:50.410719",
+  "total_companies": 3,
+  "successful": [
+    {
+      "ticker": "NVDA",
+      "file": "data/structured/companies/NVDA_complete_20251011_010550.json",
+      "size_kb": 56.05859375,
+      "market_cap": 4459396595712,
+      "sentiment": {
+        "total_social_posts": 33,
+        "total_bullish": 20,
+        "total_bearish": 7,
+        "overall_sentiment_score": 0.26103035714285716
+      }
+    },
+    {
+      "ticker": "AAPL",
+      "file": "data/structured/companies/AAPL_complete_20251011_010550.json",
+      "size_kb": 9.56640625,
+      "market_cap": 3639902470144,
+      "sentiment": {
+        "total_social_posts": 0,
+        "total_bullish": 0,
+        "total_bearish": 0,
+        "overall_sentiment_score": 0
+      }
+    },
+    {
+      "ticker": "MSFT",
+      "file": "data/structured/companies/MSFT_complete_20251011_010550.json",
+      "size_kb": 14.65234375,
+      "market_cap": 3798050537472,
+      "sentiment": {
+        "total_social_posts": 2,
+        "total_bullish": 1,
+        "total_bearish": 1,
+        "overall_sentiment_score": 0.15255000000000002
+      }
+    }
+  ],
+  "failed": []
+}

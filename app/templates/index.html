@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>deepAlpha Copilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        #chat-container::-webkit-scrollbar { width: 4px; }
+        #chat-container::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 20px; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-900">
+    <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
+        <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div>
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">deepAlpha Copilot</p>
+                    <h1 class="text-3xl md:text-4xl font-semibold">Deep Alpha</h1>
+                    <p class="mt-3 text-sm text-slate-300">
+                        We translate fundamentals, financials, sentiment, leadership, events, and technical signals into a concise outlook so you can act with conviction.
+                    </p>
+                </div>
+                <!-- Login/Signup functionality removed -->
+                <form id="score-form" class="bg-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 w-full md:w-96">
+                    <div class="flex-1">
+                        <label for="score-ticker" class="text-xs uppercase tracking-wide text-slate-400">Ticker symbol</label>
+                        <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 uppercase" placeholder="NVDA" />
+                    </div>
+                    <button type="submit" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-4 py-2 rounded-lg transition">Generate</button>
+                </form>
+            </div>
+        </header>
+
+        <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <p class="text-sm text-slate-500">Loading scorecard...</p>
+        </section>
+
+        <section id="score-table" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-semibold text-slate-800">Help us test!</h2>
+                    <p class="text-sm text-slate-600 mt-1">Check out other companies for testing. Click refresh to load the latest scores.</p>
+            </div>
+                <button id="load-all-btn" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+            
+            <!-- Ticker Grid -->
+            <div id="ticker-grid" class="grid grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-3 mb-6">
+                ${supportedTickers.map(ticker => {
+                    const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
+                    return `
+                        <div class="ticker-card bg-slate-50 hover:bg-slate-100 rounded-lg p-3 text-center transition-colors cursor-pointer border border-slate-200 hover:border-blue-300" data-ticker="${ticker}">
+                            <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
+                            <div class="text-xs text-slate-500 mt-1 truncate" title="${metadata.name}">${metadata.name}</div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            
+            <!-- Full Table (Hidden by default) -->
+            <div id="full-table" class="hidden">
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Ticker</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Company</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Industry</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Score</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Recommendation</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Floating Chat Assistant -->
+        <div id="chat-assistant" class="fixed bottom-6 right-6 z-50">
+            <!-- Chat Toggle Button -->
+            <button id="chat-toggle" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+            </button>
+            
+            <!-- Chat Window -->
+            <div id="chat-window" class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+                <!-- Chat Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-sm">Deep Alpha Copilot</h3>
+                            <p class="text-xs text-blue-100">AI Financial Analyst</p>
+                        </div>
+                    </div>
+                    <button id="chat-close" class="text-white/80 hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div id="chat-container" class="p-4 overflow-y-auto h-80 space-y-4">
+                    <div class="flex justify-start">
+                        <div class="bg-slate-100 text-slate-800 p-3 rounded-xl max-w-xs shadow-sm">
+                            <p class="text-sm">
+                                Hi! I'm your AI financial analyst. Ask me anything about companies, market trends, or investment strategies. Try "What's NVDA's competitive advantage?" or "Should I buy TSLA now?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="border-t border-slate-200 p-4">
+                    <form id="chat-form" class="flex items-center gap-2">
+                        <input type="text" id="user-input" placeholder="Ask me anything..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+                </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const chatContainer = document.getElementById('chat-container');
+        const scoreForm = document.getElementById('score-form');
+        const scoreTickerInput = document.getElementById('score-ticker');
+        const scoreboard = document.getElementById('scoreboard');
+        const scoreTable = document.getElementById('score-table');
+        const loadAllBtn = document.getElementById('load-all-btn');
+        const chatToggle = document.getElementById('chat-toggle');
+        const chatWindow = document.getElementById('chat-window');
+        const chatClose = document.getElementById('chat-close');
+        const insightContent = document.getElementById('insight-content');
+
+        const apiUrl = window.location.origin + '/chat';
+        const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
+        const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
+        
+        // Company metadata for enhanced display
+        const companyMetadata = {
+            "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
+            "MU": { name: "Micron Technology Inc", industry: "Semiconductors" },
+            "AVGO": { name: "Broadcom Inc", industry: "Semiconductors" },
+            "TSM": { name: "Taiwan Semiconductor Manufacturing Co Ltd", industry: "Semiconductors" },
+            "VRT": { name: "Vertiv Holdings Co", industry: "Industrial Equipment" },
+            "SMCI": { name: "Super Micro Computer Inc", industry: "Computer Hardware" },
+            "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
+            "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
+            "IREN": { name: "Iren Ltd", industry: "Utilities" },
+            "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
+            "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
+            "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
+            "SMR": { name: "NuScale Power Corp", industry: "Nuclear Energy" },
+            "CCJ": { name: "Cameco Corp", industry: "Uranium Mining" },
+            "VST": { name: "Vistra Corp", industry: "Utilities" },
+            "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
+            "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
+            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
+        };
+
+        async function fetchWithNewsContext(question) {
+            try {
+                const response = await fetch(`${window.location.origin}/api/scores/${encodeURIComponent(scoreTickerInput.value.trim().toUpperCase())}?news_only=true&query=${encodeURIComponent(question)}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success' && result.data && result.data.latest_news) {
+                        return result.data.latest_news;
+                    }
+                }
+            } catch (error) {
+                console.warn('Unable to fetch news context', error);
+            }
+            return [];
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = userInput.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            userInput.value = '';
+
+            const typingIndicator = addMessage('...', 'bot', true);
+
+            let augmentedQuestion = question;
+            const newsContext = await fetchWithNewsContext(question);
+            if (newsContext.length) {
+                const contextText = newsContext.map(item => `• ${item.title} (${item.source})`).join('\n');
+                augmentedQuestion = `${question}\n\nLatest headlines:\n${contextText}`;
+            }
+
+            try {
+                // Extract ticker from question if mentioned
+                const tickerMatch = question.match(/\b([A-Z]{2,5})\b/);
+                const ticker = tickerMatch ? tickerMatch[1] : 'NVDA'; // Default to NVDA
+                
+                // Get company data to provide context
+                const scoreResponse = await fetch(`/api/scores/${ticker}`);
+                const scoreData = await scoreResponse.json();
+                
+                typingIndicator.remove();
+                
+                if (scoreData.status === 'success') {
+                    const company = scoreData.data.company;
+                    const scores = scoreData.data.scores;
+                    const recommendation = scoreData.data.recommendation;
+                    
+                    // Generate a contextual response based on the question and company data
+                    const response = generateChatResponse(question, company, scores, recommendation, ticker);
+                    addMessage(response, 'bot');
+                } else {
+                    addMessage(`I can help analyze companies, but I'm having trouble accessing data for ${ticker}. Please try asking about a specific company like "What's NVDA's financial health?" or "Tell me about TSLA's competitive position."`, 'bot');
+                }
+            } catch (error) {
+                console.error('Error fetching from API:', error);
+                typingIndicator.remove();
+                addMessage('I can help analyze companies and their investment potential. Try asking questions like "What\'s NVDA\'s competitive advantage?" or "How is TSLA performing vs peers?"', 'bot');
+            }
+        });
+
+        function generateChatResponse(question, company, scores, recommendation, ticker) {
+            const questionLower = question.toLowerCase();
+            const companyName = company.name || ticker;
+            
+            // Financial health questions
+            if (questionLower.includes('financial') || questionLower.includes('balance sheet') || questionLower.includes('debt')) {
+                const financialScore = scores.financial?.score || 0;
+                const financialSummary = scores.financial?.summary || 'No financial data available';
+                return `**${companyName} Financial Health (${financialScore}/10):**\n\n${financialSummary}\n\n${recommendation?.why_buy || 'Analysis suggests mixed financial performance.'}`;
+            }
+            
+            // Competitive advantage/moat questions
+            if (questionLower.includes('moat') || questionLower.includes('competitive') || questionLower.includes('advantage')) {
+                const businessScore = scores.business?.score || 0;
+                const businessSummary = scores.business?.summary || 'No business data available';
+                return `**${companyName} Competitive Position (${businessScore}/10):**\n\n${businessSummary}\n\nThe company's competitive moat and market position suggest ${businessScore >= 7 ? 'strong' : businessScore >= 5 ? 'moderate' : 'weak'} competitive advantages.`;
+            }
+            
+            // Leadership questions
+            if (questionLower.includes('leadership') || questionLower.includes('management') || questionLower.includes('ceo')) {
+                const leadershipScore = scores.leadership?.score || 0;
+                const leadershipSummary = scores.leadership?.summary || 'No leadership data available';
+                return `**${companyName} Leadership (${leadershipScore}/10):**\n\n${leadershipSummary}\n\nManagement quality appears to be ${leadershipScore >= 7 ? 'strong' : leadershipScore >= 5 ? 'adequate' : 'concerning'}.`;
+            }
+            
+            // Technical analysis questions
+            if (questionLower.includes('technical') || questionLower.includes('chart') || questionLower.includes('momentum')) {
+                const technicalScore = scores.technical?.score || 0;
+                const technicalSummary = scores.technical?.summary || 'No technical data available';
+                return `**${companyName} Technical Analysis (${technicalScore}/10):**\n\n${technicalSummary}\n\nTechnical signals suggest ${technicalScore >= 7 ? 'bullish' : technicalScore >= 5 ? 'neutral' : 'bearish'} momentum.`;
+            }
+            
+            // Investment recommendation questions
+            if (questionLower.includes('buy') || questionLower.includes('sell') || questionLower.includes('hold') || questionLower.includes('invest')) {
+                const overallScore = scores.overall?.score || 0;
+                const action = recommendation?.action || 'Hold';
+                const timing = recommendation?.timing || 'Monitor for better entry point';
+                return `**${companyName} Investment Recommendation:**\n\n**Action:** ${action}\n**Timing:** ${timing}\n**Overall Score:** ${overallScore}/10\n\n${recommendation?.why_buy || 'Mixed signals suggest cautious approach.'}`;
+            }
+            
+            // Growth questions
+            if (questionLower.includes('growth') || questionLower.includes('revenue') || questionLower.includes('earnings')) {
+                const earningsScore = scores.earnings?.score || 0;
+                const earningsSummary = scores.earnings?.summary || 'No earnings data available';
+                return `**${companyName} Growth Analysis (${earningsScore}/10):**\n\n${earningsSummary}\n\nGrowth prospects appear ${earningsScore >= 7 ? 'strong' : earningsScore >= 5 ? 'moderate' : 'weak'}.`;
+            }
+            
+            // Risk questions
+            if (questionLower.includes('risk') || questionLower.includes('concern') || questionLower.includes('downside')) {
+                const risks = recommendation?.risks || ['Standard market risks apply'];
+                const riskText = risks.slice(0, 3).map(risk => `• ${risk}`).join('\n');
+                return `**${companyName} Key Risks:**\n\n${riskText}\n\nConsider these factors when evaluating your investment decision.`;
+            }
+            
+            // General company overview
+            return `**${companyName} Overview:**\n\n**Overall Score:** ${scores.overall?.score || 0}/10\n**Recommendation:** ${recommendation?.action || 'Hold'}\n\n${company.summary || 'Company analysis in progress.'}\n\nAsk me about specific aspects like financial health, competitive position, leadership, or investment risks!`;
+        }
+
+        function addMessage(text, sender, isTyping = false) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex mb-4 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `px-4 py-3 rounded-xl max-w-md shadow ${sender === 'user' ? 'bg-slate-900 text-white' : 'bg-white text-slate-800 border border-slate-200'}`;
+            messageBubble.innerHTML = text.replace(/\n/g, '<br>');
+
+            if (isTyping) {
+                messageBubble.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+                messageWrapper.id = "typing-indicator";
+            }
+
+            messageWrapper.appendChild(messageBubble);
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageWrapper;
+        }
+
+        function scoreColor(score) {
+            if (score === null || score === undefined) return 'bg-slate-200 text-slate-700';
+            if (score >= 7.5) return 'bg-green-100 text-green-800';
+            if (score >= 5.0) return 'bg-yellow-100 text-yellow-800';
+            return 'bg-red-100 text-red-800';
+        }
+
+        function getScoreMethodology(scoreType, component) {
+            const methodologies = {
+                business: `
+                    <div><strong>Data Sources:</strong> Yahoo Finance financials, SEC filings</div>
+                    <div><strong>Time Period:</strong> Last 4 quarters for CAGR, latest quarter for margins</div>
+                    <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Gross Margin (65%+ = 10pts), R&D Intensity (20%+ = 10pts), Industry Score (6-10pts)</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                financial: `
+                    <div><strong>Data Sources:</strong> Yahoo Finance fundamentals, company financials</div>
+                    <div><strong>Time Period:</strong> Last 4 quarters for trends, latest values for ratios</div>
+                    <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Net Margin (20%+ = 8.5pts), FCF/Debt (2x+ = 10pts), D/E (50- = 9.5pts), P/E (15- = 9.5pts), P/S (2- = 9pts)</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                sentiment: `
+                    <div><strong>Data Sources:</strong> Yahoo Finance news, Reddit API</div>
+                    <div><strong>Time Period:</strong> Last 30 days (weighted by recency)</div>
+                    <div><strong>Calculation:</strong> News sentiment via VADER analysis (0.45+ = 9.5pts), Reddit bullish ratio (0.4+ = 9.5pts)</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                critical: `
+                    <div><strong>Data Sources:</strong> Internal assessment framework</div>
+                    <div><strong>Time Period:</strong> Static mapping based on strategic importance</div>
+                    <div><strong>Calculation:</strong> Pre-defined criticality scores (5-10pts) based on industry and strategic positioning</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                leadership: `
+                    <div><strong>Data Sources:</strong> Yahoo Finance officers, CEO profile reports</div>
+                    <div><strong>Time Period:</strong> Current leadership data</div>
+                    <div><strong>Calculation:</strong> CEO tenure (15+ yrs = 9.5pts), compensation (>$10M = 9.5pts), officer count (5+ = 7.5pts), reputation bonus</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                earnings: `
+                    <div><strong>Data Sources:</strong> Quarterly earnings data, Yahoo Finance</div>
+                    <div><strong>Time Period:</strong> Quarterly earnings history</div>
+                    <div><strong>Calculation:</strong> EPS trend (30%+ = 10pts), Revenue trend (30%+ = 10pts), Consistency score (25+ = 10pts)</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `,
+                technical: `
+                    <div><strong>Data Sources:</strong> Yahoo Finance price data</div>
+                    <div><strong>Time Period:</strong> Latest trading data</div>
+                    <div><strong>Calculation:</strong> RSI (30-70 = neutral), MACD crossover (±2pts), Moving average alignment (±3pts), Base score 5.0</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                `
+            };
+            return methodologies[scoreType] || '<div>Methodology not available</div>';
+        }
+
+        function generateEventSummary(timeline) {
+            if (!timeline || timeline.length === 0) {
+                return '<div class="text-sm text-slate-500">No recent events to summarize.</div>';
+            }
+            
+            const recentEvents = timeline.filter(event => {
+                const eventDate = new Date(event.published_at);
+                const fiveDaysAgo = new Date();
+                fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+                return eventDate >= fiveDaysAgo;
+            });
+            
+            if (recentEvents.length === 0) {
+                return '<div class="text-sm text-slate-500">No events in the past 5 days.</div>';
+            }
+            
+            const positiveEvents = recentEvents.filter(e => e.sentiment > 0.1).length;
+            const negativeEvents = recentEvents.filter(e => e.sentiment < -0.1).length;
+            const neutralEvents = recentEvents.length - positiveEvents - negativeEvents;
+            
+            let sentimentSummary = '';
+            if (positiveEvents > negativeEvents) {
+                sentimentSummary = 'Recent sentiment is <strong>positive</strong>, supporting a bullish outlook.';
+            } else if (negativeEvents > positiveEvents) {
+                sentimentSummary = 'Recent sentiment is <strong>negative</strong>, suggesting caution.';
+            } else {
+                sentimentSummary = 'Recent sentiment is <strong>mixed</strong>, requiring careful analysis.';
+            }
+            
+                return `
+                <div class="space-y-2">
+                    <div class="text-sm font-medium text-slate-700">Past 5 Days Summary (${recentEvents.length} events)</div>
+                    <div class="text-sm text-slate-600">${sentimentSummary}</div>
+                    <div class="text-xs text-slate-500">
+                        Positive: ${positiveEvents} | Negative: ${negativeEvents} | Neutral: ${neutralEvents}
+                        </div>
+                    </div>
+                `;
+        }
+
+        function generateEventImpactAnalysis(timeline, ticker) {
+            if (!timeline || timeline.length === 0) {
+                return '<div class="text-sm text-slate-500">No recent events to analyze.</div>';
+            }
+            
+            // Organize events by time periods
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const threeDaysAgo = new Date(today);
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            
+            const todayEvents = timeline.filter(event => {
+                const eventDate = new Date(event.published_at);
+                return eventDate >= today;
+            });
+            
+            const past3DaysEvents = timeline.filter(event => {
+                const eventDate = new Date(event.published_at);
+                return eventDate >= threeDaysAgo && eventDate < today;
+            });
+            
+            const past7DaysEvents = timeline.filter(event => {
+                const eventDate = new Date(event.published_at);
+                return eventDate >= sevenDaysAgo && eventDate < threeDaysAgo;
+            });
+            
+            // Function to calculate sentiment and generate summary
+            function analyzePeriod(events, periodName, periodColor) {
+                if (events.length === 0) {
+                    return `
+                        <div class="p-3 rounded-lg border border-slate-200 bg-slate-50">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-sm font-medium text-slate-700">${periodName}</h4>
+                                <span class="text-xs text-slate-500">No events</span>
+                        </div>
+                            <p class="text-xs text-slate-500">No news events recorded for this period.</p>
+                        </div>
+                    `;
+                }
+                
+                const positiveEvents = events.filter(e => e.sentiment > 0.1);
+                const negativeEvents = events.filter(e => e.sentiment < -0.1);
+                const neutralEvents = events.filter(e => e.sentiment >= -0.1 && e.sentiment <= 0.1);
+                
+                const avgSentiment = events.reduce((sum, e) => sum + e.sentiment, 0) / events.length;
+                
+                let sentimentLabel = '';
+                let sentimentColor = '';
+                let sentimentBg = '';
+                
+                if (avgSentiment > 0.1) {
+                    sentimentLabel = 'Positive';
+                    sentimentColor = 'text-green-700';
+                    sentimentBg = 'bg-green-50 border-green-200';
+                } else if (avgSentiment < -0.1) {
+                    sentimentLabel = 'Negative';
+                    sentimentColor = 'text-red-700';
+                    sentimentBg = 'bg-red-50 border-red-200';
+                } else {
+                    sentimentLabel = 'Neutral';
+                    sentimentColor = 'text-yellow-700';
+                    sentimentBg = 'bg-yellow-50 border-yellow-200';
+                }
+                
+                const sources = [...new Set(events.map(e => e.source).filter(Boolean))];
+                const keyEvents = events.slice(0, 2).map(event => `
+                    <li class="flex items-start space-x-2 text-xs">
+                        <span class="mt-1 inline-block h-1 w-1 rounded-full ${event.sentiment >= 0.2 ? 'bg-green-500' : event.sentiment <= -0.2 ? 'bg-red-500' : 'bg-yellow-500'}"></span>
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between">
+                                <span class="text-slate-600 flex-1">${event.title.length > 50 ? event.title.substring(0, 50) + '...' : event.title}</span>
+                                ${event.link ? `<a href="${event.link}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-700" title="Read full article">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>` : ''}
+                        </div>
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-400 text-xs">${new Date(event.published_at).toLocaleDateString()}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                        ${event.source || 'Unknown'}
+                            </span>
+                        </div>
+                                <span class="text-xs ${event.sentiment > 0.1 ? 'text-green-600' : event.sentiment < -0.1 ? 'text-red-600' : 'text-yellow-600'}">
+                                    ${event.sentiment > 0.1 ? '↗' : event.sentiment < -0.1 ? '↘' : '→'}
+                                </span>
+                    </div>
+                        </div>
+                    </li>
+                `).join('');
+                
+                return `
+                    <div class="p-3 rounded-lg border ${sentimentBg}">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-medium ${sentimentColor}">${periodName}</h4>
+                            <div class="flex items-center space-x-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sentimentColor} ${sentimentBg} border">
+                                    ${sentimentLabel}
+                                </span>
+                                <span class="text-xs text-slate-500">${events.length} events</span>
+                        </div>
+                        </div>
+                        
+                        <div class="text-xs text-slate-600 mb-2">
+                            <span class="font-medium">Sentiment Breakdown:</span> 
+                            ${positiveEvents.length} positive, ${negativeEvents.length} negative, ${neutralEvents.length} neutral
+                    </div>
+
+                        ${keyEvents ? `
+                            <div class="mb-2">
+                                <div class="text-xs font-medium text-slate-600 mb-1">Key Events:</div>
+                                <ul class="space-y-1">
+                                    ${keyEvents}
+                                </ul>
+                    </div>
+                        ` : ''}
+                        
+                        ${sources.length > 0 ? `
+                            <div class="mt-2 pt-2 border-t border-slate-200">
+                                <div class="text-xs font-medium text-slate-600 mb-1">Sources:</div>
+                                <div class="flex flex-wrap gap-1">
+                                    ${sources.map(source => `
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 border">
+                                            ${source}
+                            </span>
+                                    `).join('')}
+                        </div>
+                    </div>
+                        ` : ''}
+                </div>
+            `;
+            }
+            
+            return `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Recent News Analysis</h3>
+                        <span class="text-xs text-slate-500">Supporting ${ticker} recommendation</span>
+                    </div>
+                    
+                    ${analyzePeriod(todayEvents, "Today's News", "blue")}
+                    ${analyzePeriod(past3DaysEvents, "Past 3 Days", "green")}
+                    ${analyzePeriod(past7DaysEvents, "Past 7 Days", "purple")}
+                    
+                    <div class="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                        <div class="text-xs text-slate-600">
+                            <strong>Analysis Summary:</strong> News sentiment analysis provides context for recent price movements and market sentiment. 
+                            Positive sentiment may support bullish positions, while negative sentiment suggests caution. 
+                            Consider this alongside technical analysis and fundamental factors for investment decisions.
+                    </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatCurrency(value) {
+            if (!value || value === 0) return 'N/A';
+            if (value >= 1e12) return '$' + (value / 1e12).toFixed(1) + 'T';
+            if (value >= 1e9) return '$' + (value / 1e9).toFixed(1) + 'B';
+            if (value >= 1e6) return '$' + (value / 1e6).toFixed(1) + 'M';
+            if (value >= 1e3) return '$' + (value / 1e3).toFixed(1) + 'K';
+            return '$' + value.toFixed(0);
+        }
+
+        function getRecommendationColor(recommendation) {
+            switch(recommendation) {
+                case 'Strong Buy': return 'bg-green-600 text-white';
+                case 'Buy': return 'bg-green-500 text-white';
+                case 'Hold': return 'bg-yellow-500 text-white';
+                case 'Sell': return 'bg-red-500 text-white';
+                default: return 'bg-gray-500 text-white';
+            }
+        }
+
+        function toggleFAQ(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.toggle('hidden');
+            }
+        }
+
+        function getBenchmarkBadgeClass(color) {
+            const colorMap = {
+                green: 'bg-green-100 text-green-700 border-green-300',
+                lightgreen: 'bg-green-50 text-green-600 border-green-200',
+                yellow: 'bg-yellow-100 text-yellow-700 border-yellow-300',
+                orange: 'bg-orange-100 text-orange-700 border-orange-300',
+                red: 'bg-red-100 text-red-700 border-red-300'
+            };
+            return colorMap[color] || 'bg-slate-100 text-slate-700 border-slate-300';
+        }
+
+        function getScoreExplanation(key) {
+            const explanations = {
+                business: "Measures revenue growth, profit margins, and competitive positioning. Higher scores indicate strong fundamentals.",
+                financial: "Evaluates cash flow, debt levels, and financial stability. Higher scores mean healthier balance sheet.",
+                sentiment: "Tracks market perception and news sentiment. Positive scores suggest investor confidence.",
+                technical: "Analyzes price trends and momentum indicators. Higher scores indicate bullish trends.",
+                leadership: "Assesses management quality and track record. Strong leadership drives long-term success.",
+                earnings: "Measures earnings quality and growth. Consistent earnings growth is key for valuation.",
+                critical: "Evaluates execution on strategic initiatives. Higher scores mean company is delivering on promises."
+            };
+            return explanations[key] || "Score based on multiple financial and market factors.";
+        }
+
+        let priceChart = null;
+
+        function showStableTooltip(chartEvent, clickEvent) {
+            // Remove any existing stable tooltip
+            const existingTooltip = document.getElementById('stable-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+
+            // Create stable tooltip
+            const tooltip = document.createElement('div');
+            tooltip.id = 'stable-tooltip';
+            tooltip.className = 'fixed bg-gray-900 text-white p-4 rounded-lg shadow-xl border border-gray-600 z-50 max-w-sm';
+            tooltip.style.left = (clickEvent.native.offsetX + 20) + 'px';
+            tooltip.style.top = (clickEvent.native.offsetY - 20) + 'px';
+
+            const sentimentEmoji = chartEvent.sentiment >= 0.2 ? '😊' : chartEvent.sentiment <= -0.2 ? '😟' : '😐';
+            const sentimentText = chartEvent.sentiment >= 0.2 ? 'Positive' : chartEvent.sentiment <= -0.2 ? 'Negative' : 'Neutral';
+
+            // Enhanced tooltip with event summary
+            const eventSummary = chartEvent.summary || chartEvent.title;
+            const hasDetailedInfo = chartEvent.has_news !== false;
+            
+            tooltip.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-lg">${chartEvent.title}</h4>
+                        <span class="text-xs px-2 py-1 rounded ${chartEvent.price_change >= 0 ? 'bg-green-600' : 'bg-red-600'}">
+                            ${chartEvent.price_change >= 0 ? '+' : ''}${chartEvent.price_change.toFixed(1)}%
+                        </span>
+                    </div>
+                    
+                    ${hasDetailedInfo ? `
+                        <div class="bg-gray-800 p-3 rounded border-l-4 ${chartEvent.price_change >= 0 ? 'border-green-500' : 'border-red-500'}">
+                            <p class="text-sm text-gray-200">${eventSummary}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                            <span class="text-gray-400">Price:</span>
+                            <span class="font-mono">$${chartEvent.price.toFixed(2)}</span>
+                    </div>
+                    <div>
+                            <span class="text-gray-400">Sentiment:</span>
+                            <span>${sentimentEmoji} ${sentimentText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-400">
+                        <strong>Source:</strong> ${chartEvent.source || 'Market Data'}
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="window.open('${chartEvent.link}', '_blank')" 
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded text-sm transition-colors">
+                            🔗 Read More
+                        </button>
+                        <button onclick="document.getElementById('stable-tooltip').remove()" 
+                                class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(tooltip);
+
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.remove();
+                }
+            }, 10000);
+        }
+
+        function renderPriceChart(priceHistory, ticker) {
+            const canvas = document.getElementById('priceChart');
+            if (!canvas || !priceHistory || !priceHistory.price_data || priceHistory.price_data.length === 0) {
+                return '';
+            }
+
+            // Destroy existing chart if it exists
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            const priceData = priceHistory.price_data || [];
+            const events = priceHistory.events || [];
+
+            // Prepare data for the chart
+            const labels = priceData.map(d => d.date);
+            const closes = priceData.map(d => d.close);
+
+            // Create event annotations
+            const eventAnnotations = events.map(event => {
+                const dateIndex = labels.indexOf(event.date);
+                if (dateIndex === -1) return null;
+                
+                return {
+                    type: 'point',
+                    xValue: dateIndex,
+                    yValue: event.price,
+                    backgroundColor: event.sentiment >= 0.2 ? 'rgba(34, 197, 94, 0.8)' : event.sentiment <= -0.2 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(234, 179, 8, 0.8)',
+                    borderColor: event.sentiment >= 0.2 ? 'rgb(34, 197, 94)' : event.sentiment <= -0.2 ? 'rgb(239, 68, 68)' : 'rgb(234, 179, 8)',
+                    borderWidth: 2,
+                    radius: 6,
+                    pointStyle: 'circle',
+                    label: {
+                        enabled: true,
+                        content: event.title.substring(0, 30) + '...',
+                        position: 'top'
+                    }
+                };
+            }).filter(a => a !== null);
+
+            // Create point styling based on events
+            const pointBackgroundColors = labels.map(date => {
+                const event = events.find(e => e.date === date);
+                if (event) {
+                    if (event.sentiment >= 0.2) return 'rgb(34, 197, 94)';
+                    if (event.sentiment <= -0.2) return 'rgb(239, 68, 68)';
+                    return 'rgb(234, 179, 8)';
+                }
+                return 'rgba(59, 130, 246, 0)';
+            });
+
+            const pointRadii = labels.map(date => {
+                const event = events.find(e => e.date === date);
+                return event ? 6 : 0;
+            });
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${ticker} Price`,
+                        data: closes,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: pointRadii,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: pointBackgroundColors,
+                        pointBorderColor: pointBackgroundColors,
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    onHover: function(event, elements) {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    },
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const elementIndex = elements[0].index;
+                            const date = labels[elementIndex];
+                            const chartEvent = events.find(e => e.date === date);
+                            if (chartEvent && chartEvent.link) {
+                                // Create a more stable tooltip-like popup
+                                showStableTooltip(chartEvent, event);
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true,
+                            intersect: false,
+                            position: 'nearest',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            padding: 12,
+                            callbacks: {
+                                title: function(context) {
+                                    const date = context[0].label;
+                                    const event = events.find(e => e.date === date);
+                                    if (event) {
+                                        return event.title;
+                                    }
+                                    return date;
+                                },
+                                label: function(context) {
+                                    const date = context.label;
+                                    const price = context.parsed.y.toFixed(2);
+                                    const event = events.find(e => e.date === date);
+                                    
+                                    let labels = [`Price: $${price}`];
+                                    if (event) {
+                                        labels.push(`Change: ${event.price_change >= 0 ? '+' : ''}${event.price_change.toFixed(2)}%`);
+                                        labels.push(`Event: ${event.title}`);
+                                        if (event.link) {
+                                            labels.push(`Source: ${event.source || 'Market Data'}`);
+                                            labels.push(`🔗 Click to read more`);
+                                        } else {
+                                            labels.push(`Source: ${event.source || 'Market Data'}`);
+                                        }
+                                        labels.push(`Sentiment: ${event.sentiment >= 0.2 ? '😊 Positive' : event.sentiment <= -0.2 ? '😟 Negative' : '😐 Neutral'}`);
+                                    }
+                                    return labels;
+                                },
+                                afterBody: function(context) {
+                                    const date = context[0].label;
+                                    const event = events.find(e => e.date === date);
+                                    if (event && event.link) {
+                                        return [`Click to open source: ${event.link}`];
+                                    }
+                                    return [];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Price ($)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupPriceChartControls(ticker) {
+            const timePeriodButtons = document.querySelectorAll('.time-period-btn');
+            const refreshButton = document.getElementById('refreshPriceChart');
+            
+            if (timePeriodButtons.length > 0) {
+                timePeriodButtons.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const period = e.target.dataset.period;
+                        
+                        // Update button states
+                        timePeriodButtons.forEach(b => {
+                            b.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+                            b.classList.add('text-slate-600', 'hover:bg-slate-200');
+                        });
+                        e.target.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                        e.target.classList.remove('text-slate-600', 'hover:bg-slate-200');
+                        
+                        await refreshPriceChartData(ticker, period);
+                    });
+                });
+            }
+            
+            if (refreshButton) {
+                refreshButton.addEventListener('click', async () => {
+                    const activeBtn = document.querySelector('.time-period-btn.bg-white');
+                    const period = activeBtn ? activeBtn.dataset.period : '1m';
+                    await refreshPriceChartData(ticker, period);
+                });
+            }
+        }
+
+        async function refreshPriceChartData(ticker, period) {
+            try {
+                const response = await fetch(`/api/price-history/${ticker}?period=${period}`);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data && result.data.price_data && result.data.price_data.length > 0) {
+                    renderPriceChart(result.data, ticker);
+                } else {
+                    console.error('Error refreshing price data:', result.message || 'No data received');
+                }
+            } catch (error) {
+                console.error('Error refreshing price data:', error);
+            }
+        }
+
+        function renderScoreboard(data) {
+            const company = data.company;
+            const overall = data.overall;
+            const scores = data.scores;
+            const timeline = data.event_timeline || [];
+            const quickFacts = data.quick_facts || {};
+            const recommendation = data.recommendation || {};
+            const industryComparison = data.industry_comparison || {};
+            const scoreBenchmarks = data.score_benchmarks || {};
+            const priceHistory = data.price_history || {};
+
+            scoreboard.innerHTML = `
+                <div class="space-y-8">
+                    <!-- Hero Section: Quick Facts & Recommendation -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl">
+                        <div class="grid lg:grid-cols-3 gap-8">
+                            <!-- Quick Facts -->
+                            <div class="lg:col-span-1">
+                                <h1 class="text-2xl font-bold mb-4">${company.name}</h1>
+                                <div class="space-y-3 text-blue-100">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Ticker:</span>
+                                        <span class="font-mono font-semibold">${company.ticker}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Industry:</span>
+                                        <span>${industryComparison.industry || 'N/A'}</span>
+                                    </div>
+                                    ${quickFacts.revenue_ttm ? `
+                                        <div class="flex justify-between">
+                                            <span class="text-sm">Revenue (TTM):</span>
+                                            <span>$${formatCurrency(quickFacts.revenue_ttm)}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${quickFacts.profit_margin ? `
+                                        <div class="flex justify-between">
+                                            <span class="text-sm">Profit Margin:</span>
+                                            <span>${quickFacts.profit_margin.toFixed(1)}%</span>
+                                        </div>
+                                    ` : ''}
+                                    ${quickFacts.forward_pe ? `
+                                        <div class="flex justify-between">
+                                            <span class="text-sm">Forward P/E:</span>
+                                            <span>${quickFacts.forward_pe.toFixed(1)}x</span>
+                                        </div>
+                                    ` : ''}
+                                    <div class="pt-2">
+                                        <a href="https://finance.yahoo.com/quote/${company.ticker}" target="_blank" class="inline-flex items-center text-blue-200 hover:text-white text-sm">
+                                            View on Yahoo Finance
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Business Model Description -->
+                            <div class="lg:col-span-1">
+                                <h3 class="text-lg font-semibold mb-4">Business Model</h3>
+                                <div class="bg-white/10 rounded-lg p-4">
+                                    <p class="text-sm text-blue-100 leading-relaxed">
+                                        ${quickFacts.business_model || 'Technology company providing products and services to various markets.'}
+                                    </p>
+                                </div>
+                                
+                                <!-- Key Metrics Summary -->
+                                <div class="mt-4 space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-blue-200">Market Cap:</span>
+                                        <span class="font-semibold">${formatCurrency(quickFacts.market_cap)}</span>
+                                    </div>
+                                    ${quickFacts.employees ? `
+                                        <div class="flex justify-between">
+                                            <span class="text-blue-200">Employees:</span>
+                                            <span class="font-semibold">${quickFacts.employees.toLocaleString()}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${quickFacts.founded ? `
+                                        <div class="flex justify-between">
+                                            <span class="text-blue-200">Founded:</span>
+                                            <span class="font-semibold">${quickFacts.founded}</span>
+                                        </div>
+                                    ` : ''}
+                                    <div class="flex justify-between">
+                                        <span class="text-blue-200">HQ:</span>
+                                        <span class="font-semibold">${quickFacts.hq_location || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommendation -->
+                            <div class="lg:col-span-1">
+                                <div class="text-center">
+                                    <div class="mb-4">
+                                        <div class="text-4xl font-bold mb-2">${overall.score.toFixed(1)}</div>
+                                        <div class="text-sm text-blue-100 uppercase tracking-wide">Overall Score</div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <div class="px-6 py-3 ${getRecommendationColor(recommendation.recommendation || overall.recommendation)} rounded-lg font-bold text-lg">
+                                            ${recommendation.recommendation || overall.recommendation}
+                                        </div>
+                                    </div>
+                                    <div class="text-left text-sm space-y-2">
+                                        <div class="font-medium">Investment Thesis:</div>
+                                        <p class="text-blue-100 leading-relaxed">
+                                            ${recommendation.action || 'Strong fundamentals with positive momentum. Good risk/reward ratio.'}
+                                        </p>
+                                        <div class="font-medium">Timing:</div>
+                                        <p class="text-blue-100">
+                                            ${recommendation.timing || 'Consider buying now - reasonable valuation with positive technicals.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+            <!-- Price History Chart - Google Finance Style -->
+            ${priceHistory && priceHistory.price_data && priceHistory.price_data.length > 0 ? `
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-slate-800 flex items-center">
+                            <span class="mr-2">📈</span> Price History
+                        </h3>
+                        <!-- Google Finance style time period buttons -->
+                        <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
+                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
+                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
+                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
+                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-4 text-xs">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
+                                <span class="text-slate-600">Positive Event</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-yellow-500 mr-1"></span>
+                                <span class="text-slate-600">Neutral Event</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
+                                <span class="text-slate-600">Negative Event</span>
+                            </div>
+                        </div>
+                        <button id="refreshPriceChart" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Refresh Data
+                        </button>
+                    </div>
+                    <div class="relative" style="height: 350px;">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- Combined Performance Analysis & Scores -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-slate-800 mb-6 flex items-center">
+                    <span class="mr-2">🏆</span> Performance Analysis vs Industry (${scoreBenchmarks.sector || 'Sector'})
+                </h3>
+                <div class="grid gap-6 grid-cols-1 lg:grid-cols-2" id="scoreComparison"></div>
+                    </div>
+                </div>
+            `;
+
+            // Render score comparison bars
+            if (scoreBenchmarks.comparisons) {
+                renderScoreComparison(scoreBenchmarks.comparisons, scores, company);
+            }
+
+            // Render price chart
+            setTimeout(() => {
+                if (priceHistory && priceHistory.price_data && priceHistory.price_data.length > 0) {
+                    renderPriceChart(priceHistory, company.ticker);
+                    setupPriceChartControls(company.ticker);
+                }
+            }, 100);
+        }
+
+        function generateKeyTakeaway(key, comp, componentScore) {
+            const diff = comp.difference;
+            const score = comp.company_score;
+            const industryAvg = comp.industry_avg;
+            
+            // Generate contextual takeaways based on actual metrics from the scoring engine
+            const takeaways = {
+                business: {
+                    excellent: `Strong competitive moat: High revenue growth + healthy gross margins + R&D investment. ${diff > 0 ? 'Outperforms industry in business fundamentals.' : 'Excellent business model execution.'}`,
+                    good: `Solid business fundamentals with decent growth and margins. ${diff > 0 ? 'Above average business performance.' : 'Good competitive position.'}`,
+                    average: `Moderate business performance with room for improvement. ${diff < -1 ? 'Below industry standards in growth/margins.' : 'Average business fundamentals.'}`,
+                    poor: `Weak business model with concerning fundamentals. ${diff < -2 ? 'Significantly underperforms industry peers.' : 'Poor growth, margins, or R&D investment.'}`
+                },
+                sentiment: {
+                    excellent: `Very positive market sentiment from news and social media. ${diff > 2 ? 'Much more bullish than industry average.' : 'Strong investor confidence.'}`,
+                    good: `Generally positive market perception and sentiment. ${diff > 0 ? 'Above average market sentiment.' : 'Good investor outlook.'}`,
+                    average: `Mixed market sentiment with some concerns. ${diff < -1 ? 'More negative than industry peers.' : 'Neutral to slightly positive sentiment.'}`,
+                    poor: `Negative market sentiment and investor concerns. ${diff < -2 ? 'Significantly more bearish than industry.' : 'Poor market perception - caution advised.'}`
+                },
+                critical: {
+                    excellent: `Highly strategic to key industry trends (AI, chips, energy). ${diff > 2 ? 'Much more critical than typical peers.' : 'Essential to major market themes.'}`,
+                    good: `Important strategic position in growing sectors. ${diff > 0 ? 'Above average strategic importance.' : 'Well-positioned for key trends.'}`,
+                    average: `Moderate strategic relevance to current themes. ${diff < -1 ? 'Less critical than industry peers.' : 'Average strategic positioning.'}`,
+                    poor: `Limited strategic importance to major trends. ${diff < -2 ? 'Much less critical than industry.' : 'Weak positioning for key market themes.'}`
+                },
+                leadership: {
+                    excellent: `Strong leadership team with proven tenure and experience. ${diff > 2 ? 'Significantly better leadership than peers.' : 'High-quality management team.'}`,
+                    good: `Competent leadership with solid experience and tenure. ${diff > 0 ? 'Above average management quality.' : 'Good leadership track record.'}`,
+                    average: `Adequate leadership with room for improvement. ${diff < -1 ? 'Below average management compared to peers.' : 'Average leadership quality.'}`,
+                    poor: `Leadership concerns with limited experience or tenure. ${diff < -2 ? 'Significantly weaker leadership than industry.' : 'Below average management - monitor closely.'}`
+                },
+                technical: {
+                    excellent: `Strong price momentum and technical indicators. ${diff > 2 ? 'Much stronger technicals than industry.' : 'Very positive price trends.'}`,
+                    good: `Positive technical signals and price momentum. ${diff > 0 ? 'Above average technical strength.' : 'Good price performance.'}`,
+                    average: `Mixed technical signals with some volatility. ${diff < -1 ? 'Weaker technicals than peers.' : 'Neutral technical outlook.'}`,
+                    poor: `Weak technical indicators and poor price momentum. ${diff < -2 ? 'Much weaker technicals than industry.' : 'Below average price performance.'}`
+                },
+                financial_earnings: {
+                    excellent: `Excellent financial health: Strong growth + margins + cash flow. ${diff > 2 ? 'Significantly stronger finances than peers.' : 'Very strong financial position.'}`,
+                    good: `Solid financial fundamentals with good growth and profitability. ${diff > 0 ? 'Above average financial strength.' : 'Good financial health.'}`,
+                    average: `Moderate financial performance with mixed metrics. ${diff < -1 ? 'Below average financials compared to peers.' : 'Average financial position.'}`,
+                    poor: `Financial concerns: Poor growth, margins, or debt levels. ${diff < -2 ? 'Much weaker financials than industry.' : 'Below average financial health - high risk.'}`
+                }
+            };
+            
+            // Determine performance level
+            let performanceLevel;
+            if (score >= 8.5) performanceLevel = 'excellent';
+            else if (score >= 7.0) performanceLevel = 'good';
+            else if (score >= 5.5) performanceLevel = 'average';
+            else performanceLevel = 'poor';
+            
+            return takeaways[key]?.[performanceLevel] || `${performanceLevel.charAt(0).toUpperCase() + performanceLevel.slice(1)} performance relative to industry peers.`;
+        }
+
+        function renderScoreComparison(comparisons, scores, company) {
+            const container = document.getElementById('scoreComparison');
+            if (!container) return;
+
+            // Combine financial and earnings into one card
+            const combinedComparisons = { ...comparisons };
+            if (comparisons.financial && comparisons.earnings) {
+                // Create combined financial+earnings card
+                const financial = comparisons.financial;
+                const earnings = comparisons.earnings;
+                combinedComparisons['financial_earnings'] = {
+                    company_score: (financial.company_score + earnings.company_score) / 2,
+                    industry_avg: (financial.industry_avg + earnings.industry_avg) / 2,
+                    difference: (financial.difference + earnings.difference) / 2,
+                    vs_industry: financial.difference >= 1.5 && earnings.difference >= 1.5 ? 'Significantly Above Average' : 
+                               financial.difference >= 0.5 && earnings.difference >= 0.5 ? 'Above Average' :
+                               financial.difference >= -0.5 && earnings.difference >= -0.5 ? 'Average' : 'Below Average',
+                    color: financial.difference >= 1.5 && earnings.difference >= 1.5 ? 'green' :
+                           financial.difference >= 0.5 && earnings.difference >= 0.5 ? 'lightgreen' :
+                           financial.difference >= -0.5 && earnings.difference >= -0.5 ? 'yellow' : 'orange'
+                };
+                delete combinedComparisons.financial;
+                delete combinedComparisons.earnings;
+            }
+
+            const html = Object.entries(combinedComparisons).map(([key, comp]) => {
+                const label = key === 'financial_earnings' ? 'Financial & Earnings' : key.charAt(0).toUpperCase() + key.slice(1);
+                const maxValue = 10;
+                const companyPercent = (comp.company_score / maxValue) * 100;
+                const industryPercent = (comp.industry_avg / maxValue) * 100;
+                
+                // Get combined component data for financial+earnings
+                let componentScore, methodology;
+                if (key === 'financial_earnings') {
+                    const financialScore = scores.financial;
+                    const earningsScore = scores.earnings;
+                    componentScore = {
+                        score: (financialScore.score + earningsScore.score) / 2,
+                        summary: `Financial health: ${financialScore.summary || 'N/A'}. Earnings quality: ${earningsScore.summary || 'N/A'}`
+                    };
+                    methodology = `<div><strong>Combined Financial & Earnings Analysis:</strong></div>${getScoreMethodology('financial', financialScore)}<br/>${getScoreMethodology('earnings', earningsScore)}`;
+                } else {
+                    componentScore = scores[key];
+                    methodology = getScoreMethodology(key, componentScore);
+                }
+                
+                // Generate key takeaway
+                const keyTakeaway = generateKeyTakeaway(key, comp, componentScore);
+                
+                return `
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+                        <!-- Header with consistent alignment -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <h4 class="text-lg font-semibold text-slate-800">${label}</h4>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${comp.company_score.toFixed(1)}/10</span>
+                                <div class="group relative">
+                                    <svg class="w-4 h-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                    </svg>
+                                    <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-slate-900 text-white text-xs rounded-lg p-3 w-80 z-20 shadow-xl">
+                                        <div class="space-y-2">${methodology}</div>
+                                        <div class="absolute top-full left-4 border-4 border-transparent border-t-slate-900"></div>
+                    </div>
+                    </div>
+                    </div>
+                            <span class="text-sm px-3 py-1.5 rounded-full border font-medium ${getBenchmarkBadgeClass(comp.color)} whitespace-nowrap">${comp.vs_industry}</span>
+                    </div>
+                        
+                        <!-- Key Takeaway -->
+                        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-sm font-medium text-blue-800">💡 Key Takeaway:</p>
+                            <p class="text-sm text-blue-700 mt-1">${keyTakeaway}</p>
+                        </div>
+                        
+                        <!-- Visual Comparison with consistent height -->
+                        <div class="relative h-6 mb-4">
+                            <div class="absolute w-full h-4 bg-slate-100 rounded-full"></div>
+                            <div class="absolute h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all shadow-sm" style="width: ${companyPercent}%"></div>
+                            <div class="absolute top-5 w-2 h-2 bg-slate-400 rounded-full transition-all" style="left: ${industryPercent}%"></div>
+                        </div>
+                        
+                        <!-- Metrics with consistent alignment -->
+                        <div class="flex items-center justify-between text-sm mb-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score.toFixed(1)}</span>
+                                <span class="text-slate-400">•</span>
+                                <span class="text-slate-600">Industry: ${comp.industry_avg.toFixed(1)}</span>
+                            </div>
+                            <span class="${comp.difference >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
+                                ${comp.difference >= 0 ? '+' : ''}${comp.difference.toFixed(1)}
+                            </span>
+                        </div>
+                        
+                        <!-- Summary with consistent spacing - flex-1 to fill remaining space -->
+                        <p class="text-sm text-slate-600 leading-relaxed flex-1">${componentScore.summary || 'No summary available.'}</p>
+                </div>
+            `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function getTakeaway(key, comp, componentScore) {
+            const diff = comp.difference;
+            const vsIndustry = comp.vs_industry;
+            
+            const takeaways = {
+                business: {
+                    above: `Strong competitive position with ${diff > 2 ? 'exceptional' : 'solid'} revenue growth and margins vs peers.`,
+                    below: `Underperforming industry peers in revenue growth and competitive positioning.`
+                },
+                financial_earnings: {
+                    above: `Strong financial health and earnings quality ${diff > 1.5 ? 'significantly' : 'moderately'} above industry peers.`,
+                    below: `Financial metrics and earnings below industry average, indicating potential concerns.`
+                },
+                financial: {
+                    above: `Healthy balance sheet with ${diff > 1.5 ? 'superior' : 'strong'} cash flow and debt management.`,
+                    below: `Financial metrics below industry average, indicating potential balance sheet concerns.`
+                },
+                earnings: {
+                    above: `Consistent earnings growth and quality ${diff > 1.5 ? 'significantly' : 'moderately'} above industry.`,
+                    below: `Earnings quality and growth below industry peers, indicating execution issues.`
+                },
+                sentiment: {
+                    above: `Positive market sentiment and investor confidence ${diff > 2 ? 'significantly' : 'moderately'} above peers.`,
+                    below: `Negative sentiment and lower investor confidence compared to industry.`
+                },
+                technical: {
+                    above: `Strong technical momentum with ${diff > 2 ? 'excellent' : 'positive'} price trends vs market.`,
+                    below: `Weak technical signals suggesting poor price momentum and trend.`
+                },
+                leadership: {
+                    above: `Experienced leadership team with ${diff > 1.5 ? 'proven' : 'solid'} track record vs peers.`,
+                    below: `Leadership concerns may impact execution compared to industry standards.`
+                },
+                critical: {
+                    above: `Strategic importance and execution ${diff > 2 ? 'significantly' : 'moderately'} above industry average.`,
+                    below: `Lower strategic importance or execution concerns vs industry peers.`
+                }
+            };
+            
+            return takeaways[key] ? 
+                (diff >= 0 ? takeaways[key].above : takeaways[key].below) : 
+                `${vsIndustry} performance compared to industry peers.`;
+        }
+
+
+
+        async function loadScoreboard(ticker) {
+            scoreboard.innerHTML = '<p class="text-sm text-slate-500">Loading scorecard...</p>';
+            try {
+                const response = await fetch(scoreApiUrl(ticker));
+                const data = await response.json();
+                if (data.status === 'success') {
+                    renderScoreboard(data.data);
+                } else {
+                    scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching scores:', error);
+                scoreboard.innerHTML = '<p class="text-sm text-red-600">Failed to load scorecard. Please try again later.</p>';
+            }
+        }
+
+        scoreForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const ticker = scoreTickerInput.value.trim().toUpperCase();
+            if (!ticker) return;
+            loadScoreboard(ticker);
+        });
+
+        async function refreshCoverageTable() {
+            const tickerGrid = document.getElementById('ticker-grid');
+            const fullTable = document.getElementById('full-table');
+            const tableBody = document.getElementById('table-body');
+            
+            // Show loading state on ticker cards
+            tickerGrid.innerHTML = supportedTickers.map(ticker => {
+                const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
+                return `
+                    <div class="ticker-card bg-slate-50 rounded-lg p-3 text-center border border-slate-200 opacity-50" data-ticker="${ticker}">
+                        <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
+                        <div class="text-xs text-slate-500 mt-1 truncate">Loading...</div>
+                    </div>
+                `;
+            }).join('');
+            
+            const rows = [];
+            for (const ticker of supportedTickers) {
+                try {
+                    const response = await fetch(scoreApiUrl(ticker));
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        const overall = data.data.overall;
+                        rows.push({ ticker, score: overall.score, recommendation: overall.recommendation, confidence: overall.confidence });
+                        
+                        // Update ticker card with score
+                        const tickerCard = document.querySelector(`[data-ticker="${ticker}"]`);
+                        if (tickerCard) {
+                            tickerCard.innerHTML = `
+                                <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
+                                <div class="text-xs text-slate-500 mt-1 truncate">${companyMetadata[ticker]?.name || ticker}</div>
+                                <div class="text-xs font-semibold mt-1 ${scoreColor(overall.score)}">${overall.score.toFixed(1)}</div>
+                                <div class="text-xs text-slate-600">${overall.recommendation}</div>
+                            `;
+                            tickerCard.classList.remove('opacity-50');
+                            tickerCard.classList.add('hover:bg-slate-100', 'cursor-pointer', 'transition-colors', 'hover:border-blue-300');
+                        }
+                    } else {
+                        rows.push({ ticker, score: null, recommendation: data.message || 'Error', confidence: null });
+                    }
+                } catch (error) {
+                    rows.push({ ticker, score: null, recommendation: 'Fetch error', confidence: null });
+                }
+            }
+            
+            rows.sort((a, b) => (b.score || 0) - (a.score || 0));
+            
+            // Update full table
+            if (tableBody) {
+                tableBody.innerHTML = rows.map(row => {
+                    const metadata = companyMetadata[row.ticker] || { name: row.ticker, industry: 'Unknown' };
+                    return `
+                                <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-2 text-sm font-medium text-slate-800">
+                                <a href="https://finance.yahoo.com/quote/${row.ticker}" target="_blank" class="text-cyan-600 hover:text-cyan-800 hover:underline">${row.ticker}</a>
+                            </td>
+                            <td class="px-4 py-2 text-sm text-slate-700">${metadata.name}</td>
+                            <td class="px-4 py-2 text-sm text-slate-600">${metadata.industry}</td>
+                                    <td class="px-4 py-2 text-sm ${row.score !== null ? 'text-slate-700' : 'text-slate-400'}">${row.score !== null ? row.score.toFixed(2) : '—'}</td>
+                                    <td class="px-4 py-2 text-sm text-slate-700">${row.recommendation}</td>
+                                    <td class="px-4 py-2 text-sm text-slate-500">${row.confidence !== null ? row.confidence + '%' : '—'}</td>
+                                </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Chat assistant functionality
+        chatToggle.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+        });
+        
+        chatClose.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+        
+        // Ticker card click handlers
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.ticker-card')) {
+                const ticker = e.target.closest('.ticker-card').dataset.ticker;
+                scoreTickerInput.value = ticker;
+                loadScoreboard(ticker);
+            }
+        });
+
+        loadAllBtn.addEventListener('click', refreshCoverageTable);
+
+        loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
+        refreshCoverageTable();
+    </script>
+</body>
+</html>

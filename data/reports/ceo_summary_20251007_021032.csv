@@ -1,0 +1,19 @@
+ticker,company_name,ceo_name,ceo_title,tenure_duration,start_date,education,num_past_roles,num_highlights,linkedin_url,source,fetch_timestamp
+NVDA,NVIDIA CORP,Mr. Jen-Hsun  Huang,"Co-Founder, CEO, President & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:09:39.728568
+AVGO,Broadcom Inc.,Mr. Hock E. Tan,"President, CEO & Executive Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:09:47.277198
+MU,MICRON TECHNOLOGY INC,Mr. Sanjay  Mehrotra,"CEO, President & Chairman",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:09:54.617838
+VST,Vistra Corp.,Mr. James A. Burke CPA,"President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:09:56.977724
+VRT,Vertiv Holdings Co,Mr. Giordano  Albertazzi,CEO & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:09:59.320365
+CCJ,CAMECO CORP,Mr. Timothy S. Gitzel,CEO & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:01.651699
+SMCI,"Super Micro Computer, Inc.",Mr. Charles  Liang,"Founder, Chairman of the Board, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:04.025892
+OKLO,Oklo Inc.,Mr. Jacob  Dewitte,"Co-Founder, CEO & Chairman",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:06.358014
+IREN,IREN Ltd,Mr. William  Roberts,"Co-Founder, Co-CEO & Executive Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:08.716184
+RIOT,"Riot Platforms, Inc.",Mr. Jason  Les,CEO & Executive Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:11.055639
+QS,QuantumScape Corp,Dr. Siva  Sivaram,"President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:13.417771
+SMR,NUSCALE POWER Corp,Mr. John Lawrence Hopkins,"President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:15.785499
+NXE,NexGen Energy Ltd.,"Mr. Leigh Robert Curyer ACA, BA (Acc)","Founder, President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:18.151869
+CIFR,Cipher Mining Inc.,Mr. Rodney Tyler Page,CEO & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:20.483202
+EOSE,"Eos Energy Enterprises, Inc.",Mr. Joseph R. Mastrangelo Jr.,CEO & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:22.817875
+INOD,INNODATA INC,Mr. Jack S. Abuhoff J.D.,"President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:25.157940
+RR,RICHTECH ROBOTICS INC.,Mr. Zhenwu  Huang,"Co-Founder, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:27.500069
+TSM,TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD,Dr. C. C.  Wei Ph.D.,Chairman & CEO,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-07T02:10:29.912088

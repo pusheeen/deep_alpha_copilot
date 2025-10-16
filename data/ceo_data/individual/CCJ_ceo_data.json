@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "CCJ",
+    "company_name": "Cameco Corporation",
+    "ceo_name": "Tim Gitzel",
+    "ceo_title": "President and Chief Executive Officer",
+    "tenure_duration": "14 years",
+    "start_date": "July 2011",
+    "linkedin_url": "Not found",
+    "source": "Cameco Corporation official records",
+    "past_experience": [
+      {
+        "company": "Cameco",
+        "role": "President",
+        "duration": "2010-2011",
+        "description": "Led company operations"
+      },
+      {
+        "company": "Cameco",
+        "role": "Senior Vice President and COO",
+        "duration": "2007-2010",
+        "description": "Managed operations and production"
+      }
+    ],
+    "education": "University of Saskatchewan",
+    "career_highlights": [
+      "Led Cameco through uranium market cycles",
+      "Expert in nuclear fuel and uranium mining",
+      "Advocate for nuclear energy as clean power source"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:38.428256",
+    "calculated_years": 14
+  },
+  "note": "CEO information compiled from multiple sources"
+}

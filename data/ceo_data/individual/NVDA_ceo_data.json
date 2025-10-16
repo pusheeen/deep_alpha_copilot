@@ -1,0 +1,37 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "NVDA",
+    "company_name": "NVIDIA Corporation",
+    "ceo_name": "Jensen Huang",
+    "ceo_title": "President, CEO and Co-Founder",
+    "tenure_duration": "32 years",
+    "start_date": "April 1993",
+    "linkedin_url": "Not found",
+    "source": "NVIDIA official records",
+    "past_experience": [
+      {
+        "company": "AMD",
+        "role": "Director of CoreWare",
+        "duration": "1993",
+        "description": "Led microprocessor design"
+      },
+      {
+        "company": "LSI Logic",
+        "role": "Microprocessor Designer",
+        "duration": "1985-1993",
+        "description": "Designed microprocessors and chipsets"
+      }
+    ],
+    "education": "Stanford University (MS Electrical Engineering), Oregon State University (BS Electrical Engineering)",
+    "career_highlights": [
+      "Co-founded NVIDIA at age 30",
+      "Led GPU revolution in computing",
+      "Pioneer in AI and machine learning hardware",
+      "Named one of Time's 100 Most Influential People"
+    ],
+    "fetch_timestamp": "2025-10-07T01:04:59.376095",
+    "calculated_years": 32
+  },
+  "note": "CEO information compiled from multiple sources"
+}

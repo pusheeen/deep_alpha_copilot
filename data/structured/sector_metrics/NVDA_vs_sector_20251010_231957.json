@@ -1,0 +1,263 @@
+{
+  "analysis_timestamp": "2025-10-10T23:19:57.366174",
+  "company": {
+    "ticker": "NVDA",
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "metrics": {
+      "profitability": {
+        "roe": 109.417,
+        "roa": 53.093999999999994,
+        "roic": 81.55979552886815,
+        "net_margin": 55.848027157712444,
+        "gross_margin": 74.98869705816992
+      },
+      "growth": {
+        "cagr": 36.24838247358071,
+        "momentum_1m": 3.0030345956258087,
+        "momentum_3m": 7.305412196492078,
+        "momentum_6m": 65.13392122306891,
+        "momentum_1y": 35.914325192111484
+      },
+      "valuation": {
+        "pe_ratio": 52.034092,
+        "ps_ratio": 26.990986,
+        "pb_ratio": 44.531975,
+        "market_cap": 4459396595712
+      },
+      "risk": {
+        "beta": 1.8578940703466134,
+        "volatility": 49.66860438766498,
+        "sharpe_ratio": 0.6492709604216197
+      },
+      "financial_health": {
+        "debt_to_equity": 10.584,
+        "current_ratio": 4.214,
+        "quick_ratio": 3.488,
+        "interest_coverage": 341.1862348178138
+      }
+    }
+  },
+  "sector_benchmarks": {
+    "sector_name": "Technology",
+    "num_companies": 4,
+    "companies": [
+      "NVDA",
+      "AAPL",
+      "MSFT",
+      "AMD"
+    ],
+    "quality_score": 83.18422023510828,
+    "averages": {
+      "profitability": {
+        "avg_roe": 74.3027495,
+        "avg_roa": 23.508249749999997,
+        "avg_roic": 36.69816580554822,
+        "avg_net_margin": 30.582365847239032,
+        "avg_gross_margin": 59.84229669437646
+      },
+      "growth": {
+        "avg_cagr": 24.180995966320385,
+        "avg_momentum_1m": 10.879885830222058,
+        "avg_momentum_3m": 16.003688241792183,
+        "avg_momentum_6m": 62.82470028516437,
+        "avg_momentum_1y": 23.96441745270577
+      },
+      "valuation": {
+        "avg_pe_ratio": 63.64332075,
+        "avg_ps_ratio": 15.290548499999998,
+        "avg_pb_ratio": 29.196500750000002
+      },
+      "risk": {
+        "avg_beta": 1.490670374790246,
+        "avg_volatility": 41.318518897621935,
+        "avg_sharpe_ratio": 0.5000155862553891
+      },
+      "financial_health": {
+        "avg_debt_to_equity": 51.061,
+        "avg_current_ratio": 2.2315
+      }
+    }
+  },
+  "company_vs_sector": {
+    "classification": "Above Average",
+    "relative_performance_score": 66.13275395935406,
+    "detailed_comparisons": {
+      "roe": {
+        "company_value": 109.417,
+        "sector_avg": 74.3027495,
+        "difference": 35.1142505,
+        "pct_difference": 47.25834607237515
+      },
+      "roa": {
+        "company_value": 53.093999999999994,
+        "sector_avg": 23.508249749999997,
+        "difference": 29.585750249999997,
+        "pct_difference": 125.85262860753808
+      },
+      "roic": {
+        "company_value": 81.55979552886815,
+        "sector_avg": 36.69816580554822,
+        "difference": 44.86162972331993,
+        "pct_difference": 122.24488264897838
+      },
+      "net_margin": {
+        "company_value": 55.848027157712444,
+        "sector_avg": 30.582365847239032,
+        "difference": 25.265661310473412,
+        "pct_difference": 82.61513002845197
+      },
+      "gross_margin": {
+        "company_value": 74.98869705816992,
+        "sector_avg": 59.84229669437646,
+        "difference": 15.146400363793461,
+        "pct_difference": 25.310526501261123
+      },
+      "cagr": {
+        "company_value": 36.24838247358071,
+        "sector_avg": 24.180995966320385,
+        "difference": 12.067386507260327,
+        "pct_difference": 49.90442297772989
+      },
+      "momentum_3m": {
+        "company_value": 7.305412196492078,
+        "sector_avg": 16.003688241792183,
+        "difference": -8.698276045300105,
+        "pct_difference": -54.35169639574298
+      },
+      "pe_ratio": {
+        "company_value": 52.034092,
+        "sector_avg": 63.64332075,
+        "difference": -11.60922875,
+        "pct_difference": -18.241079524436977
+      },
+      "ps_ratio": {
+        "company_value": 26.990986,
+        "sector_avg": 15.290548499999998,
+        "difference": 11.700437500000001,
+        "pct_difference": 76.52071801086797
+      },
+      "pb_ratio": {
+        "company_value": 44.531975,
+        "sector_avg": 29.196500750000002,
+        "difference": 15.33547425,
+        "pct_difference": 52.52504189222059
+      },
+      "debt_to_equity": {
+        "company_value": 10.584,
+        "sector_avg": 51.061,
+        "difference": -40.477000000000004,
+        "pct_difference": -79.27185131509373
+      },
+      "current_ratio": {
+        "company_value": 4.214,
+        "sector_avg": 2.2315,
+        "difference": 1.9825000000000004,
+        "pct_difference": 88.84158637687656
+      },
+      "beta": {
+        "company_value": 1.8578940703466134,
+        "sector_avg": 1.490670374790246,
+        "difference": 0.36722369555636725,
+        "pct_difference": 24.634802017048184
+      },
+      "volatility": {
+        "company_value": 49.66860438766498,
+        "sector_avg": 41.318518897621935,
+        "difference": 8.350085490043043,
+        "pct_difference": 20.209062940355366
+      },
+      "sharpe_ratio": {
+        "company_value": 0.6492709604216197,
+        "sector_avg": 0.5000155862553891,
+        "difference": 0.14925537416623058,
+        "pct_difference": 29.85014432930028
+      }
+    },
+    "strengths": [
+      "roe",
+      "roa",
+      "roic",
+      "net_margin",
+      "gross_margin",
+      "cagr",
+      "debt_to_equity",
+      "current_ratio",
+      "sharpe_ratio"
+    ],
+    "weaknesses": [
+      "momentum_3m",
+      "ps_ratio",
+      "pb_ratio",
+      "beta",
+      "volatility"
+    ],
+    "outliers": [
+      {
+        "metric": "roe",
+        "pct_difference": 47.25834607237515
+      },
+      {
+        "metric": "roa",
+        "pct_difference": 125.85262860753808
+      },
+      {
+        "metric": "roic",
+        "pct_difference": 122.24488264897838
+      },
+      {
+        "metric": "net_margin",
+        "pct_difference": 82.61513002845197
+      },
+      {
+        "metric": "cagr",
+        "pct_difference": 49.90442297772989
+      },
+      {
+        "metric": "momentum_3m",
+        "pct_difference": -54.35169639574298
+      },
+      {
+        "metric": "ps_ratio",
+        "pct_difference": 76.52071801086797
+      },
+      {
+        "metric": "pb_ratio",
+        "pct_difference": 52.52504189222059
+      },
+      {
+        "metric": "debt_to_equity",
+        "pct_difference": -79.27185131509373
+      },
+      {
+        "metric": "current_ratio",
+        "pct_difference": 88.84158637687656
+      }
+    ],
+    "summary": {
+      "total_metrics_compared": 15,
+      "num_strengths": 9,
+      "num_weaknesses": 5,
+      "num_outliers": 10
+    }
+  },
+  "sector_momentum": {
+    "sector": "Technology",
+    "price_momentum_1m": 10.879885830222058,
+    "price_momentum_3m": 16.003688241792183,
+    "price_momentum_6m": 62.82470028516437,
+    "price_momentum_1y": 23.96441745270577,
+    "sentiment_score": null,
+    "net_sentiment": null,
+    "combined_momentum_score": 24.11444260692993,
+    "momentum_trend": "Decelerating",
+    "signal": "Strong Buy"
+  },
+  "sector_relative_strength": {
+    "rs_3m": 10.749166827049775,
+    "rs_6m": 39.82092431936374,
+    "rs_1y": 9.923359781234291,
+    "composite_rs": 19.305532665580866,
+    "classification": "Strong Outperformer"
+  }
+}

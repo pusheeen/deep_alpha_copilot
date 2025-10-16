@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "ceo_data": {
+    "ticker": "RIOT",
+    "company_name": "Riot Platforms Inc",
+    "ceo_name": "Jason Les",
+    "ceo_title": "Chief Executive Officer",
+    "tenure_duration": "4 years",
+    "start_date": "February 2021",
+    "linkedin_url": "Not found",
+    "source": "Riot Platforms official records",
+    "past_experience": [
+      {
+        "company": "Riot Platforms",
+        "role": "Board Member",
+        "duration": "2017-2021",
+        "description": "Strategic advisory and board leadership"
+      },
+      {
+        "company": "Professional Poker",
+        "role": "Professional Player",
+        "duration": "2004-2018",
+        "description": "Professional poker player and AI enthusiast"
+      }
+    ],
+    "education": "University of California, Irvine (BS Computer Science)",
+    "career_highlights": [
+      "Bitcoin advocate since 2013",
+      "Led Riot Platforms expansion",
+      "Focus on sustainable Bitcoin mining infrastructure"
+    ],
+    "fetch_timestamp": "2025-10-07T01:05:29.419345",
+    "calculated_years": 4
+  },
+  "note": "CEO information compiled from multiple sources"
+}
