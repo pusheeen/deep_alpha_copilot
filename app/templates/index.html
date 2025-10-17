@@ -675,14 +675,13 @@
                     </div>
                     
                     <div class="text-xs text-gray-400">
-                        <strong>Source:</strong> ${chartEvent.source || 'Market Data'}
+                        <strong>Source:</strong> 
+                        <a href="${chartEvent.link}" target="_blank" class="text-blue-400 hover:text-blue-300 underline">
+                            ${chartEvent.source || 'Market Data'}
+                        </a>
                     </div>
                     
-                    <div class="flex space-x-2">
-                        <button onclick="window.open('${chartEvent.link}', '_blank')" 
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded text-sm transition-colors">
-                            🔗 Read More
-                        </button>
+                    <div class="flex justify-end">
                         <button onclick="document.getElementById('stable-tooltip').remove()" 
                                 class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors">
                             ✕
@@ -720,8 +719,8 @@
             const labels = priceData.map(d => d.date);
             const closes = priceData.map(d => d.close);
 
-            // Create event annotations
-            const eventAnnotations = events.map(event => {
+            // Create event annotations - only for 10%+ daily movements
+            const eventAnnotations = events.filter(event => Math.abs(event.price_change) >= 10).map(event => {
                 const dateIndex = labels.indexOf(event.date);
                 if (dateIndex === -1) return null;
                 
@@ -742,9 +741,9 @@
                 };
             }).filter(a => a !== null);
 
-            // Create point styling based on events
+            // Create point styling based on events - only for 10%+ daily movements
             const pointBackgroundColors = labels.map(date => {
-                const event = events.find(e => e.date === date);
+                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                 if (event) {
                     if (event.sentiment >= 0.2) return 'rgb(34, 197, 94)';
                     if (event.sentiment <= -0.2) return 'rgb(239, 68, 68)';
@@ -754,7 +753,7 @@
             });
 
             const pointRadii = labels.map(date => {
-                const event = events.find(e => e.date === date);
+                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                 return event ? 6 : 0;
             });
 
@@ -791,7 +790,7 @@
                         if (elements.length > 0) {
                             const elementIndex = elements[0].index;
                             const date = labels[elementIndex];
-                            const chartEvent = events.find(e => e.date === date);
+                            const chartEvent = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                             if (chartEvent && chartEvent.link) {
                                 // Create a more stable tooltip-like popup
                                 showStableTooltip(chartEvent, event);
@@ -825,7 +824,7 @@
                             callbacks: {
                                 title: function(context) {
                                     const date = context[0].label;
-                                    const event = events.find(e => e.date === date);
+                                    const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                                     if (event) {
                                         return event.title;
                                     }
@@ -834,7 +833,7 @@
                                 label: function(context) {
                                     const date = context.label;
                                     const price = context.parsed.y.toFixed(2);
-                                    const event = events.find(e => e.date === date);
+                                    const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                                     
                                     let labels = [`Price: $${price}`];
                                     if (event) {
@@ -962,7 +961,7 @@
                                     ${quickFacts.revenue_ttm ? `
                                         <div class="flex justify-between">
                                             <span class="text-sm">Revenue (TTM):</span>
-                                            <span>$${formatCurrency(quickFacts.revenue_ttm)}</span>
+                                            <span>${formatCurrency(quickFacts.revenue_ttm)}</span>
                                         </div>
                                     ` : ''}
                                     ${quickFacts.profit_margin ? `
@@ -1248,7 +1247,7 @@
                         <div class="relative h-6 mb-4">
                             <div class="absolute w-full h-4 bg-slate-100 rounded-full"></div>
                             <div class="absolute h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all shadow-sm" style="width: ${companyPercent}%"></div>
-                            <div class="absolute top-5 w-2 h-2 bg-slate-400 rounded-full transition-all" style="left: ${industryPercent}%"></div>
+                            <div class="absolute h-4 bg-slate-400 rounded-full transition-all opacity-60" style="width: 2px; left: ${industryPercent}%"></div>
                         </div>
                         
                         <!-- Metrics with consistent alignment -->
