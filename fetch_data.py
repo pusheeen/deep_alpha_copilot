@@ -82,6 +82,9 @@ os.makedirs(REDDIT_DATA_DIR, exist_ok=True)
 os.makedirs(X_DATA_DIR, exist_ok=True)
 os.makedirs(EARNINGS_DIR, exist_ok=True)
 os.makedirs(SECTOR_METRICS_DIR, exist_ok=True)
+# Ensure per-company CEO profiles directory
+CEO_PROFILE_DIR = os.path.join(DATA_DIR, 'ceo_profiles')
+os.makedirs(CEO_PROFILE_DIR, exist_ok=True)
 
 # Set up logging
 logging.basicConfig(
@@ -446,6 +449,12 @@ def fetch_ceo_profiles(companies_df: pd.DataFrame):
             # Fetch CEO data
             result = query_ceo_info_by_ticker(ticker, company_name)
             results.append(result)
+            # Save individual CEO profile
+            profile_data = result.get('ceo_data') if result.get('success', False) else result
+            ceo_file = os.path.join(CEO_PROFILE_DIR, f"{ticker}_ceo_profile.json")
+            with open(ceo_file, 'w', encoding='utf-8') as f:
+                json.dump(profile_data, f, indent=2, ensure_ascii=False)
+            logger.info(f"✅ Saved CEO profile for {ticker} to {ceo_file}")
 
             if result.get('success', False):
                 successful_count += 1
@@ -737,8 +746,8 @@ def fetch_stock_prices(ticker: str):
 
 @retry_on_failure(max_retries=3, delay=2.0, backoff=2.0)
 def fetch_10k_filings(ticker: str, cik: str):
-    """Fetches the last 5 annual 10-K filings from the SEC EDGAR database."""
-    logger.info(f"Fetching 10-K filings for {ticker} (CIK: {cik})...")
+    """Fetches the last 5 annual 10-K or 20-F filings from the SEC EDGAR database."""
+    logger.info(f"Fetching annual 10-K/20-F filings for {ticker} (CIK: {cik})...")
     headers = {'User-Agent': SEC_USER_AGENT}
 
     submissions_url = f"https://data.sec.gov/submissions/CIK{cik.zfill(10)}.json"
@@ -756,7 +765,8 @@ def fetch_10k_filings(ticker: str, cik: str):
     for i in range(len(recent_filings['form'])):
         if filing_count >= 5:
             break
-        if recent_filings['form'][i] == '10-K':
+        form = recent_filings['form'][i]
+        if form in ('10-K', '20-F'):
             accession_no = recent_filings['accessionNumber'][i].replace('-', '')
             primary_doc_name = recent_filings['primaryDocument'][i]
             filing_date = recent_filings['filingDate'][i]
@@ -764,13 +774,15 @@ def fetch_10k_filings(ticker: str, cik: str):
 
             doc_url = f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no}/{primary_doc_name}"
 
-            logger.info(f"  Downloading 10-K for {year}...")
+            logger.info(f"  Downloading {form} for {year}...")
             try:
                 time.sleep(0.2)
                 doc_response = requests.get(doc_url, headers=headers)
                 doc_response.raise_for_status()
 
-                file_path = os.path.join(FILINGS_10K_DIR, f"{ticker}_10K_{year}.html")
+                # Use form code (e.g., 10K, 20F) in filename
+                form_code = form.replace('-', '')
+                file_path = os.path.join(FILINGS_10K_DIR, f"{ticker}_{form_code}_{year}.html")
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(doc_response.text)
 
@@ -791,8 +803,8 @@ SUBREDDITS = [
     'EtherMining', 'CryptoMiningTalk', 'BitcoinMiningStock', 'CryptoMarkets'
 ]
 
-# Time range: past 1 month
-DAYS_BACK = 30
+# Time range: past 1 day
+DAYS_BACK = 1
 
 
 def contains_ticker(text: str) -> List[str]:
@@ -817,7 +829,15 @@ def contains_ticker(text: str) -> List[str]:
         'NVDA': ['NVDA', 'NVIDIA', '$NVDA'],
         'MU': ['MU', 'MICRON', '$MU'],
         'AVGO': ['AVGO', 'BROADCOM', '$AVGO'],
-        'TSM': ['TSM', 'TSMC', 'TAIWAN SEMI', '$TSM'],
+        'TSM': [
+            'TSM',
+            "TSM'S",
+            'TSMC',
+            'TAIWAN SEMI',
+            'TAIWAN SEMICONDUCTOR',
+            'TAIWAN SEMICONDUCTOR MANUFACTURING',
+            '$TSM'
+        ],
         'SMCI': ['SMCI', 'SUPER MICRO', 'SUPERMICRO', '$SMCI'],
         'RR': ['$RR']  # Too common, only match with $
     }
@@ -996,6 +1016,7 @@ def scrape_reddit_with_praw() -> List[Dict[str, Any]]:
         return []
 
     analyzer = SentimentIntensityAnalyzer()
+    # Fetch posts from the past DAYS_BACK day(s)
     since_date = datetime.now() - timedelta(days=DAYS_BACK)
     all_posts = []
 
@@ -1037,47 +1058,46 @@ def fetch_reddit_data():
             logger.warning("Skipping Reddit data save because no data is available.")
             return
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    # Save all posts
-    all_posts_file = os.path.join(REDDIT_DATA_DIR, f"reddit_posts_{timestamp}.json")
-    with open(all_posts_file, 'w') as f:
-        json.dump(posts_data, f, indent=2)
-
-    # Save summary by ticker
-    ticker_summary = {}
-    for post in posts_data:
-        for ticker in post['mentioned_tickers']:
-            if ticker not in ticker_summary:
-                ticker_summary[ticker] = {
-                    'total_posts': 0,
-                    'bullish_posts': 0,
-                    'bearish_posts': 0,
-                    'neutral_posts': 0,
-                    'avg_sentiment': 0,
-                    'subreddits': set()
-                }
-
-            ticker_summary[ticker]['total_posts'] += 1
-            ticker_summary[ticker]['subreddits'].add(post['subreddit'])
-
-            if post['sentiment'] == 'bullish':
-                ticker_summary[ticker]['bullish_posts'] += 1
-            elif post['sentiment'] == 'bearish':
-                ticker_summary[ticker]['bearish_posts'] += 1
-            else:
-                ticker_summary[ticker]['neutral_posts'] += 1
-
-    # Convert sets to lists for JSON serialization
-    for ticker_data in ticker_summary.values():
-        ticker_data['subreddits'] = list(ticker_data['subreddits'])
-
-    summary_file = os.path.join(REDDIT_DATA_DIR, f"reddit_summary_{timestamp}.json")
-    with open(summary_file, 'w') as f:
-        json.dump(ticker_summary, f, indent=2)
-
-    logger.info(f"✅ Saved {len(posts_data)} Reddit posts to {all_posts_file}")
-    logger.info(f"✅ Saved summary to {summary_file}")
+    # Timestamp and datetime string for file naming
+    now = datetime.now()
+    fetch_timestamp = now.isoformat()
+    # include hours, minutes, seconds to avoid overwrites
+    date_str = now.strftime('%Y%m%d_%H%M%S')
+    # Generate per-company combined raw posts + summary
+    for ticker in TARGET_TICKERS:
+        # Filter posts for this ticker
+        posts_for_ticker = [post for post in posts_data if ticker in post['mentioned_tickers']]
+        total_posts = len(posts_for_ticker)
+        bullish_posts = sum(1 for p in posts_for_ticker if p['sentiment'] == 'bullish')
+        bearish_posts = sum(1 for p in posts_for_ticker if p['sentiment'] == 'bearish')
+        neutral_posts = sum(1 for p in posts_for_ticker if p['sentiment'] == 'neutral')
+        subreddits = list({p['subreddit'] for p in posts_for_ticker})
+        if posts_for_ticker:
+            avg_compound = sum(p.get('compound_score', 0) for p in posts_for_ticker) / total_posts
+            bullish_score = int(round(((avg_compound + 1) / 2) * 9 + 1))
+        else:
+            avg_compound = None
+            bullish_score = None
+        result = {
+            'ticker': ticker,
+            'posts': posts_for_ticker,
+            'total_posts': total_posts,
+            'bullish_posts': bullish_posts,
+            'bearish_posts': bearish_posts,
+            'neutral_posts': neutral_posts,
+            'subreddits': subreddits,
+            'avg_sentiment': avg_compound,
+            'bullish_score': bullish_score,
+            'fetch_timestamp': fetch_timestamp
+        }
+        # Save per-ticker data with timestamp suffix
+        ticker_file = os.path.join(
+            REDDIT_DATA_DIR,
+            f"{ticker}_reddit_posts_{date_str}.json"
+        )
+        with open(ticker_file, 'w') as f:
+            json.dump(result, f, indent=2)
+        logger.info(f"✅ Saved Reddit data and summary for {ticker} to {ticker_file}")
 
 
 # ========== X/TWITTER SCRAPING FUNCTIONS ==========
@@ -1143,14 +1163,10 @@ def search_x_posts(client, query: str, max_results: int = 100) -> List[Dict[str,
         return []
 
     try:
-        # Calculate start time (7 days ago for free tier)
-        start_time = datetime.now() - timedelta(days=X_DAYS_BACK)
-
         # Search recent tweets (v2 API)
         tweets = client.search_recent_tweets(
             query=query,
             max_results=min(max_results, 100),
-            start_time=start_time,
             tweet_fields=['created_at', 'public_metrics', 'author_id', 'lang'],
             expansions=['author_id'],
             user_fields=['username', 'name', 'verified']
@@ -1225,10 +1241,12 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
     # Search for company posts
     try:
         # Build company query (ticker + company name variations)
-        company_query = f'(${ticker} OR "{company_name}") -is:retweet lang:en'
+        company_query = f'({ticker} OR "{company_name}") -is:retweet lang:en'
 
         logger.info(f"  Searching X for company posts: {company_query}")
         company_results = search_x_posts(client, company_query, max_results=10)  # Reduced to avoid rate limits
+        # Filter only today's posts
+        company_results = [post for post in company_results if datetime.fromisoformat(post['created_at']).date() == datetime.now().date()]
 
         if company_results:
             # Analyze sentiment for each post
@@ -1253,10 +1271,12 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
     if ceo_name and ceo_name != "Not found":
         try:
             # Build CEO query
-            ceo_query = f'"{ceo_name}" ({company_name} OR ${ticker}) -is:retweet lang:en'
+            ceo_query = f'"{ceo_name}" ({company_name} OR {ticker}) -is:retweet lang:en'
 
             logger.info(f"  Searching X for CEO posts: {ceo_query}")
             ceo_results = search_x_posts(client, ceo_query, max_results=10)  # Reduced to avoid rate limits
+            # Filter only today's posts
+            ceo_results = [post for post in ceo_results if datetime.fromisoformat(post['created_at']).date() == datetime.now().date()]
 
             if ceo_results:
                 # Analyze sentiment for each post
@@ -1277,6 +1297,14 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
         except Exception as e:
             logger.error(f"Error fetching CEO posts for {ticker}: {e}")
 
+    # Compute overall bullish score (1 to 10) from average compound sentiment
+    all_scores = [post.get('compound_score', 0) for post in (company_posts + ceo_posts)]
+    if all_scores:
+        avg_compound = sum(all_scores) / len(all_scores)
+        # Map avg_compound (-1..1) to bullish_score (1..10)
+        bullish_score = int(round(((avg_compound + 1) / 2) * 9 + 1))
+    else:
+        bullish_score = None
     return {
         'ticker': ticker,
         'company_name': company_name,
@@ -1285,6 +1313,7 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
         'ceo_posts': ceo_posts,
         'total_company_posts': len(company_posts),
         'total_ceo_posts': len(ceo_posts),
+        'bullish_score': bullish_score,
         'fetch_timestamp': datetime.now().isoformat()
     }
 
@@ -1305,6 +1334,10 @@ def fetch_x_data():
     if not client:
         logger.warning("X client not available. Skipping X data collection.")
         return
+
+    # Timestamp for file naming
+    now = datetime.now()
+    date_str = now.strftime('%Y%m%d_%H%M%S')
 
     # Initialize sentiment analyzer
     analyzer = SentimentIntensityAnalyzer()
@@ -1343,46 +1376,22 @@ def fetch_x_data():
         try:
             result = fetch_x_data_for_company(client, ticker, company_name, ceo_name, analyzer)
             all_results.append(result)
-
-            # Save individual company file
-            company_file = os.path.join(X_DATA_DIR, f"{ticker}_x_posts.json")
+            # Add fetch context and summary for this ticker
+            result['time_range_days'] = X_DAYS_BACK
+            result['api_tier'] = f"Basic ({X_DAYS_BACK} days)"
+            # Save combined raw data and summary per company
+            # Save combined raw data and summary per company with timestamp
+            company_file = os.path.join(X_DATA_DIR, f"{ticker}_x_posts_{date_str}.json")
             with open(company_file, 'w') as f:
                 json.dump(result, f, indent=2)
-
-            # Rate limiting between companies (making 2 requests per company)
+            logger.info(f"✅ Saved X data and summary for {ticker} to {company_file}")
+            # Rate limiting between companies
             time.sleep(10)
 
         except Exception as e:
             logger.error(f"Failed to fetch X data for {ticker}: {e}")
             continue
 
-    # Save combined summary
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    summary_file = os.path.join(X_DATA_DIR, f"x_data_summary_{timestamp}.json")
-
-    summary = {
-        'fetch_timestamp': datetime.now().isoformat(),
-        'total_companies': len(companies_df),
-        'successful_fetches': len(all_results),
-        'time_range_days': X_DAYS_BACK,
-        'api_tier': 'Basic (7 days)',
-        'companies': all_results
-    }
-
-    with open(summary_file, 'w') as f:
-        json.dump(summary, f, indent=2)
-
-    # Calculate and save statistics
-    total_company_posts = sum(r['total_company_posts'] for r in all_results)
-    total_ceo_posts = sum(r['total_ceo_posts'] for r in all_results)
-
-    logger.info("=" * 60)
-    logger.info("X DATA FETCH COMPLETED")
-    logger.info("=" * 60)
-    logger.info(f"Total companies processed: {len(all_results)}")
-    logger.info(f"Total company posts: {total_company_posts}")
-    logger.info(f"Total CEO posts: {total_ceo_posts}")
-    logger.info(f"Summary saved to: {summary_file}")
 
 
 # ========== SECTOR METRICS CALCULATION FUNCTIONS ==========
@@ -2712,7 +2721,7 @@ if __name__ == "__main__":
         cik = str(row['cik'])
 
         # Fetch and Save Data
-        fetch_financial_statements(ticker)
+        # fetch_financial_statements(ticker)  # Function not defined, skipping
         earnings_records = fetch_quarterly_earnings(ticker)
         store_quarterly_earnings_in_neo4j(ticker, row.get('company_name'), earnings_records)
         fetch_stock_prices(ticker)
