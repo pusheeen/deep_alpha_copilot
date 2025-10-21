@@ -1,0 +1,90 @@
+{
+  "fetch_timestamp": "2025-10-20T19:29:21.352760",
+  "total_companies_analyzed": 5,
+  "total_sectors": 1,
+  "sectors": {
+    "Technology": {
+      "num_companies": 5,
+      "total_market_cap": 8875404623872.0,
+      "avg_market_cap": 1775080924774.4,
+      "total_revenue": 3159562700000.0,
+      "avg_revenue": 631912540000.0,
+      "avg_gross_margin": 62.80101729336527,
+      "median_gross_margin": 63.03369915073487,
+      "avg_net_margin": 27.068630451385268,
+      "median_net_margin": 21.678078015296435,
+      "total_free_cash_flow": 943473500000.0,
+      "avg_free_cash_flow": 188694700000.0,
+      "avg_pe_ratio": 76.095067,
+      "median_pe_ratio": 67.60488,
+      "avg_ps_ratio": 16.44272544,
+      "median_ps_ratio": 14.071375,
+      "avg_pb_ratio": 18.197705980000002,
+      "median_pb_ratio": 6.5396223,
+      "avg_eps": 4.484,
+      "median_eps": 3.91,
+      "avg_roe": 49.0195992,
+      "median_roe": 34.657001,
+      "avg_roa": 17.591000199999996,
+      "median_roa": 8.895000999999999,
+      "avg_roic": 25.041355932059258,
+      "median_roic": 12.208566197340753,
+      "avg_debt_to_equity": 130.93220000000002,
+      "median_debt_to_equity": 18.998,
+      "avg_current_ratio": 2.3026,
+      "median_current_ratio": 2.491,
+      "avg_quick_ratio": 1.7672,
+      "median_quick_ratio": 1.279,
+      "avg_interest_coverage": 101.44399973174426,
+      "median_interest_coverage": 22.619565217391305,
+      "avg_rsi": 57.7728775903578,
+      "median_rsi": 57.88436781579151,
+      "avg_macd": 8.348936404756074,
+      "avg_cagr": 57.68481475710572,
+      "median_cagr": 52.863580522204586,
+      "avg_momentum_1m": 9.382694675390663,
+      "avg_momentum_3m": 24.110374325691346,
+      "avg_momentum_6m": 117.28121300133867,
+      "avg_momentum_1y": 57.10333856173945,
+      "avg_volatility": 53.53505292475986,
+      "median_volatility": 58.14015081942525,
+      "avg_beta": 1.6817303462391806,
+      "median_beta": 1.7969352157733298,
+      "avg_sharpe_ratio": 0.9913790064263871,
+      "median_sharpe_ratio": 0.9772958639324557,
+      "quality_score": 80.0913200214213
+    }
+  },
+  "sentiment_analysis": {},
+  "momentum_analysis": {
+    "Technology": {
+      "sector": "Technology",
+      "price_momentum_1m": 9.382694675390663,
+      "price_momentum_3m": 24.110374325691346,
+      "price_momentum_6m": 117.28121300133867,
+      "price_momentum_1y": 57.10333856173945,
+      "sentiment_score": null,
+      "net_sentiment": null,
+      "combined_momentum_score": 40.15276662430536,
+      "momentum_trend": "Decelerating",
+      "signal": "Strong Buy"
+    }
+  },
+  "correlation_analysis": {
+    "correlation_matrix": {
+      "Technology": {
+        "Technology": 1.0
+      }
+    },
+    "relative_strength": {
+      "Technology": {
+        "rs_3m": 17.968706495336534,
+        "rs_6m": 89.22978695867039,
+        "rs_1y": 40.68346451891384,
+        "composite_rs": 43.88998223905215,
+        "classification": "Strong Outperformer"
+      }
+    },
+    "sector_pairs": []
+  }
+}

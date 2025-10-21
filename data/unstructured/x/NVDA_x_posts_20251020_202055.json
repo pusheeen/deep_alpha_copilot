@@ -1,0 +1,41 @@
+{
+  "ticker": "NVDA",
+  "company_name": "NVIDIA CORP",
+  "company_x_handle": "@nvidia",
+  "ceo_name": "Mr. Jen-Hsun  Huang",
+  "ceo_x_handle": "@JenHsunHuang",
+  "company_posts": [
+    {
+      "id": 1980314081350361556,
+      "text": "\u2728 Last week, Jensen made a special trip to @OpenAI, to personally deliver NVIDIA DGX Sparks to Sam Altman, and team. We are honored to share this milestone in AI -- bringing AI supercomputing to the desktop with OpenAI. \n\n\u201cDGX-1 launched the era of AI supercomputers and unlocked https://t.co/OoziyCYlJw",
+      "created_at": "2025-10-20T16:44:04+00:00",
+      "author_id": 61559439,
+      "author_username": "nvidia",
+      "author_name": "NVIDIA",
+      "author_verified": true,
+      "retweet_count": 98,
+      "reply_count": 49,
+      "like_count": 861,
+      "quote_count": 10,
+      "lang": "en",
+      "url": "https://twitter.com/nvidia/status/1980314081350361556",
+      "sentiment": "bullish",
+      "compound_score": 0.8885,
+      "positive_score": 0.221,
+      "negative_score": 0.0,
+      "topics": [
+        "AI"
+      ]
+    }
+  ],
+  "ceo_posts": [],
+  "total_posts": 1,
+  "total_company_posts": 1,
+  "total_ceo_posts": 0,
+  "bullish_score": 9,
+  "average_sentiment": 0.8885,
+  "overall_sentiment": "bullish",
+  "fetch_timestamp": "2025-10-20T20:21:01.697445",
+  "time_range_hours": 24,
+  "data_source": "Official company and CEO X/Twitter accounts only"
+}
