@@ -24,15 +24,120 @@
                     </p>
                 </div>
                 <!-- Login/Signup functionality removed -->
-                <form id="score-form" class="bg-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 w-full md:w-96">
-                    <div class="flex-1">
-                        <label for="score-ticker" class="text-xs uppercase tracking-wide text-slate-400">Ticker symbol</label>
-                        <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 uppercase" placeholder="NVDA" />
-                    </div>
-                    <button type="submit" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-4 py-2 rounded-lg transition">Generate</button>
-                </form>
+                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <form id="score-form" class="bg-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 flex-1 md:w-96">
+                        <div class="flex-1">
+                            <label for="score-ticker" class="text-xs uppercase tracking-wide text-slate-400">Ticker symbol</label>
+                            <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 uppercase" placeholder="NVDA" />
+                        </div>
+                        <button type="submit" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-4 py-2 rounded-lg transition">Generate</button>
+                    </form>
+                    <button id="open-comparison" class="inline-flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold px-4 py-2 rounded-lg transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        Compare
+                    </button>
+                </div>
             </div>
         </header>
+
+        <!-- Multi-Stock Comparison Section -->
+        <section id="comparison-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-semibold text-slate-800">Stock Comparison</h2>
+                    <p class="text-sm text-slate-600 mt-1">Compare up to 4 stocks across all metrics</p>
+                </div>
+                <button id="close-comparison" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Comparison Input -->
+            <div class="bg-slate-50 rounded-xl p-4 mb-6">
+                <div class="flex flex-wrap gap-3 items-center">
+                    <span class="text-sm font-medium text-slate-700">Compare:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <div class="relative">
+                            <input type="text" id="compare-ticker-1" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="NVDA" />
+                            <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="compare-ticker-2" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="TSLA" />
+                            <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="compare-ticker-3" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="AAPL" />
+                            <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="compare-ticker-4" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="MSFT" />
+                            <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="compare-btn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
+                        Compare Stocks
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comparison Results -->
+            <div id="comparison-results" class="hidden">
+                <!-- Overall Scores Comparison -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Overall Scores</h3>
+                    <div id="overall-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                        <canvas id="overallChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Individual Scores Comparison -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
+                    <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                        <canvas id="individualChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Price Comparison -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Price Performance Comparison</h3>
+                    <div class="flex items-center gap-4 mb-4">
+                        <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="1m">1 Month</option>
+                            <option value="6m">6 Months</option>
+                            <option value="1y" selected>1 Year</option>
+                            <option value="2y">2 Years</option>
+                        </select>
+                        <button id="refresh-price-comparison" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="price-comparison-chart" class="bg-slate-50 rounded-xl p-4">
+                        <canvas id="priceChart" width="400" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
             <p class="text-sm text-slate-500">Loading scorecard...</p>
@@ -1230,6 +1335,16 @@
                                     </svg>
                                     <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-slate-900 text-white text-xs rounded-lg p-3 w-80 z-20 shadow-xl">
                                         <div class="space-y-2">${methodology}</div>
+                                        ${key === 'sentiment' ? `
+                                            <div class="mt-3 pt-3 border-t border-slate-700">
+                                                <div class="font-semibold text-blue-300 mb-2">📰 Recent Sources:</div>
+                                                <div id="sentiment-links-${company.ticker}" class="space-y-1">
+                                                    <div class="animate-pulse bg-slate-700 rounded h-3 w-full"></div>
+                                                    <div class="animate-pulse bg-slate-700 rounded h-3 w-3/4"></div>
+                                                    <div class="animate-pulse bg-slate-700 rounded h-3 w-1/2"></div>
+                                                </div>
+                                            </div>
+                                        ` : ''}
                                         <div class="absolute top-full left-4 border-4 border-transparent border-t-slate-900"></div>
                     </div>
                     </div>
@@ -1269,6 +1384,90 @@
             }).join('');
 
             container.innerHTML = html;
+            
+            // Add event listeners for sentiment score hover
+            document.querySelectorAll('.group').forEach(group => {
+                group.addEventListener('mouseenter', async (e) => {
+                    const sentimentLinksDiv = group.querySelector('[id^="sentiment-links-"]');
+                    if (sentimentLinksDiv) {
+                        const ticker = sentimentLinksDiv.id.replace('sentiment-links-', '');
+                        await loadSentimentLinks(ticker, sentimentLinksDiv);
+                    }
+                });
+            });
+        }
+
+        async function loadSentimentLinks(ticker, container) {
+            try {
+                // Fetch news data for the ticker using the correct API endpoint
+                const response = await fetch(`/api/scores/${ticker}?news_only=true&query=${ticker}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data.latest_news && result.data.latest_news.length > 0) {
+                    const news = result.data.latest_news.slice(0, 3); // Top 3 most recent
+                    
+                    const linksHtml = news.map(item => {
+                        const source = item.source || item.provider || 'Unknown Source';
+                        const title = item.title || 'No title available';
+                        const url = item.url || item.link || '#';
+                        
+                        return `
+                            <div class="flex items-start space-x-2">
+                                <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <a href="${url}" target="_blank" class="text-blue-300 hover:text-blue-200 underline truncate block" title="${title}">
+                                        ${title.length > 60 ? title.substring(0, 60) + '...' : title}
+                                    </a>
+                                    <div class="text-slate-400 text-xs mt-1">${source}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    container.innerHTML = linksHtml;
+                } else {
+                    // Try to get news from the main scores endpoint
+                    const scoresResponse = await fetch(`/api/scores/${ticker}`);
+                    if (scoresResponse.ok) {
+                        const scoresResult = await scoresResponse.json();
+                        if (scoresResult.status === 'success' && scoresResult.data.news && scoresResult.data.news.length > 0) {
+                            const news = scoresResult.data.news.slice(0, 3);
+                            
+                            const linksHtml = news.map(item => {
+                                const source = item.source || item.provider || 'News Source';
+                                const title = item.title || 'No title available';
+                                const url = item.url || item.link || '#';
+                                
+                                return `
+                                    <div class="flex items-start space-x-2">
+                                        <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                        <div class="flex-1 min-w-0">
+                                            <a href="${url}" target="_blank" class="text-blue-300 hover:text-blue-200 underline truncate block" title="${title}">
+                                                ${title.length > 60 ? title.substring(0, 60) + '...' : title}
+                                            </a>
+                                            <div class="text-slate-400 text-xs mt-1">${source}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                            
+                            container.innerHTML = linksHtml;
+                        } else {
+                            container.innerHTML = '<div class="text-slate-400 text-xs">No recent news available</div>';
+                        }
+                    } else {
+                        container.innerHTML = '<div class="text-slate-400 text-xs">No recent news available</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading sentiment links:', error);
+                container.innerHTML = '<div class="text-red-400 text-xs">Error loading sources</div>';
+            }
         }
 
         function getTakeaway(key, comp, componentScore) {
@@ -1324,6 +1523,9 @@
                 const data = await response.json();
                 if (data.status === 'success') {
                     renderScoreboard(data.data);
+                    // Also render the price chart for single stock view
+                    const activePeriod = document.querySelector('.period-btn.active')?.dataset.period || '1m';
+                    refreshPriceChartData(ticker, activePeriod);
                 } else {
                     scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
@@ -1337,6 +1539,13 @@
             event.preventDefault();
             const ticker = scoreTickerInput.value.trim().toUpperCase();
             if (!ticker) return;
+            
+            // Hide comparison section and show single stock sections
+            document.getElementById('comparison-section').classList.add('hidden');
+            document.getElementById('scoreboard').classList.remove('hidden');
+            document.getElementById('score-table').classList.remove('hidden');
+            document.getElementById('price-history-card').classList.remove('hidden');
+            
             loadScoreboard(ticker);
         });
 
@@ -1426,6 +1635,351 @@
         });
 
         loadAllBtn.addEventListener('click', refreshCoverageTable);
+
+        // Multi-Stock Comparison Functionality
+        let comparisonData = {};
+        let comparisonCharts = {};
+
+        // Comparison section toggle
+        document.getElementById('open-comparison').addEventListener('click', () => {
+            document.getElementById('comparison-section').classList.remove('hidden');
+            document.getElementById('scoreboard').classList.add('hidden');
+            document.getElementById('score-table').classList.add('hidden');
+            document.getElementById('price-history-card').classList.add('hidden');
+        });
+
+        document.getElementById('close-comparison').addEventListener('click', () => {
+            document.getElementById('comparison-section').classList.add('hidden');
+            document.getElementById('scoreboard').classList.remove('hidden');
+            document.getElementById('score-table').classList.remove('hidden');
+            document.getElementById('price-history-card').classList.remove('hidden');
+            
+            // Clear comparison data to prevent interference
+            comparisonData = {};
+            if (comparisonCharts.overall) {
+                comparisonCharts.overall.destroy();
+                comparisonCharts.overall = null;
+            }
+            if (comparisonCharts.individual) {
+                comparisonCharts.individual.destroy();
+                comparisonCharts.individual = null;
+            }
+            if (comparisonCharts.price) {
+                comparisonCharts.price.destroy();
+                comparisonCharts.price = null;
+            }
+            
+            // Reset the comparison results section
+            const resultsDiv = document.getElementById('comparison-results');
+            if (resultsDiv) {
+                resultsDiv.classList.add('hidden');
+                resultsDiv.innerHTML = '';
+            }
+        });
+
+        // Remove ticker functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-ticker')) {
+                const index = e.target.closest('.remove-ticker').dataset.index;
+                document.getElementById(`compare-ticker-${index}`).value = '';
+            }
+        });
+
+        // Compare stocks functionality
+        document.getElementById('compare-btn').addEventListener('click', async () => {
+            const tickers = [];
+            for (let i = 1; i <= 4; i++) {
+                const ticker = document.getElementById(`compare-ticker-${i}`).value.trim().toUpperCase();
+                if (ticker) tickers.push(ticker);
+            }
+
+            if (tickers.length < 2) {
+                alert('Please enter at least 2 tickers to compare');
+                return;
+            }
+
+            await performComparison(tickers);
+        });
+
+        async function performComparison(tickers) {
+            const resultsDiv = document.getElementById('comparison-results');
+            resultsDiv.classList.remove('hidden');
+            
+            // Show loading state
+            resultsDiv.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-slate-600">Loading comparison data...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                // Fetch data for all tickers with proper error handling
+                const promises = tickers.map(async (ticker) => {
+                    try {
+                        const response = await fetch(`/api/scores/${ticker}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        return { ticker, data, success: true };
+                    } catch (error) {
+                        console.error(`Error fetching data for ${ticker}:`, error);
+                        return { ticker, data: null, success: false, error: error.message };
+                    }
+                });
+                
+                const results = await Promise.all(promises);
+
+                // Store comparison data
+                comparisonData = {};
+                results.forEach((result) => {
+                    if (result.success && result.data.status === 'success') {
+                        comparisonData[result.ticker] = result.data.data;
+                    } else {
+                        console.error(`Failed to load data for ${result.ticker}:`, result.error || result.data?.message);
+                    }
+                });
+
+                // Check if we have any successful data
+                const successfulTickers = Object.keys(comparisonData);
+                if (successfulTickers.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="text-center py-12">
+                            <p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render comparison charts with successful data
+                renderOverallScoresChart(successfulTickers);
+                renderIndividualScoresChart(successfulTickers);
+                renderPriceComparisonChart(successfulTickers);
+
+                // Show success message if some tickers failed
+                if (successfulTickers.length < tickers.length) {
+                    const failedTickers = tickers.filter(t => !successfulTickers.includes(t));
+                    console.warn(`Failed to load data for: ${failedTickers.join(', ')}`);
+                }
+
+            } catch (error) {
+                console.error('Error performing comparison:', error);
+                resultsDiv.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-600">Failed to load comparison data. Please try again.</p>
+                        <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderOverallScoresChart(tickers) {
+            const ctx = document.getElementById('overallChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (comparisonCharts.overall) {
+                comparisonCharts.overall.destroy();
+            }
+
+            const data = tickers.map(ticker => {
+                const companyData = comparisonData[ticker];
+                // Try different possible paths for overall score
+                return companyData ? 
+                    (companyData.overall?.score || 
+                     companyData.overall_score || 
+                     companyData.scores?.overall?.score || 
+                     companyData.total_score || 
+                     0) : 0;
+            });
+
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            
+            comparisonCharts.overall = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tickers,
+                    datasets: [{
+                        label: 'Overall Score',
+                        data: data,
+                        backgroundColor: colors.slice(0, tickers.length),
+                        borderColor: colors.slice(0, tickers.length),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderIndividualScoresChart(tickers) {
+            const ctx = document.getElementById('individualChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (comparisonCharts.individual) {
+                comparisonCharts.individual.destroy();
+            }
+
+            const scoreTypes = ['business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            
+            const datasets = tickers.map((ticker, index) => {
+                const companyData = comparisonData[ticker];
+                const data = scoreTypes.map(type => {
+                    return companyData ? companyData.scores[type]?.score || 0 : 0;
+                });
+                
+                return {
+                    label: ticker,
+                    data: data,
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
+                };
+            });
+
+            comparisonCharts.individual = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: scoreTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function renderPriceComparisonChart(tickers) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const period = document.getElementById('price-period').value;
+            
+            // Destroy existing chart if it exists
+            if (comparisonCharts.price) {
+                comparisonCharts.price.destroy();
+            }
+
+            try {
+                const promises = tickers.map(ticker => fetch(`/api/price-history/${ticker}?period=${period}`));
+                const responses = await Promise.all(promises);
+                const priceData = await Promise.all(responses.map(r => r.json()));
+
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+                
+                const datasets = tickers.map((ticker, index) => {
+                    const data = priceData[index];
+                    if (data.status === 'success' && data.data.price_data) {
+                        const prices = data.data.price_data.map(item => ({
+                            x: item.trading_date || item.date,
+                            y: item.close_price || item.close
+                        }));
+                        
+                        return {
+                            label: ticker,
+                            data: prices,
+                            borderColor: colors[index],
+                            backgroundColor: colors[index] + '20',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1
+                        };
+                    }
+                    return {
+                        label: ticker,
+                        data: [],
+                        borderColor: colors[index],
+                        backgroundColor: colors[index] + '20',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    };
+                });
+
+                comparisonCharts.price = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day'
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading price data:', error);
+            }
+        }
+
+        // Refresh price comparison when period changes
+        document.getElementById('refresh-price-comparison').addEventListener('click', () => {
+            const tickers = Object.keys(comparisonData);
+            if (tickers.length > 0) {
+                renderPriceComparisonChart(tickers);
+            }
+        });
 
         loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
         refreshCoverageTable();
