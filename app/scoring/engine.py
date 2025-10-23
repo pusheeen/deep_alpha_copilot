@@ -50,6 +50,9 @@ class ScoreComputationError(Exception):
 
 
 DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
+# Fix for Docker container deployment
+if not DATA_ROOT.exists():
+    DATA_ROOT = Path("/app/data")
 FINANCIALS_DIR = DATA_ROOT / "structured" / "financials"
 EARNINGS_DIR = DATA_ROOT / "structured" / "earnings"
 PRICES_DIR = DATA_ROOT / "structured" / "prices"
