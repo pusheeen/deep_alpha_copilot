@@ -1,0 +1,116 @@
+INFO:     Started server process [54898]
+INFO:     Waiting for application startup.
+App name mismatch detected. The runner is configured with app name "Financial_Root_Agent_app", but the root agent was loaded from "/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/.venv/lib/python3.13/site-packages/google/adk/agents", which implies app name "agents".
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Warning: NEO4J_URI not provided, Neo4j functionality will be disabled
+Initializing ADK Agent...
+Agent is ready.
+INFO:     127.0.0.1:63586 - "HEAD / HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:63593 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63598 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63726 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63726 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/TSM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/RR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63734 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63734 - "GET /api/price-history/VRT?period=1m HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/SMR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/VST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/NXE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63727 - "GET /api/scores/QS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/TSM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/RR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/SMR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/VST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/NXE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63798 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63798 - "GET /api/price-history/MU?period=1m HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63785 - "GET /api/scores/QS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63826 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63830 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63830 - "GET /api/price-history/EOSE?period=1m HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63844 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63860 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/TSM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/RR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63914 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63914 - "GET /api/price-history/INOD?period=1m HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/SMR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/VST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/NXE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/QS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/TSM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/RR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/SMR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/VST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/NXE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63905 - "GET /api/scores/QS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52730 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52729 - "GET /api/scores/TSM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/VRT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/INOD HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/RR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/SMR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/VST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/NXE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52729 - "GET /api/scores/QS HTTP/1.1" 200 OK

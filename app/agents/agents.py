@@ -6,7 +6,7 @@ for graph querying, document retrieval, and stock price predictions.
 """
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
-from ..neo4j_for_adk import graphdb
+# from ..neo4j_for_adk import graphdb  # Disabled - using JSON files instead
 from app.models.predict import predict_next_day_price
 from langchain_google_vertexai import VertexAIEmbeddings
 from target_tickers import TARGET_TICKERS
@@ -34,8 +34,10 @@ TICKER_LIST_STR = ", ".join(sorted(TARGET_TICKERS))
 def query_graph_database(question: str) -> dict:
     """
     Generates a Cypher query for the financial graph and executes it.
+    DISABLED - using JSON files instead of Neo4j
     """
-    schema = graphdb.send_query("CALL db.schema.visualization()")["query_result"]
+    # schema = graphdb.send_query("CALL db.schema.visualization()")["query_result"]
+    return {"status": "disabled", "message": "Neo4j functionality disabled - using JSON files"}
     
     # CORRECTED: Updated schema description and examples to match actual database structure
     cypher_generation_prompt = f"""
@@ -90,7 +92,8 @@ def query_graph_database(question: str) -> dict:
     cypher_query = cypher_query.replace("```cypher", "").replace("```", "").strip()
     print(f"Generated Cypher: {cypher_query}")
     
-    return graphdb.send_query(cypher_query)
+    # return graphdb.send_query(cypher_query)
+    return {"status": "disabled", "message": "Neo4j functionality disabled - using JSON files"}
 
 def retrieve_from_documents(question: str) -> dict:
     """
@@ -104,10 +107,9 @@ def retrieve_from_documents(question: str) -> dict:
     ORDER BY score DESC
     """
     
-    search_results = graphdb.send_query(search_query, {"embedding": question_embedding})
-    
-    if search_results['status'] == 'error' or not search_results['query_result']:
-        return {"answer": "Could not retrieve relevant documents from filings.", "error": search_results.get('message', 'Unknown error')}
+    # search_results = graphdb.send_query(search_query, {"embedding": question_embedding})
+    # Disabled Neo4j functionality
+    return {"answer": "Document retrieval disabled - using JSON files instead of Neo4j", "status": "disabled"}
     
     context = "\n".join([r['text'] for r in search_results['query_result']])
     
@@ -748,10 +750,13 @@ def query_reddit_sentiment(question: str) -> dict:
         LIMIT 50
         """
         
-        result = graphdb.send_query(cypher_query)
+        # result = graphdb.send_query(cypher_query)
+        # Disabled Neo4j functionality
         return {
-            "query_result": result.get("query_result", []),
-            "cypher_query": cypher_query
+            "query_result": [],
+            "cypher_query": cypher_query,
+            "status": "disabled",
+            "message": "Neo4j functionality disabled - using JSON files"
         }
     except Exception as e:
         return {"error": f"Reddit sentiment query failed: {str(e)}"}
