@@ -824,8 +824,8 @@
             const labels = priceData.map(d => d.date);
             const closes = priceData.map(d => d.close);
 
-            // Create event annotations - only for 10%+ daily movements
-            const eventAnnotations = events.filter(event => Math.abs(event.price_change) >= 10).map(event => {
+            // Create event annotations - only for significant daily movements (2%+ or $2+)
+            const eventAnnotations = events.filter(event => Math.abs(event.price_change) >= 2).map(event => {
                 const dateIndex = labels.indexOf(event.date);
                 if (dateIndex === -1) return null;
                 
@@ -846,9 +846,9 @@
                 };
             }).filter(a => a !== null);
 
-            // Create point styling based on events - only for 10%+ daily movements
+            // Create point styling based on events - only for significant daily movements (2%+ or $2+)
             const pointBackgroundColors = labels.map(date => {
-                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
+                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 2);
                 if (event) {
                     if (event.sentiment >= 0.2) return 'rgb(34, 197, 94)';
                     if (event.sentiment <= -0.2) return 'rgb(239, 68, 68)';
@@ -858,7 +858,7 @@
             });
 
             const pointRadii = labels.map(date => {
-                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
+                const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 2);
                 return event ? 6 : 0;
             });
 
@@ -895,7 +895,7 @@
                         if (elements.length > 0) {
                             const elementIndex = elements[0].index;
                             const date = labels[elementIndex];
-                            const chartEvent = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
+                            const chartEvent = events.find(e => e.date === date && Math.abs(e.price_change) >= 2);
                             if (chartEvent && chartEvent.link) {
                                 // Create a more stable tooltip-like popup
                                 showStableTooltip(chartEvent, event);
@@ -1022,11 +1022,11 @@
 
         async function refreshPriceChartData(ticker, period) {
             try {
-                const response = await fetch(`/api/price-history/${ticker}?period=${period}`);
+                const response = await fetch(`/api/scores/${ticker}`);
                 const result = await response.json();
                 
-                if (result.status === 'success' && result.data && result.data.price_data && result.data.price_data.length > 0) {
-                    renderPriceChart(result.data, ticker);
+                if (result.status === 'success' && result.data && result.data.price_history && result.data.price_history.price_data && result.data.price_history.price_data.length > 0) {
+                    renderPriceChart(result.data.price_history, ticker);
                 } else {
                     console.error('Error refreshing price data:', result.message || 'No data received');
                 }
