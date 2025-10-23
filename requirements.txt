@@ -7,17 +7,17 @@ google-cloud-aiplatform
 google-api-python-client
 markdown
 scipy
-scikit-learn
+# scikit-learn  # Temporarily disabled for deployment
 pandas
 numpy
-lightgbm
+# lightgbm  # Temporarily disabled for deployment
 langchain-google-vertexai
 # neo4j  # Disabled - using JSON files instead
 fastapi
 uvicorn
 python-dotenv
 pydantic==2.11.7
-unstructured
+# unstructured  # Temporarily disabled for deployment
 joblib
 yfinance
 praw
