@@ -133,7 +133,7 @@
                         </button>
                     </div>
                     <div id="price-comparison-chart" class="bg-slate-50 rounded-xl p-4">
-                        <canvas id="priceChart" width="400" height="250"></canvas>
+                        <canvas id="priceComparisonChart" width="400" height="250"></canvas>
                     </div>
                 </div>
             </div>
@@ -1544,7 +1544,6 @@
             document.getElementById('comparison-section').classList.add('hidden');
             document.getElementById('scoreboard').classList.remove('hidden');
             document.getElementById('score-table').classList.remove('hidden');
-            document.getElementById('price-history-card').classList.remove('hidden');
             
             loadScoreboard(ticker);
         });
@@ -1645,14 +1644,12 @@
             document.getElementById('comparison-section').classList.remove('hidden');
             document.getElementById('scoreboard').classList.add('hidden');
             document.getElementById('score-table').classList.add('hidden');
-            document.getElementById('price-history-card').classList.add('hidden');
         });
 
         document.getElementById('close-comparison').addEventListener('click', () => {
             document.getElementById('comparison-section').classList.add('hidden');
             document.getElementById('scoreboard').classList.remove('hidden');
             document.getElementById('score-table').classList.remove('hidden');
-            document.getElementById('price-history-card').classList.remove('hidden');
             
             // Clear comparison data to prevent interference
             comparisonData = {};
