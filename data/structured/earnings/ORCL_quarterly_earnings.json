@@ -1,0 +1,34 @@
+[
+  {
+    "ticker": "ORCL",
+    "period": "2025-08-31 00:00:00",
+    "revenue": 14926000000.0,
+    "earnings": 10042000000.0,
+    "net_income": 2927000000.0,
+    "eps": 1.01
+  },
+  {
+    "ticker": "ORCL",
+    "period": "2025-05-31 00:00:00",
+    "revenue": 15903000000.0,
+    "earnings": 11162000000.0,
+    "net_income": 3427000000.0,
+    "eps": null
+  },
+  {
+    "ticker": "ORCL",
+    "period": "2025-02-28 00:00:00",
+    "revenue": 14130000000.0,
+    "earnings": 9935000000.0,
+    "net_income": 2936000000.0,
+    "eps": 1.02
+  },
+  {
+    "ticker": "ORCL",
+    "period": "2024-11-30 00:00:00",
+    "revenue": 14059000000.0,
+    "earnings": 9974000000.0,
+    "net_income": 3151000000.0,
+    "eps": 1.1
+  }
+]

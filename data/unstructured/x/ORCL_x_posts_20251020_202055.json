@@ -1,0 +1,89 @@
+{
+  "ticker": "ORCL",
+  "company_name": "ORACLE CORP",
+  "company_x_handle": "@Oracle",
+  "ceo_name": "Mr. Michael D. Sicilia",
+  "ceo_x_handle": null,
+  "company_posts": [
+    {
+      "id": 1980386560999559326,
+      "text": "Hear from Laurent Mekies, CEO and Team Principal for @redbullracing on how our partnership is helping the team unlock competitive advantages on and off the track. https://t.co/t3nljUwyHl",
+      "created_at": "2025-10-20T21:32:04+00:00",
+      "author_id": 809273,
+      "author_username": "Oracle",
+      "author_name": "Oracle",
+      "author_verified": true,
+      "retweet_count": 7,
+      "reply_count": 1,
+      "like_count": 24,
+      "quote_count": 0,
+      "lang": "en",
+      "url": "https://twitter.com/Oracle/status/1980386560999559326",
+      "sentiment": "bullish",
+      "compound_score": 0.6597,
+      "positive_score": 0.211,
+      "negative_score": 0.0,
+      "topics": [
+        "technical_analysis",
+        "news",
+        "partnerships"
+      ]
+    },
+    {
+      "id": 1980349150475526200,
+      "text": "Catch a replay of Clay Magouyrk's #AIWorld keynote to find out how we\u2019re helping engineer the answers to your toughest challenges: https://t.co/J8YtgA3Qzq https://t.co/bCiSDoAUKE",
+      "created_at": "2025-10-20T19:03:25+00:00",
+      "author_id": 809273,
+      "author_username": "Oracle",
+      "author_name": "Oracle",
+      "author_verified": true,
+      "retweet_count": 8,
+      "reply_count": 1,
+      "like_count": 24,
+      "quote_count": 0,
+      "lang": "en",
+      "url": "https://twitter.com/Oracle/status/1980349150475526200",
+      "sentiment": "bullish",
+      "compound_score": 0.296,
+      "positive_score": 0.141,
+      "negative_score": 0.052,
+      "topics": [
+        "AI"
+      ]
+    },
+    {
+      "id": 1980302995146342891,
+      "text": "Learn how Autonomous AI Database with Apache Iceberg enables customers to run AI and analytics securely on all their data on any cloud. https://t.co/kfNv6Ugk4n #AIWorld https://t.co/7w8mmgDIh1",
+      "created_at": "2025-10-20T16:00:00+00:00",
+      "author_id": 809273,
+      "author_username": "Oracle",
+      "author_name": "Oracle",
+      "author_verified": true,
+      "retweet_count": 12,
+      "reply_count": 0,
+      "like_count": 30,
+      "quote_count": 1,
+      "lang": "en",
+      "url": "https://twitter.com/Oracle/status/1980302995146342891",
+      "sentiment": "bullish",
+      "compound_score": 0.34,
+      "positive_score": 0.088,
+      "negative_score": 0.0,
+      "topics": [
+        "technical_analysis",
+        "regulatory",
+        "AI"
+      ]
+    }
+  ],
+  "ceo_posts": [],
+  "total_posts": 3,
+  "total_company_posts": 3,
+  "total_ceo_posts": 0,
+  "bullish_score": 7,
+  "average_sentiment": 0.4319,
+  "overall_sentiment": "bullish",
+  "fetch_timestamp": "2025-10-20T20:21:28.195006",
+  "time_range_hours": 24,
+  "data_source": "Official company and CEO X/Twitter accounts only"
+}

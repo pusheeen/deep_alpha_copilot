@@ -1,0 +1,112 @@
+{
+  "batch_info": {
+    "timestamp": "2025-10-20T19:18:22.044406",
+    "total_companies": 5,
+    "successful_fetches": 5,
+    "failed_fetches": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NVDA",
+        "company_name": "NVIDIA CORP",
+        "ceo_name": "Mr. Jen-Hsun  Huang",
+        "ceo_title": "Co-Founder, CEO, President & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-20T19:18:00.989541",
+        "age": 61,
+        "year_born": 1963,
+        "total_pay": 11054945
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "AVGO",
+        "company_name": "Broadcom Inc.",
+        "ceo_name": "Mr. Hock E. Tan",
+        "ceo_title": "President, CEO & Executive Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-20T19:18:10.472575",
+        "age": 72,
+        "year_born": 1952,
+        "total_pay": 2634542
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "ORCL",
+        "company_name": "ORACLE CORP",
+        "ceo_name": "Mr. Michael D. Sicilia",
+        "ceo_title": "Chief Executive Officer & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-20T19:18:13.574697",
+        "age": 53,
+        "year_born": 1971
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "AMD",
+        "company_name": "ADVANCED MICRO DEVICES INC",
+        "ceo_name": "Dr. Lisa T. Su Ph.D.",
+        "ceo_title": "Chair, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-20T19:18:16.402326",
+        "age": 54,
+        "year_born": 1970,
+        "total_pay": 3062598
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "TSM",
+        "company_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+        "ceo_name": "Dr. C. C.  Wei Ph.D.",
+        "ceo_title": "Chairman & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-20T19:18:19.265007",
+        "total_pay": 21486166
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    }
+  ]
+}

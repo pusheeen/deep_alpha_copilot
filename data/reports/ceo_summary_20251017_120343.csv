@@ -1,0 +1,6 @@
+ticker,company_name,ceo_name,ceo_title,tenure_duration,start_date,education,num_past_roles,num_highlights,linkedin_url,source,fetch_timestamp
+NVDA,NVIDIA CORP,Mr. Jen-Hsun  Huang,"Co-Founder, CEO, President & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-17T12:03:26.204306
+AVGO,Broadcom Inc.,Mr. Hock E. Tan,"President, CEO & Executive Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-17T12:03:33.835699
+ORCL,ORACLE CORP,Mr. Michael D. Sicilia,Chief Executive Officer & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-17T12:03:36.205200
+AMD,ADVANCED MICRO DEVICES INC,Dr. Lisa T. Su Ph.D.,"Chair, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-17T12:03:38.604257
+TSM,TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD,Dr. C. C.  Wei Ph.D.,Chairman & CEO,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-17T12:03:41.055682

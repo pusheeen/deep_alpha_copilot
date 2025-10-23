@@ -1,0 +1,13 @@
+{
+  "ticker": "ORCL",
+  "company_name": "ORACLE CORP",
+  "ceo_name": "Mr. Michael D. Sicilia",
+  "company_posts": [],
+  "ceo_posts": [],
+  "total_company_posts": 0,
+  "total_ceo_posts": 0,
+  "bullish_score": null,
+  "fetch_timestamp": "2025-10-20T20:00:38.196922",
+  "time_range_days": 7,
+  "api_tier": "Basic (7 days)"
+}

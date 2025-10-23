@@ -1,0 +1,85 @@
+{
+  "ticker": "NVDA",
+  "posts": [
+    {
+      "id": "1obx79x",
+      "title": "Portfolio review needed - High concentration risk, approaching NZ tax threshold",
+      "selftext": "Looking for advice on my portfolio. I'm in New Zealand, 5-10 year timeline, goal is to reach $310k NZD (\\~$177k USD) to pay off mortgage. Comfortable with volatility but concerned about concentration.\n\n**Current positions (total: $85.7k NZD / \\~$49k USD):**\n\n* TSLA: 29.6% ($25.3k) - +102% return\n* RKLB: 28.7% ($24.6k) - +432% return\n* NVDA: 14.5% ($12.4k) - +61% return\n* VOO: 10.6% ($9.1k) - +35% return\n* AMZN: 7.4% ($6.4k) - +49% return\n* SHOP: 5.4% ($4.6k) - +165% return\n* IBIT: 1.2% ($1.0k) - +26% return\n* SMCI: 0.9% ($785) - -13% return\n* OPEN: 0.6% ($498) - +186% return (but all analysts rate it sell)\n* LLY: 0.5% ($451) - -13% return\n* NIO: 0.5% ($414) - -34% return\n\n**Key concerns:**\n\n1. 58% concentrated in just two stocks (TSLA + RKLB) - both have been huge winners but feeling exposed\n2. Approaching NZ's $50k foreign investment tax threshold (based on cost basis) where I'll owe annual tax on 5% of portfolio value regardless of gains\n3. Planning to DCA $10k NZD (\\~$5.7k USD) per year going forward\n\n**Questions:**\n\n* Should I trim TSLA/RKLB back to 10% each and diversify, or let winners run?\n* Should I use some of those trimmings to get VOO to at least 30% for safety?\n* Any specific sectors or stocks you'd recommend adding for better balance?\n* Should I be thinking about the NZ tax threshold differently?\n\nAppreciate any insights!",
+      "score": 2,
+      "upvote_ratio": 0.75,
+      "num_comments": 1,
+      "created_utc": 1761002648.0,
+      "subreddit": "investing",
+      "url": "https://reddit.com/r/investing/comments/1obx79x/portfolio_review_needed_high_concentration_risk/",
+      "mentioned_tickers": [
+        "NVDA"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.988,
+      "positive_score": 0.137,
+      "negative_score": 0.015,
+      "topics": [
+        "technical_analysis",
+        "regulatory",
+        "AI"
+      ],
+      "comments": []
+    },
+    {
+      "id": "1obwe67",
+      "title": "$10,000 short term to invest (not dependent on this $)",
+      "selftext": "Will have an extra $10,000 to invest in the next week or two. (Contrary to all professional advice) I would like to invest this as a short-term (maybe 10 month) play where I have at least $15,000+ at the end with a potential to double - by around August. This is all assuming a continuation of the bull market, of course. I'm thinking about NVDA of course, and am seeing a lot about SOUN and IONQ. What other ideas would you guys have to research? Would a mix of NVDA and a higher upside stock be my best bet? Would betting on an earnings report be a good option? I am not approved for options so I would like to avoid that for the moment but will explore maybe utilizing 1-2k for that purpose later on.  \n",
+      "score": 0,
+      "upvote_ratio": 0.37,
+      "num_comments": 50,
+      "created_utc": 1761000569.0,
+      "subreddit": "investing",
+      "url": "https://reddit.com/r/investing/comments/1obwe67/10000_short_term_to_invest_not_dependent_on_this/",
+      "mentioned_tickers": [
+        "NVDA"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.7316,
+      "positive_score": 0.068,
+      "negative_score": 0.021,
+      "topics": [
+        "earnings"
+      ],
+      "comments": []
+    },
+    {
+      "id": "1obu5kr",
+      "title": "Bitget Hits $200M in US Stock Futures Trading Volume, Fueling Market Growth",
+      "selftext": "Bitget\u2019s US stock futures hit over $200 million in trading volume, driven by high demand for tokenized equities like Tesla and NVIDIA. The platform offers 25 major US equities and offering up to $5 million in rewards for users trading US stock tokens.\n\nThe top three most-traded stock futures include:\n\n* Tesla (TSLA): $71.5 million\n* NVIDIA (NVDA): $25.05 million\n* Circle (CRCL): $17.68 million\n\nThe platform now offers 25 major US equities, spanning sectors like technology, semiconductors, finance, aviation, and consumer goods.\n\nWhy is TSLA trades significantly higher than the other 2...? did events around Musk trigger the traffic or just users sighting opportunities?",
+      "score": 11,
+      "upvote_ratio": 0.84,
+      "num_comments": 4,
+      "created_utc": 1760995139.0,
+      "subreddit": "CryptoCurrency",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1obu5kr/bitget_hits_200m_in_us_stock_futures_trading/",
+      "mentioned_tickers": [
+        "NVDA"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.9179,
+      "positive_score": 0.122,
+      "negative_score": 0.012,
+      "topics": [
+        "regulatory",
+        "uranium"
+      ],
+      "comments": []
+    }
+  ],
+  "total_posts": 3,
+  "bullish_posts": 3,
+  "bearish_posts": 0,
+  "neutral_posts": 0,
+  "subreddits": [
+    "CryptoCurrency",
+    "investing"
+  ],
+  "avg_sentiment": 0.8791666666666668,
+  "bullish_score": 9,
+  "fetch_timestamp": "2025-10-20T19:29:15.190175"
+}

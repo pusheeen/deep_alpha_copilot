@@ -54,6 +54,26 @@ SEC_USER_AGENT = os.getenv("SEC_USER_AGENT", "Your Name your.email@provider.com"
 # Import target tickers
 from target_tickers import TARGET_TICKERS
 
+# Dynamically generate ticker aliases based on TARGET_TICKERS
+TICKER_ALIASES: Dict[str, List[str]] = {ticker: [ticker, f'${ticker}'] for ticker in TARGET_TICKERS}
+
+# Official Twitter/X handles for companies and CEOs
+COMPANY_X_HANDLES = {
+    'NVDA': 'nvidia',
+    'AMD': 'AMD',
+    'TSM': 'TSMC',
+    'AVGO': 'Broadcom',
+    'ORCL': 'Oracle',
+}
+
+CEO_X_HANDLES = {
+    'NVDA': 'JenHsunHuang',  # Jensen Huang
+    'AMD': 'LisaSu',  # Lisa Su
+    'TSM': None,  # C.C. Wei doesn't have a public Twitter
+    'AVGO': None,  # Hock Tan doesn't have a public Twitter
+    'ORCL': None,  # Michael Sicilia doesn't have a public Twitter (Larry Ellison has @larryellison but he's not current CEO)
+}
+
 # --- Configuration ---
 DATA_DIR = "data"
 COMPANIES_CSV_PATH = "data/companies.csv"
@@ -678,6 +698,104 @@ def fetch_quarterly_earnings(ticker: str) -> List[Dict[str, Any]]:
         return []
 
 
+def fetch_financial_statements(ticker: str):
+    """
+    Fetch comprehensive financial statements from yfinance and save to JSON.
+
+    Args:
+        ticker: Stock ticker symbol
+    """
+    logger.info(f"Fetching financial statements for {ticker}...")
+
+    try:
+        stock = yf.Ticker(ticker)
+
+        # Get all financial data
+        financials_data = {
+            "ticker": ticker,
+            "fetch_date": datetime.now().isoformat(),
+            "income_statement": {},
+            "balance_sheet": {},
+            "cash_flow": {},
+            "quarterly_income_statement": {},
+            "quarterly_balance_sheet": {},
+            "quarterly_cash_flow": {},
+            "key_metrics": {}
+        }
+
+        # Helper function to convert DataFrame with datetime columns to dict
+        def df_to_json_dict(df):
+            if df is None or df.empty:
+                return {}
+            # Convert column names (which might be Timestamps) to strings
+            df_copy = df.copy()
+            df_copy.columns = df_copy.columns.map(str)
+            return df_copy.to_dict()
+
+        # Annual Income Statement
+        if hasattr(stock, 'financials') and stock.financials is not None and not stock.financials.empty:
+            financials_data["income_statement"] = df_to_json_dict(stock.financials)
+
+        # Annual Balance Sheet
+        if hasattr(stock, 'balance_sheet') and stock.balance_sheet is not None and not stock.balance_sheet.empty:
+            financials_data["balance_sheet"] = df_to_json_dict(stock.balance_sheet)
+
+        # Annual Cash Flow
+        if hasattr(stock, 'cashflow') and stock.cashflow is not None and not stock.cashflow.empty:
+            financials_data["cash_flow"] = df_to_json_dict(stock.cashflow)
+
+        # Quarterly Income Statement
+        if hasattr(stock, 'quarterly_financials') and stock.quarterly_financials is not None and not stock.quarterly_financials.empty:
+            financials_data["quarterly_income_statement"] = df_to_json_dict(stock.quarterly_financials)
+
+        # Quarterly Balance Sheet
+        if hasattr(stock, 'quarterly_balance_sheet') and stock.quarterly_balance_sheet is not None and not stock.quarterly_balance_sheet.empty:
+            financials_data["quarterly_balance_sheet"] = df_to_json_dict(stock.quarterly_balance_sheet)
+
+        # Quarterly Cash Flow
+        if hasattr(stock, 'quarterly_cashflow') and stock.quarterly_cashflow is not None and not stock.quarterly_cashflow.empty:
+            financials_data["quarterly_cash_flow"] = df_to_json_dict(stock.quarterly_cashflow)
+
+        # Get key metrics from info
+        info = stock.info
+        financials_data["key_metrics"] = {
+            "market_cap": info.get("marketCap"),
+            "enterprise_value": info.get("enterpriseValue"),
+            "trailing_pe": info.get("trailingPE"),
+            "forward_pe": info.get("forwardPE"),
+            "price_to_book": info.get("priceToBook"),
+            "price_to_sales": info.get("priceToSalesTrailing12Months"),
+            "profit_margins": info.get("profitMargins"),
+            "operating_margins": info.get("operatingMargins"),
+            "roe": info.get("returnOnEquity"),
+            "roa": info.get("returnOnAssets"),
+            "revenue_growth": info.get("revenueGrowth"),
+            "earnings_growth": info.get("earningsGrowth"),
+            "current_ratio": info.get("currentRatio"),
+            "quick_ratio": info.get("quickRatio"),
+            "debt_to_equity": info.get("debtToEquity"),
+            "total_cash": info.get("totalCash"),
+            "total_debt": info.get("totalDebt"),
+            "free_cash_flow": info.get("freeCashflow"),
+            "operating_cash_flow": info.get("operatingCashflow"),
+            "revenue": info.get("totalRevenue"),
+            "ebitda": info.get("ebitda"),
+            "gross_profits": info.get("grossProfits"),
+            "sector": info.get("sector"),
+            "industry": info.get("industry"),
+        }
+
+        # Save to JSON file
+        output_file = os.path.join(FINANCIALS_DIR, f"{ticker}_financials.json")
+        with open(output_file, 'w') as f:
+            json.dump(financials_data, f, indent=2, default=str)
+
+        logger.info(f"✅ Saved financial statements for {ticker}")
+
+    except Exception as e:
+        logger.error(f"Failed to fetch financials for {ticker}: {e}")
+
+
 def store_quarterly_earnings_in_neo4j(ticker: str, company_name: Optional[str], earnings: List[Dict[str, Any]]):
     """Persist quarterly earnings records into Neo4j."""
     if not earnings:
@@ -812,38 +930,8 @@ def contains_ticker(text: str) -> List[str]:
     text_upper = text.upper()
     found_tickers = []
 
-    # Map of tickers to alternative names/variations
-    ticker_aliases = {
-        'IREN': ['IREN', 'IRIS ENERGY', '$IREN'],
-        'RIOT': ['RIOT', 'RIOT PLATFORMS', 'RIOT BLOCKCHAIN', '$RIOT'],
-        'CIFR': ['CIFR', 'CIPHER MINING', '$CIFR'],
-        'OKLO': ['OKLO', '$OKLO'],
-        'SMR': ['SMR', 'NUSCALE', 'NUSCALE POWER', '$SMR'],
-        'INOD': ['INOD', 'INNODATA', '$INOD'],
-        'EOSE': ['EOSE', 'EOS ENERGY', '$EOSE'],
-        'QS': ['QS', 'QUANTUMSCAPE', '$QS'],
-        'VRT': ['VRT', 'VERTIV', '$VRT'],
-        'VST': ['VST', 'VISTRA', '$VST'],
-        'CCJ': ['CCJ', 'CAMECO', '$CCJ'],
-        'NXE': ['NXE', 'NEXGEN', 'NEXGEN ENERGY', '$NXE'],
-        'NVDA': ['NVDA', 'NVIDIA', '$NVDA'],
-        'MU': ['MU', 'MICRON', '$MU'],
-        'AVGO': ['AVGO', 'BROADCOM', '$AVGO'],
-        'TSM': [
-            'TSM',
-            "TSM'S",
-            'TSMC',
-            'TAIWAN SEMI',
-            'TAIWAN SEMICONDUCTOR',
-            'TAIWAN SEMICONDUCTOR MANUFACTURING',
-            '$TSM'
-        ],
-        'SMCI': ['SMCI', 'SUPER MICRO', 'SUPERMICRO', '$SMCI'],
-        'RR': ['$RR']  # Too common, only match with $
-    }
-
-    for ticker in TARGET_TICKERS:
-        aliases = ticker_aliases.get(ticker, [ticker])
+    # Iterate through tickers and their aliases defined in TICKER_ALIASES
+    for ticker, aliases in TICKER_ALIASES.items():
         for alias in aliases:
             pattern = r'\b' + re.escape(alias) + r'\b'
             if re.search(pattern, text_upper):
@@ -1221,7 +1309,7 @@ def search_x_posts(client, query: str, max_results: int = 100) -> List[Dict[str,
 
 def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: str, analyzer) -> Dict[str, Any]:
     """
-    Fetch X posts for a specific company and its CEO.
+    Fetch X posts from official company and CEO accounts from the last 24 hours.
 
     Args:
         client: Tweepy client instance
@@ -1238,45 +1326,85 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
     company_posts = []
     ceo_posts = []
 
-    # Search for company posts
-    try:
-        # Build company query (ticker + company name variations)
-        company_query = f'({ticker} OR "{company_name}") -is:retweet lang:en'
+    # Calculate 24 hours ago
+    from datetime import timedelta
+    now = datetime.now(tz=None)
+    twenty_four_hours_ago = now - timedelta(hours=24)
 
-        logger.info(f"  Searching X for company posts: {company_query}")
-        company_results = search_x_posts(client, company_query, max_results=10)  # Reduced to avoid rate limits
-        # Filter only today's posts
-        company_results = [post for post in company_results if datetime.fromisoformat(post['created_at']).date() == datetime.now().date()]
+    # Get official Twitter handles
+    company_handle = COMPANY_X_HANDLES.get(ticker)
+    ceo_handle = CEO_X_HANDLES.get(ticker)
 
-        if company_results:
-            # Analyze sentiment for each post
-            for post in company_results:
-                sentiment_data = analyze_sentiment(post['text'], analyzer)
-                post['sentiment'] = sentiment_data['sentiment']
-                post['compound_score'] = sentiment_data['compound_score']
-                post['positive_score'] = sentiment_data['positive_score']
-                post['negative_score'] = sentiment_data['negative_score']
-                post['topics'] = extract_topics(post['text'])
-
-            company_posts = company_results
-            logger.info(f"  Found {len(company_posts)} posts about {company_name}")
-
-        # Rate limiting (increased to avoid hitting limits)
-        time.sleep(5)
-
-    except Exception as e:
-        logger.error(f"Error fetching company posts for {ticker}: {e}")
-
-    # Search for CEO posts (if CEO name is available)
-    if ceo_name and ceo_name != "Not found":
+    # Search for posts FROM official company account
+    if company_handle:
         try:
-            # Build CEO query
-            ceo_query = f'"{ceo_name}" ({company_name} OR {ticker}) -is:retweet lang:en'
+            # Build query to get posts FROM the official company account
+            company_query = f'from:{company_handle} -is:retweet lang:en'
 
-            logger.info(f"  Searching X for CEO posts: {ceo_query}")
-            ceo_results = search_x_posts(client, ceo_query, max_results=10)  # Reduced to avoid rate limits
-            # Filter only today's posts
-            ceo_results = [post for post in ceo_results if datetime.fromisoformat(post['created_at']).date() == datetime.now().date()]
+            logger.info(f"  Searching X for posts from @{company_handle}: {company_query}")
+            company_results = search_x_posts(client, company_query, max_results=100)
+
+            # Filter posts from last 24 hours
+            filtered_results = []
+            for post in company_results:
+                if post['created_at']:
+                    # Parse created_at timestamp (ISO format)
+                    post_time = datetime.fromisoformat(post['created_at'].replace('Z', '+00:00'))
+                    # Make naive for comparison if needed
+                    if post_time.tzinfo is not None:
+                        post_time = post_time.replace(tzinfo=None)
+                    if post_time >= twenty_four_hours_ago:
+                        filtered_results.append(post)
+
+            company_results = filtered_results
+            logger.info(f"  Found {len(company_results)} posts from @{company_handle} in last 24 hours")
+
+            if company_results:
+                # Analyze sentiment for each post
+                for post in company_results:
+                    sentiment_data = analyze_sentiment(post['text'], analyzer)
+                    post['sentiment'] = sentiment_data['sentiment']
+                    post['compound_score'] = sentiment_data['compound_score']
+                    post['positive_score'] = sentiment_data['positive_score']
+                    post['negative_score'] = sentiment_data['negative_score']
+                    post['topics'] = extract_topics(post['text'])
+
+                company_posts = company_results
+                logger.info(f"  ✅ Found {len(company_posts)} posts from official @{company_handle} account")
+            else:
+                logger.info(f"  No posts from @{company_handle} in last 24 hours")
+
+            # Rate limiting
+            time.sleep(3)
+
+        except Exception as e:
+            logger.error(f"Error fetching posts from @{company_handle}: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        logger.info(f"  No official X handle configured for {ticker}")
+
+    # Search for posts FROM official CEO account
+    if ceo_handle:
+        try:
+            # Build query to get posts FROM the official CEO account
+            ceo_query = f'from:{ceo_handle} -is:retweet lang:en'
+
+            logger.info(f"  Searching X for posts from CEO @{ceo_handle}: {ceo_query}")
+            ceo_results = search_x_posts(client, ceo_query, max_results=100)
+
+            # Filter posts from last 24 hours
+            filtered_results = []
+            for post in ceo_results:
+                if post['created_at']:
+                    post_time = datetime.fromisoformat(post['created_at'].replace('Z', '+00:00'))
+                    if post_time.tzinfo is not None:
+                        post_time = post_time.replace(tzinfo=None)
+                    if post_time >= twenty_four_hours_ago:
+                        filtered_results.append(post)
+
+            ceo_results = filtered_results
+            logger.info(f"  Found {len(ceo_results)} posts from CEO @{ceo_handle} in last 24 hours")
 
             if ceo_results:
                 # Analyze sentiment for each post
@@ -1289,13 +1417,19 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
                     post['topics'] = extract_topics(post['text'])
 
                 ceo_posts = ceo_results
-                logger.info(f"  Found {len(ceo_posts)} posts about CEO {ceo_name}")
+                logger.info(f"  ✅ Found {len(ceo_posts)} posts from CEO @{ceo_handle}")
+            else:
+                logger.info(f"  No posts from CEO @{ceo_handle} in last 24 hours")
 
-            # Rate limiting (increased to avoid hitting limits)
-            time.sleep(5)
+            # Rate limiting
+            time.sleep(3)
 
         except Exception as e:
-            logger.error(f"Error fetching CEO posts for {ticker}: {e}")
+            logger.error(f"Error fetching posts from CEO @{ceo_handle}: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        logger.info(f"  No official CEO X handle configured for {ticker}")
 
     # Compute overall bullish score (1 to 10) from average compound sentiment
     all_scores = [post.get('compound_score', 0) for post in (company_posts + ceo_posts)]
@@ -1308,13 +1442,20 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
     return {
         'ticker': ticker,
         'company_name': company_name,
+        'company_x_handle': f'@{company_handle}' if company_handle else None,
         'ceo_name': ceo_name,
+        'ceo_x_handle': f'@{ceo_handle}' if ceo_handle else None,
         'company_posts': company_posts,
         'ceo_posts': ceo_posts,
+        'total_posts': len(company_posts) + len(ceo_posts),
         'total_company_posts': len(company_posts),
         'total_ceo_posts': len(ceo_posts),
         'bullish_score': bullish_score,
-        'fetch_timestamp': datetime.now().isoformat()
+        'average_sentiment': sum(all_scores) / len(all_scores) if all_scores else None,
+        'overall_sentiment': 'bullish' if bullish_score and bullish_score > 5 else 'bearish' if bullish_score else 'neutral',
+        'fetch_timestamp': datetime.now().isoformat(),
+        'time_range_hours': 24,
+        'data_source': 'Official company and CEO X/Twitter accounts only'
     }
 
 
@@ -1376,10 +1517,6 @@ def fetch_x_data():
         try:
             result = fetch_x_data_for_company(client, ticker, company_name, ceo_name, analyzer)
             all_results.append(result)
-            # Add fetch context and summary for this ticker
-            result['time_range_days'] = X_DAYS_BACK
-            result['api_tier'] = f"Basic ({X_DAYS_BACK} days)"
-            # Save combined raw data and summary per company
             # Save combined raw data and summary per company with timestamp
             company_file = os.path.join(X_DATA_DIR, f"{ticker}_x_posts_{date_str}.json")
             with open(company_file, 'w') as f:
@@ -2721,7 +2858,7 @@ if __name__ == "__main__":
         cik = str(row['cik'])
 
         # Fetch and Save Data
-        # fetch_financial_statements(ticker)  # Function not defined, skipping
+        fetch_financial_statements(ticker)
         earnings_records = fetch_quarterly_earnings(ticker)
         store_quarterly_earnings_in_neo4j(ticker, row.get('company_name'), earnings_records)
         fetch_stock_prices(ticker)
@@ -2748,6 +2885,52 @@ if __name__ == "__main__":
 
     logger.info("")
     logger.info("=" * 60)
+    logger.info("CALCULATING SECTOR METRICS")
+    logger.info("=" * 60)
+
+    # Step 6: Calculate sector metrics
+    try:
+        calculate_sector_metrics()
+        logger.info("✅ Sector metrics calculation completed")
+    except Exception as e:
+        logger.error(f"Failed to calculate sector metrics: {e}")
+        import traceback
+        traceback.print_exc()
+
+    logger.info("")
+    logger.info("=" * 60)
     logger.info("DATA FETCHING PIPELINE COMPLETED")
     logger.info("=" * 60)
     logger.info("Check the 'data' directory for all fetched data.")
+    logger.info("  - Financials: data/structured/financials")
+    logger.info("  - Sector Metrics: data/structured/sector_metrics")
+
+
+def fetch_x_data_only():
+    """
+    Fetch only X/Twitter data for all target companies.
+    Useful when you want to update X data without re-fetching everything else.
+
+    Usage:
+        python -c "from fetch_data import fetch_x_data_only; fetch_x_data_only()"
+    """
+    logger.info("=" * 60)
+    logger.info("FETCHING X/TWITTER DATA ONLY")
+    logger.info("=" * 60)
+    logger.info(f"Target tickers: {', '.join(TARGET_TICKERS)}")
+    logger.info("")
+
+    # Check if companies.csv exists
+    if not os.path.exists(COMPANIES_CSV_PATH):
+        logger.error(f"Companies file not found: {COMPANIES_CSV_PATH}")
+        logger.info("Run the full fetch_data.py pipeline first to generate company information.")
+        return
+
+    # Fetch X data
+    fetch_x_data()
+
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("X DATA FETCHING COMPLETED")
+    logger.info("=" * 60)
+    logger.info("Check data/unstructured/x/ for the generated files")

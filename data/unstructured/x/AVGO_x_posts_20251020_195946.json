@@ -1,0 +1,13 @@
+{
+  "ticker": "AVGO",
+  "company_name": "Broadcom Inc.",
+  "ceo_name": "Mr. Hock E. Tan",
+  "company_posts": [],
+  "ceo_posts": [],
+  "total_company_posts": 0,
+  "total_ceo_posts": 0,
+  "bullish_score": null,
+  "fetch_timestamp": "2025-10-20T20:00:17.806740",
+  "time_range_days": 7,
+  "api_tier": "Basic (7 days)"
+}
