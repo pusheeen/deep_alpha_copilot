@@ -300,7 +300,42 @@ def load_financials_df(ticker: str) -> pd.DataFrame:
     path = FINANCIALS_DIR / f"{ticker}_financials.json"
     if not path.exists():
         raise ScoreComputationError(f"Financials file not found for {ticker}")
-    df = pd.read_json(path)
+    
+    with open(path, 'r') as f:
+        data = json.load(f)
+    
+    # The structure has dates as keys within each statement section
+    # e.g., {"income_statement": {"2025-01-31 00:00:00": {...}, ...}, ...}
+    # We combine all metrics across all statements by date
+    
+    records = []
+    statement_types = [
+        'income_statement', 'balance_sheet', 'cash_flow',
+        'quarterly_income_statement', 'quarterly_balance_sheet', 'quarterly_cash_flow',
+        'key_metrics'
+    ]
+    
+    for statement_type in statement_types:
+        if statement_type in data and isinstance(data[statement_type], dict):
+            for date_str, metrics in data[statement_type].items():
+                if not isinstance(metrics, dict):
+                    continue
+                # Find or create the record for this date
+                existing = next((r for r in records if r['date'] == date_str), None)
+                if existing:
+                    # Merge metrics, avoiding overwriting with None/NaN
+                    for key, value in metrics.items():
+                        if key not in existing or existing[key] is None:
+                            existing[key] = value
+                else:
+                    record = {'date': date_str}
+                    record.update(metrics)
+                    records.append(record)
+    
+    if not records:
+        raise ScoreComputationError(f"No financial data found for {ticker}")
+    
+    df = pd.DataFrame(records)
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date")
     return df.set_index("date")
