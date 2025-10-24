@@ -322,37 +322,40 @@
             }
 
             try {
-                // Extract ticker from question if mentioned (case-insensitive)
-                const tickerMatch = question.toUpperCase().match(/\b([A-Z]{2,5})\b/);
-                const ticker = tickerMatch ? tickerMatch[1] : null;
+                // Call the ADK agent endpoint for intelligent responses
+                const chatResponse = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: augmentedQuestion,
+                        include_reasoning: false  // Set to true to see which tools the agent used
+                    })
+                });
                 
-                if (!ticker) {
-                    typingIndicator.remove();
-                    addMessage(`I can help analyze companies like NVDA, TSLA, AVGO, TSM, and others. Please mention a specific ticker symbol in your question (e.g., "What's AVGO's price?" or "Tell me about TSLA").`, 'bot');
-                    return;
-                }
-                
-                // Get company data to provide context
-                const scoreResponse = await fetch(`/api/scores/${ticker}`);
-                const scoreData = await scoreResponse.json();
+                const chatData = await chatResponse.json();
                 
                 typingIndicator.remove();
                 
-                if (scoreData.status === 'success') {
-                    const company = scoreData.data.company;
-                    const scores = scoreData.data.scores;
-                    const recommendation = scoreData.data.recommendation;
+                if (chatData.answer) {
+                    // Format the agent's response with markdown support
+                    const formattedAnswer = chatData.answer.replace(/\n/g, '<br>');
+                    addMessage(formattedAnswer, 'bot');
                     
-                    // Generate a contextual response based on the question and company data
-                    const response = generateChatResponse(question, company, scores, recommendation, ticker);
-                    addMessage(response, 'bot');
+                    // Optional: Show tool usage for transparency (if reasoning was enabled)
+                    if (chatData.tools_used && chatData.tools_used.length > 0) {
+                        console.log('Tools used:', chatData.tools_used);
+                    }
+                } else if (chatData.status === 'validation_error') {
+                    addMessage('Please ask a more specific question. I can help with stock analysis, financial metrics, news, predictions, and more!', 'bot');
                 } else {
-                    addMessage(`I can help analyze companies, but I'm having trouble accessing data for ${ticker}. Please try asking about a specific company like "What's NVDA's financial health?" or "Tell me about TSLA's competitive position."`, 'bot');
+                    addMessage('I encountered an issue processing your question. Please try rephrasing or ask about specific companies like NVDA, TSLA, AVGO, or TSM.', 'bot');
                 }
             } catch (error) {
-                console.error('Error fetching from API:', error);
+                console.error('Error calling agent:', error);
                 typingIndicator.remove();
-                addMessage('I can help analyze companies and their investment potential. Try asking questions like "What\'s NVDA\'s competitive advantage?" or "How is TSLA performing vs peers?"', 'bot');
+                addMessage('I\'m having trouble connecting to the analysis system. Please try again in a moment. I can help with stock analysis, financial data, news, and investment recommendations.', 'bot');
             }
         });
 
