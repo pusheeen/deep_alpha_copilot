@@ -322,9 +322,15 @@
             }
 
             try {
-                // Extract ticker from question if mentioned
-                const tickerMatch = question.match(/\b([A-Z]{2,5})\b/);
-                const ticker = tickerMatch ? tickerMatch[1] : 'NVDA'; // Default to NVDA
+                // Extract ticker from question if mentioned (case-insensitive)
+                const tickerMatch = question.toUpperCase().match(/\b([A-Z]{2,5})\b/);
+                const ticker = tickerMatch ? tickerMatch[1] : null;
+                
+                if (!ticker) {
+                    typingIndicator.remove();
+                    addMessage(`I can help analyze companies like NVDA, TSLA, AVGO, TSM, and others. Please mention a specific ticker symbol in your question (e.g., "What's AVGO's price?" or "Tell me about TSLA").`, 'bot');
+                    return;
+                }
                 
                 // Get company data to provide context
                 const scoreResponse = await fetch(`/api/scores/${ticker}`);
