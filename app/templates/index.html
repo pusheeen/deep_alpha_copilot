@@ -384,10 +384,16 @@
             
             // Investment recommendation questions
             if (questionLower.includes('buy') || questionLower.includes('sell') || questionLower.includes('hold') || questionLower.includes('invest')) {
-                const overallScore = scores.overall?.score || 0;
-                const action = recommendation?.action || 'Hold';
-                const timing = recommendation?.timing || 'Monitor for better entry point';
-                return `**${companyName} Investment Recommendation:**\n\n**Action:** ${action}\n**Timing:** ${timing}\n**Overall Score:** ${overallScore}/10\n\n${recommendation?.why_buy || 'Mixed signals suggest cautious approach.'}`;
+                const overallScore = scores.overall?.score;
+                const hasValidScore = overallScore !== null && overallScore !== undefined && overallScore > 0;
+                
+                if (hasValidScore) {
+                    const action = recommendation?.action || 'Hold';
+                    const timing = recommendation?.timing || 'Monitor for better entry point';
+                    return `**${companyName} Investment Recommendation:**\n\n**Action:** ${action}\n**Timing:** ${timing}\n**Overall Score:** ${overallScore}/10\n\n${recommendation?.why_buy || 'Mixed signals suggest cautious approach.'}`;
+                } else {
+                    return `**${companyName} Investment Analysis:**\n\n*Investment scores are being calculated. Please try again in a moment for a comprehensive recommendation.*\n\nIn the meantime, I can help you understand specific aspects like financial health, competitive position, or market risks.`;
+                }
             }
             
             // Growth questions
@@ -405,7 +411,14 @@
             }
             
             // General company overview
-            return `**${companyName} Overview:**\n\n**Overall Score:** ${scores.overall?.score || 0}/10\n**Recommendation:** ${recommendation?.action || 'Hold'}\n\n${company.summary || 'Company analysis in progress.'}\n\nAsk me about specific aspects like financial health, competitive position, leadership, or investment risks!`;
+            const overallScore = scores.overall?.score;
+            const hasValidScore = overallScore !== null && overallScore !== undefined && overallScore > 0;
+            
+            if (hasValidScore) {
+                return `**${companyName} Overview:**\n\n**Overall Score:** ${overallScore}/10\n**Recommendation:** ${recommendation?.action || 'Hold'}\n\n${company.summary || 'Company analysis in progress.'}\n\nAsk me about specific aspects like financial health, competitive position, leadership, or investment risks!`;
+            } else {
+                return `**${companyName} Overview:**\n\n${company.summary || 'Company analysis in progress.'}\n\n*Score calculation in progress - please try again in a moment.*\n\nAsk me about specific aspects like financial health, competitive position, leadership, or investment risks!`;
+            }
         }
 
         function addMessage(text, sender, isTyping = false) {
