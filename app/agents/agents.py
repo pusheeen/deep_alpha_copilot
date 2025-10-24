@@ -31,13 +31,82 @@ GOOGLE_SEARCH_ENGINE_ID = os.getenv("GOOGLE_SEARCH_ENGINE_ID")
 TICKER_LIST_STR = ", ".join(sorted(TARGET_TICKERS))
 
 # --- Tool Definitions ---
+def query_company_data(ticker: str, data_type: str = "all") -> dict:
+    """
+    Query comprehensive company data from JSON files and scoring engine.
+    
+    Args:
+        ticker: Stock ticker symbol (e.g., 'NVDA', 'AVGO')
+        data_type: Type of data to retrieve:
+            - 'all': Complete analysis with scores and recommendations
+            - 'risks': Investment risks and concerns
+            - 'financials': Financial metrics and health
+            - 'scores': All scoring categories
+            - 'recommendation': Buy/hold/sell recommendation with reasoning
+    
+    Returns:
+        dict: Requested company data
+    """
+    from app.scoring import compute_company_scores
+    
+    try:
+        ticker = ticker.upper().strip()
+        data = compute_company_scores(ticker)
+        
+        if data_type == "risks":
+            risks = data.get("recommendation", {}).get("risks", [])
+            main_risks = data.get("recommendation", {}).get("main_risks", "")
+            key_concerns = data.get("recommendation", {}).get("key_concerns", "")
+            
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "risks": risks,
+                "main_risks": main_risks,
+                "key_concerns": key_concerns,
+                "risk_summary": f"Key risks for {ticker}: {main_risks}. Concerns: {key_concerns}. Detailed risks: {', '.join(risks[:5])}"
+            }
+        elif data_type == "financials":
+            scores = data.get("scores", {})
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "financial_score": scores.get("financial", {}),
+                "business_score": scores.get("business", {}),
+                "quick_facts": data.get("quick_facts", {})
+            }
+        elif data_type == "scores":
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "scores": data.get("scores", {}),
+                "overall": data.get("overall", {})
+            }
+        elif data_type == "recommendation":
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "recommendation": data.get("recommendation", {}),
+                "overall_score": data.get("overall", {})
+            }
+        else:  # all
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "data": data
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to retrieve data for {ticker}: {str(e)}"
+        }
+
 def query_graph_database(question: str) -> dict:
     """
     Generates a Cypher query for the financial graph and executes it.
-    DISABLED - using JSON files instead of Neo4j
+    DEPRECATED - Use query_company_data() instead for JSON-based data
     """
-    # schema = graphdb.send_query("CALL db.schema.visualization()")["query_result"]
-    return {"status": "disabled", "message": "Neo4j functionality disabled - using JSON files"}
+    return {"status": "disabled", "message": "Neo4j functionality disabled - use query_company_data() tool instead"}
     
     # CORRECTED: Updated schema description and examples to match actual database structure
     cypher_generation_prompt = f"""
@@ -318,19 +387,31 @@ def fetch_intraday_price_and_events(ticker: str, max_events: int = 5) -> dict:
 
 # --- Sub-Agent Definitions ---
 graph_qa_subagent = Agent(
-    name="GraphQA_Agent",
+    name="CompanyData_Agent",
     model=llm,
-    tools=[query_graph_database],
-    description=f"Use for questions about company financials (revenue, net income, EPS), risks, events, strategies, and any structured data queries. Works with tickers: {TICKER_LIST_STR}.",
+    tools=[query_company_data],
+    description=f"Use for questions about company financials, risks, scores, and investment analysis from JSON data. Works with tickers: {TICKER_LIST_STR}.",
     instruction=f"""
-    Your task is to use the `query_graph_database` tool to answer questions about:
-    - Financial metrics (revenue, net income, EPS) by company and year
-    - Company risks, events, and strategic focuses
-    - Comparisons between companies
-    - Financial trends over time
+    Your task is to use the `query_company_data` tool to answer questions about companies.
     
-    Always use the exact ticker symbols: {TICKER_LIST_STR}
-    Remember that years are stored as strings (e.g., '2024', '2023').
+    CAPABILITIES:
+    - Financial metrics and scores (use data_type='financials')
+    - Investment risks and concerns (use data_type='risks')
+    - All scoring categories (use data_type='scores')  
+    - Buy/hold/sell recommendations (use data_type='recommendation')
+    - Complete company analysis (use data_type='all')
+    
+    IMPORTANT:
+    - Always use exact ticker symbols: {TICKER_LIST_STR}
+    - For risk questions, use data_type='risks' to get comprehensive risk analysis
+    - For financial health questions, use data_type='financials'
+    - For investment decisions, use data_type='recommendation'
+    - Provide detailed, actionable insights based on the returned data
+    
+    EXAMPLES:
+    - "What are the risks for AVGO?" → query_company_data(ticker="AVGO", data_type="risks")
+    - "How is NVDA's financial health?" → query_company_data(ticker="NVDA", data_type="financials")
+    - "Should I buy TSLA?" → query_company_data(ticker="TSLA", data_type="recommendation")
     """
 )
 
@@ -819,11 +900,11 @@ root_agent = Agent(
     You are a knowledgeable financial data assistant with access to data for {len(TARGET_TICKERS)} companies including: {', '.join(TARGET_TICKERS)}.
 
     DELEGATION GUIDELINES:
-    - Use 'GraphQA_Agent' for:
-      * Specific financial numbers (revenue, net income, EPS)
-      * Company risks, events, strategies (structured data)
-      * Financial comparisons and trends
-      * Any query requiring precise data extraction
+    - Use 'CompanyData_Agent' for:
+      * Specific financial numbers and scores
+      * Company risks, concerns, and weaknesses
+      * Investment recommendations and analysis
+      * All structured company data from JSON files
 
     - Use 'DocumentRAG_Agent' for:
       * Qualitative analysis and detailed explanations
