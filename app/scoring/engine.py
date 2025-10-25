@@ -127,7 +127,9 @@ def load_ceo_profile(ticker: str) -> Optional[Dict[str, object]]:
 
 _reddit_sentiment_cache = {}
 _reddit_cache_timestamps = {}
-REDDIT_CACHE_TTL = 21600  # 6 hours in seconds
+_twitter_sentiment_cache = {}
+_twitter_cache_timestamps = {}
+SENTIMENT_CACHE_TTL = 21600  # 6 hours in seconds
 
 def get_live_reddit_sentiment(ticker: str) -> Optional[dict]:
     """
@@ -144,7 +146,7 @@ def get_live_reddit_sentiment(ticker: str) -> Optional[dict]:
         # Check cache first
         if ticker in _reddit_sentiment_cache:
             cache_age = now - _reddit_cache_timestamps.get(ticker, 0)
-            if cache_age < REDDIT_CACHE_TTL:
+            if cache_age < SENTIMENT_CACHE_TTL:
                 return _reddit_sentiment_cache[ticker]
         
         # Fetch live data
@@ -193,6 +195,90 @@ def get_live_reddit_sentiment(ticker: str) -> Optional[dict]:
     except Exception as e:
         # Fallback to cached files
         return None
+
+
+def get_live_twitter_sentiment(ticker: str) -> Optional[dict]:
+    """
+    Fetch live Twitter/X sentiment with 6-hour caching to balance freshness and latency.
+    Falls back to Google Search API for recent mentions if Twitter API not available.
+    """
+    try:
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+        from googleapiclient.discovery import build
+        
+        ticker = ticker.upper()
+        now = datetime.now(timezone.utc).timestamp()
+        
+        # Check cache first
+        if ticker in _twitter_sentiment_cache:
+            cache_age = now - _twitter_cache_timestamps.get(ticker, 0)
+            if cache_age < SENTIMENT_CACHE_TTL:
+                return _twitter_sentiment_cache[ticker]
+        
+        # Use Google Custom Search API to find recent mentions
+        api_key = os.getenv('GOOGLE_API_KEY')
+        search_engine_id = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
+        
+        if not api_key or not search_engine_id:
+            return None
+        
+        service = build('customsearch', 'v1', developerKey=api_key)
+        analyzer = SentimentIntensityAnalyzer()
+        all_mentions = []
+        
+        # Search for recent mentions on Twitter/X and news
+        search_queries = [
+            f'${ticker} stock twitter.com OR x.com',
+            f'{ticker} stock sentiment'
+        ]
+        
+        for query in search_queries:
+            try:
+                result = service.cse().list(
+                    q=query,
+                    cx=search_engine_id,
+                    num=5,
+                    dateRestrict='d7'  # Last 7 days
+                ).execute()
+                
+                items = result.get('items', [])
+                for item in items:
+                    title = item.get('title', '')
+                    snippet = item.get('snippet', '')
+                    text = f"{title} {snippet}"
+                    
+                    sentiment = analyzer.polarity_scores(text)
+                    all_mentions.append({
+                        'sentiment': 'bullish' if sentiment['compound'] > 0.05 else 'bearish' if sentiment['compound'] < -0.05 else 'neutral',
+                        'compound_score': sentiment['compound']
+                    })
+            except:
+                continue
+        
+        if not all_mentions:
+            return None
+        
+        # Calculate aggregate
+        bullish = sum(1 for m in all_mentions if m['sentiment'] == 'bullish')
+        bearish = sum(1 for m in all_mentions if m['sentiment'] == 'bearish')
+        
+        result = {
+            'total_mentions': len(all_mentions),
+            'bullish_mentions': bullish,
+            'bearish_mentions': bearish,
+            'neutral_mentions': len(all_mentions) - bullish - bearish
+        }
+        
+        # Cache the result
+        _twitter_sentiment_cache[ticker] = result
+        _twitter_cache_timestamps[ticker] = now
+        
+        return result
+        
+    except Exception as e:
+        # Fallback
+        return None
+
 
 @lru_cache(maxsize=1)
 def load_latest_reddit_summary() -> Dict[str, dict]:
@@ -1647,13 +1733,40 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
         info = {}
         news_items = []
     
-    # Try live Reddit sentiment first (with 6-hour cache), fallback to static files
+    # Fetch live sentiment from Reddit and Twitter (with 6-hour cache)
     try:
         reddit_summary = get_live_reddit_sentiment(ticker)
         if not reddit_summary:
             reddit_summary = load_latest_reddit_summary().get(ticker)
     except Exception:
         reddit_summary = None
+    
+    try:
+        twitter_summary = get_live_twitter_sentiment(ticker)
+    except Exception:
+        twitter_summary = None
+    
+    # Combine Reddit and Twitter sentiment
+    combined_sentiment = None
+    if reddit_summary or twitter_summary:
+        combined_sentiment = {
+            'total_posts': (reddit_summary.get('total_posts', 0) if reddit_summary else 0) + 
+                          (twitter_summary.get('total_mentions', 0) if twitter_summary else 0),
+            'bullish_posts': (reddit_summary.get('bullish_posts', 0) if reddit_summary else 0) +
+                           (twitter_summary.get('bullish_mentions', 0) if twitter_summary else 0),
+            'bearish_posts': (reddit_summary.get('bearish_posts', 0) if reddit_summary else 0) +
+                           (twitter_summary.get('bearish_mentions', 0) if twitter_summary else 0),
+            'neutral_posts': (reddit_summary.get('neutral_posts', 0) if reddit_summary else 0) +
+                           (twitter_summary.get('neutral_mentions', 0) if twitter_summary else 0),
+            'sources': []
+        }
+        if reddit_summary:
+            combined_sentiment['sources'].append('Reddit')
+        if twitter_summary:
+            combined_sentiment['sources'].append('Twitter/X')
+    
+    # Use combined sentiment for scoring
+    reddit_summary = combined_sentiment
 
     # Compute scores with individual error handling
     try:
