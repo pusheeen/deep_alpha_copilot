@@ -934,6 +934,8 @@ SUBREDDITS = [
 ]
 
 # Time range: past 1 day
+# Number of days back to fetch Reddit posts
+# Number of days back to fetch Reddit posts (reset to daily fetch)
 DAYS_BACK = 1
 
 
@@ -1338,10 +1340,10 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
     company_posts = []
     ceo_posts = []
 
-    # Calculate 24 hours ago
+    # Calculate threshold time (X_DAYS_BACK days ago)
     from datetime import timedelta
     now = datetime.now(tz=None)
-    twenty_four_hours_ago = now - timedelta(hours=24)
+    threshold_time = now - timedelta(days=X_DAYS_BACK)
 
     # Get official Twitter handles
     company_handle = COMPANY_X_HANDLES.get(ticker)
@@ -1356,16 +1358,16 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
             logger.info(f"  Searching X for posts from @{company_handle}: {company_query}")
             company_results = search_x_posts(client, company_query, max_results=100)
 
-            # Filter posts from last 24 hours
+            # Filter posts from last X_DAYS_BACK days
             filtered_results = []
             for post in company_results:
-                if post['created_at']:
+                if post.get('created_at'):
                     # Parse created_at timestamp (ISO format)
                     post_time = datetime.fromisoformat(post['created_at'].replace('Z', '+00:00'))
-                    # Make naive for comparison if needed
+                    # Normalize to naive datetime
                     if post_time.tzinfo is not None:
                         post_time = post_time.replace(tzinfo=None)
-                    if post_time >= twenty_four_hours_ago:
+                    if post_time >= threshold_time:
                         filtered_results.append(post)
 
             company_results = filtered_results
@@ -1408,11 +1410,13 @@ def fetch_x_data_for_company(client, ticker: str, company_name: str, ceo_name: s
             # Filter posts from last 24 hours
             filtered_results = []
             for post in ceo_results:
-                if post['created_at']:
+                if post.get('created_at'):
+                    # Parse created_at timestamp (ISO format)
                     post_time = datetime.fromisoformat(post['created_at'].replace('Z', '+00:00'))
+                    # Normalize to naive datetime
                     if post_time.tzinfo is not None:
                         post_time = post_time.replace(tzinfo=None)
-                    if post_time >= twenty_four_hours_ago:
+                    if post_time >= threshold_time:
                         filtered_results.append(post)
 
             ceo_results = filtered_results
