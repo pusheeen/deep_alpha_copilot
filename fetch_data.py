@@ -56,6 +56,18 @@ from target_tickers import TARGET_TICKERS
 
 # Dynamically generate ticker aliases based on TARGET_TICKERS
 TICKER_ALIASES: Dict[str, List[str]] = {ticker: [ticker, f'${ticker}'] for ticker in TARGET_TICKERS}
+import sys  # for command-line ticker override
+
+# Allow overriding TARGET_TICKERS via command-line args
+# Usage: python fetch_data.py TICKER1 TICKER2 ...
+if __name__ == "__main__" and len(sys.argv) > 1:
+    # Parse tickers from args and override defaults
+    new_tickers = [arg.strip().upper() for arg in sys.argv[1:]]
+    TARGET_TICKERS = new_tickers
+    # Regenerate aliases based on overridden TARGET_TICKERS
+    TICKER_ALIASES = {ticker: [ticker, f'${ticker}'] for ticker in TARGET_TICKERS}
+    # Clean up sys.argv so downstream libraries don't see extra args
+    sys.argv = sys.argv[:1]
 
 # Official Twitter/X handles for companies and CEOs
 COMPANY_X_HANDLES = {

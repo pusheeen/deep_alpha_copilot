@@ -1,0 +1,52 @@
+{
+  "batch_info": {
+    "timestamp": "2025-10-24T23:44:27.337244",
+    "total_companies": 2,
+    "successful_fetches": 2,
+    "failed_fetches": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "MP",
+        "company_name": "MP Materials Corp. / DE",
+        "ceo_name": "Mr. James Henry Litinsky",
+        "ceo_title": "Co-Founder, Chairman, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-24T23:44:22.239180",
+        "age": 45,
+        "year_born": 1979,
+        "total_pay": 2961300
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "LAC",
+        "company_name": "LITHIUM AMERICAS CORP.",
+        "ceo_name": "Mr. Jonathan D. Evans",
+        "ceo_title": "President, CEO & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-24T23:44:24.697667",
+        "age": 53,
+        "year_born": 1971,
+        "total_pay": 1495800
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    }
+  ]
+}

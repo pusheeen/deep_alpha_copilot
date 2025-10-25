@@ -1,0 +1,90 @@
+{
+  "fetch_timestamp": "2025-10-24T23:59:24.147301",
+  "total_companies_analyzed": 10,
+  "total_sectors": 1,
+  "sectors": {
+    "Basic Materials": {
+      "num_companies": 10,
+      "total_market_cap": 35294320352.0,
+      "avg_market_cap": 3529432035.2,
+      "total_revenue": 5596318962.0,
+      "avg_revenue": 559631896.2,
+      "avg_gross_margin": -2.7969193186979275,
+      "median_gross_margin": 1.1629697373848122,
+      "avg_net_margin": -21.870088585150373,
+      "median_net_margin": -21.93292975245494,
+      "total_free_cash_flow": -1483672014.0,
+      "avg_free_cash_flow": -148367201.4,
+      "avg_pe_ratio": 42.737204000000006,
+      "median_pe_ratio": -18.268025,
+      "avg_ps_ratio": 628.7268778,
+      "median_ps_ratio": 51.794727,
+      "avg_pb_ratio": 22.48460696,
+      "median_pb_ratio": 14.2601685,
+      "avg_eps": -1.3430000000000002,
+      "median_eps": -0.33999999999999997,
+      "avg_roe": -44.04920002,
+      "median_roe": -10.113,
+      "avg_roa": -10.827900020000001,
+      "median_roa": -6.7625001000000005,
+      "avg_roic": 492.88632251307416,
+      "median_roic": -7.590171075440848,
+      "avg_debt_to_equity": 20.23388888888889,
+      "median_debt_to_equity": 8.556,
+      "avg_current_ratio": 10.886699999999998,
+      "median_current_ratio": 2.9005,
+      "avg_quick_ratio": 10.2438,
+      "median_quick_ratio": 2.3575,
+      "avg_interest_coverage": -88.7284545720688,
+      "median_interest_coverage": -30.00690863173892,
+      "avg_rsi": 52.547165642288135,
+      "median_rsi": 51.51167211476372,
+      "avg_macd": 1.768151925006702,
+      "avg_cagr": 358.30435203185806,
+      "median_cagr": 172.96914192134938,
+      "avg_momentum_1m": 49.40495850743209,
+      "avg_momentum_3m": 152.76025814560086,
+      "avg_momentum_6m": 222.59612980084293,
+      "avg_momentum_1y": 351.3433373029935,
+      "avg_volatility": 116.42034608270001,
+      "median_volatility": 116.32776782181138,
+      "avg_beta": 0.9795961715538881,
+      "median_beta": 1.007967914093029,
+      "avg_sharpe_ratio": 2.8781873236554327,
+      "median_sharpe_ratio": 1.4699959162262446,
+      "quality_score": 58.988305555555556
+    }
+  },
+  "sentiment_analysis": {},
+  "momentum_analysis": {
+    "Basic Materials": {
+      "sector": "Basic Materials",
+      "price_momentum_1m": 49.40495850743209,
+      "price_momentum_3m": 152.76025814560086,
+      "price_momentum_6m": 222.59612980084293,
+      "price_momentum_1y": 351.3433373029935,
+      "sentiment_score": null,
+      "net_sentiment": null,
+      "combined_momentum_score": 145.24362053712107,
+      "momentum_trend": "Decelerating",
+      "signal": "Strong Buy"
+    }
+  },
+  "correlation_analysis": {
+    "correlation_matrix": {
+      "Basic Materials": {
+        "Basic Materials": 1.0
+      }
+    },
+    "relative_strength": {
+      "Basic Materials": {
+        "rs_3m": 145.85479879198593,
+        "rs_6m": 198.94443642540853,
+        "rs_1y": 332.9605461524615,
+        "composite_rs": 199.2028395541078,
+        "classification": "Strong Outperformer"
+      }
+    },
+    "sector_pairs": []
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "ticker": "NMG",
+    "period": "2025-06-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": -2477000.0,
+    "net_income": -21016000.0,
+    "eps": -0.14
+  },
+  {
+    "ticker": "NMG",
+    "period": "2025-03-31 00:00:00",
+    "revenue": 0.0,
+    "earnings": -2601000.0,
+    "net_income": -12442000.0,
+    "eps": -0.08
+  },
+  {
+    "ticker": "NMG",
+    "period": "2024-12-31 00:00:00",
+    "revenue": 0.0,
+    "earnings": -2332000.0,
+    "net_income": -21903000.0,
+    "eps": null
+  },
+  {
+    "ticker": "NMG",
+    "period": "2024-09-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": -2367000.0,
+    "net_income": -8062000.0,
+    "eps": -0.07
+  }
+]
