@@ -103,15 +103,7 @@
 
             <!-- Comparison Results -->
             <div id="comparison-results" class="hidden">
-                <!-- Overall Scores Comparison -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Overall Scores</h3>
-                    <div id="overall-scores-chart" class="bg-slate-50 rounded-xl p-4">
-                        <canvas id="overallChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
-
-                <!-- Individual Scores Comparison -->
+                <!-- Score Comparison Radar -->
                 <div class="mb-8">
                     <h3 class="text-lg font-semibold text-slate-800 mb-4">Score Comparison Radar</h3>
                     <p class="text-sm text-slate-600 mb-4">Compare performance across all scoring dimensions</p>
@@ -1689,10 +1681,6 @@
             
             // Clear comparison data to prevent interference
             comparisonData = {};
-            if (comparisonCharts.overall) {
-                comparisonCharts.overall.destroy();
-                comparisonCharts.overall = null;
-            }
             if (comparisonCharts.individual) {
                 comparisonCharts.individual.destroy();
                 comparisonCharts.individual = null;
@@ -1802,7 +1790,6 @@
                 }
 
                 // Render comparison charts with successful data
-                renderOverallScoresChart(successfulTickers);
                 renderIndividualScoresChart(successfulTickers);
                 renderPriceComparisonChart(successfulTickers);
 
@@ -1829,98 +1816,6 @@
             }
         }
 
-        function renderOverallScoresChart(tickers) {
-            const ctx = document.getElementById('overallChart').getContext('2d');
-            
-            // Destroy existing chart if it exists
-            if (comparisonCharts.overall) {
-                comparisonCharts.overall.destroy();
-            }
-
-            const data = tickers.map(ticker => {
-                const companyData = comparisonData[ticker];
-                return companyData ? 
-                    (companyData.overall?.score || 
-                     companyData.overall_score || 
-                     companyData.scores?.overall?.score || 
-                     companyData.total_score || 
-                     0) : 0;
-            });
-
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-            
-            comparisonCharts.overall = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: tickers,
-                    datasets: [{
-                        label: 'Overall Score',
-                        data: data,
-                        backgroundColor: colors.slice(0, tickers.length).map(color => color + '80'),
-                        borderColor: colors.slice(0, tickers.length),
-                        borderWidth: 3,
-                        borderRadius: 12,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: '#3B82F6',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.parsed.y.toFixed(1)}/10`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10,
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.2)',
-                                drawBorder: false
-                            },
-                            ticks: {
-                                color: '#64748b',
-                                font: {
-                                    size: 12,
-                                    weight: '500'
-                                },
-                                callback: function(value) {
-                                    return value.toFixed(1);
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#64748b',
-                                font: {
-                                    size: 12,
-                                    weight: '600'
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         function renderIndividualScoresChart(tickers) {
             const ctx = document.getElementById('individualChart').getContext('2d');
             
@@ -1929,12 +1824,21 @@
                 comparisonCharts.individual.destroy();
             }
 
-            const scoreTypes = ['business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
+            // Include overall score as the 8th dimension
+            const scoreTypes = ['overall', 'business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
             
             const datasets = tickers.map((ticker, index) => {
                 const companyData = comparisonData[ticker];
                 const data = scoreTypes.map(type => {
+                    if (type === 'overall') {
+                        return companyData ? 
+                            (companyData.overall?.score || 
+                             companyData.overall_score || 
+                             companyData.scores?.overall?.score || 
+                             companyData.total_score || 
+                             0) : 0;
+                    }
                     return companyData ? companyData.scores[type]?.score || 0 : 0;
                 });
                 
@@ -2082,7 +1986,7 @@
                             borderColor: colors[index % colors.length],
                             backgroundColor: colors[index % colors.length] + '20',
                             borderWidth: 2,
-                            fill: false,
+                            fill: true,  // Fill area like single stock view
                             tension: 0.1
                         };
                     } else {
