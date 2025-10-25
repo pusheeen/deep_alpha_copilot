@@ -1700,11 +1700,13 @@
                 comparisonCharts.price = null;
             }
             
-            // Reset the comparison results section
+            // Hide the comparison results section (don't clear innerHTML to preserve canvases)
             const resultsDiv = document.getElementById('comparison-results');
             if (resultsDiv) {
                 resultsDiv.classList.add('hidden');
-                resultsDiv.innerHTML = '';
+                // Remove any error/loading messages but keep the chart canvases
+                const loadingDiv = document.getElementById('comparison-loading');
+                if (loadingDiv) loadingDiv.remove();
             }
         });
 
@@ -1736,15 +1738,24 @@
             const resultsDiv = document.getElementById('comparison-results');
             resultsDiv.classList.remove('hidden');
             
-            // Show loading state
-            resultsDiv.innerHTML = `
-                <div class="flex items-center justify-center py-12">
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p class="text-slate-600">Loading comparison data...</p>
-                    </div>
+            // DON'T clear innerHTML - just show loading message in a specific area
+            // The canvas elements need to stay in the DOM
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'comparison-loading';
+            loadingDiv.className = 'flex items-center justify-center py-12 bg-white rounded-xl mb-4';
+            loadingDiv.innerHTML = `
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-slate-600">Loading comparison data...</p>
                 </div>
             `;
+            
+            // Remove old loading div if exists
+            const oldLoading = document.getElementById('comparison-loading');
+            if (oldLoading) oldLoading.remove();
+            
+            // Insert loading at the top
+            resultsDiv.insertBefore(loadingDiv, resultsDiv.firstChild);
 
             try {
                 // Fetch data for all tickers with proper error handling
@@ -1774,14 +1785,17 @@
                     }
                 });
 
+                // Remove loading indicator
+                const loadingDiv = document.getElementById('comparison-loading');
+                if (loadingDiv) loadingDiv.remove();
+                
                 // Check if we have any successful data
                 const successfulTickers = Object.keys(comparisonData);
                 if (successfulTickers.length === 0) {
-                    resultsDiv.innerHTML = `
-                        <div class="text-center py-12">
-                            <p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>
-                        </div>
-                    `;
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'text-center py-12 bg-red-50 rounded-xl';
+                    errorDiv.innerHTML = `<p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>`;
+                    resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
                     return;
                 }
 
@@ -1798,12 +1812,18 @@
 
             } catch (error) {
                 console.error('Error performing comparison:', error);
-                resultsDiv.innerHTML = `
-                    <div class="text-center py-12">
-                        <p class="text-red-600">Failed to load comparison data. Please try again.</p>
-                        <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
-                    </div>
+                
+                // Remove loading indicator
+                const loadingDiv = document.getElementById('comparison-loading');
+                if (loadingDiv) loadingDiv.remove();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'text-center py-12 bg-red-50 rounded-xl';
+                errorDiv.innerHTML = `
+                    <p class="text-red-600">Failed to load comparison data. Please try again.</p>
+                    <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
                 `;
+                resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
             }
         }
 
