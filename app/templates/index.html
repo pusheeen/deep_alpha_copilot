@@ -1742,11 +1742,10 @@
         let comparisonData = {};
         let comparisonCharts = {};
 
-        // Comparison section toggle
+        // Comparison section toggle - open in new tab
         document.getElementById('open-comparison').addEventListener('click', () => {
-            document.getElementById('comparison-section').classList.remove('hidden');
-            document.getElementById('scoreboard').classList.add('hidden');
-            document.getElementById('score-table').classList.add('hidden');
+            // Open the same page in a new tab with a hash to show comparison
+            window.open(window.location.origin + '/?view=comparison', '_blank');
         });
 
         document.getElementById('close-comparison').addEventListener('click', () => {
@@ -2160,8 +2159,16 @@
             }
         });
 
-        loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
-        refreshCoverageTable();
+        // Check if we should open comparison view (when opened in new tab)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('view') === 'comparison') {
+            document.getElementById('comparison-section').classList.remove('hidden');
+            document.getElementById('scoreboard').classList.add('hidden');
+            document.getElementById('score-table').classList.add('hidden');
+        } else {
+            loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
+            refreshCoverageTable();
+        }
     </script>
 </body>
 </html>
