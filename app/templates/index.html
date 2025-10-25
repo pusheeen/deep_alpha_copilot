@@ -1923,54 +1923,84 @@
         }
 
         async function renderPriceComparisonChart(tickers) {
-            const ctx = document.getElementById('priceComparisonChart').getContext('2d');
+            const canvas = document.getElementById('priceComparisonChart');
+            if (!canvas) {
+                console.error('Price comparison canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
             const period = document.getElementById('price-period').value;
             
             // Destroy existing chart if it exists
             if (comparisonCharts.price) {
                 comparisonCharts.price.destroy();
+                comparisonCharts.price = null;
             }
 
             try {
+                console.log('Fetching price data for tickers:', tickers, 'period:', period);
                 const promises = tickers.map(ticker => fetch(`/api/price-history/${ticker}?period=${period}`));
                 const responses = await Promise.all(promises);
                 const priceData = await Promise.all(responses.map(r => r.json()));
 
-                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+                console.log('Price data received:', priceData);
+
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
                 
                 const datasets = tickers.map((ticker, index) => {
                     const data = priceData[index];
-                    if (data.status === 'success' && data.data.price_data) {
+                    console.log(`Processing ${ticker}:`, data);
+                    
+                    if (data.status === 'success' && data.data && data.data.price_data && data.data.price_data.length > 0) {
                         const prices = data.data.price_data.map(item => ({
-                            x: item.trading_date || item.date,
-                            y: item.close_price || item.close
+                            x: item.date,
+                            y: item.close
                         }));
+                        
+                        console.log(`${ticker} has ${prices.length} price points`);
                         
                         return {
                             label: ticker,
                             data: prices,
-                            borderColor: colors[index],
-                            backgroundColor: colors[index] + '20',
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1
+                        };
+                    } else {
+                        console.warn(`${ticker} has no valid price data:`, data);
+                        return {
+                            label: ticker + ' (No Data)',
+                            data: [],
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '20',
                             borderWidth: 2,
                             fill: false,
                             tension: 0.1
                         };
                     }
-                    return {
-                        label: ticker,
-                        data: [],
-                        borderColor: colors[index],
-                        backgroundColor: colors[index] + '20',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.1
-                    };
                 });
+
+                // Filter out empty datasets
+                const validDatasets = datasets.filter(ds => ds.data.length > 0);
+                
+                if (validDatasets.length === 0) {
+                    console.error('No valid datasets to display');
+                    const chartContainer = document.getElementById('price-comparison-chart');
+                    if (chartContainer) {
+                        chartContainer.innerHTML = '<div class="text-center text-red-600 p-4">No price data available for comparison. Please try different tickers or time periods.</div>';
+                    }
+                    return;
+                }
+
+                console.log('Creating chart with datasets:', validDatasets);
 
                 comparisonCharts.price = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        datasets: datasets
+                        datasets: validDatasets
                     },
                     options: {
                         responsive: true,
@@ -1978,17 +2008,32 @@
                         plugins: {
                             legend: {
                                 position: 'top',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
                             }
                         },
                         scales: {
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: 'day'
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'MMM dd'
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Date'
                                 }
                             },
                             y: {
                                 beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Price ($)'
+                                },
                                 ticks: {
                                     callback: function(value) {
                                         return '$' + value.toFixed(2);
@@ -1999,8 +2044,14 @@
                     }
                 });
 
+                console.log('Chart created successfully');
+
             } catch (error) {
-                console.error('Error loading price data:', error);
+                console.error('Error loading price comparison data:', error);
+                const chartContainer = document.getElementById('price-comparison-chart');
+                if (chartContainer) {
+                    chartContainer.innerHTML = `<div class="text-center text-red-600 p-4">Error loading price data: ${error.message}</div>`;
+                }
             }
         }
 
