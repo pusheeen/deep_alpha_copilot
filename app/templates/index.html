@@ -6,6 +6,7 @@
     <title>deepAlpha Copilot</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         #chat-container::-webkit-scrollbar { width: 4px; }
@@ -112,8 +113,9 @@
 
                 <!-- Individual Scores Comparison -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
-                    <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Score Comparison Radar</h3>
+                    <p class="text-sm text-slate-600 mb-4">Compare performance across all scoring dimensions</p>
+                    <div id="individual-scores-chart" class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6">
                         <canvas id="individualChart" width="400" height="300"></canvas>
                     </div>
                 </div>
@@ -1837,7 +1839,6 @@
 
             const data = tickers.map(ticker => {
                 const companyData = comparisonData[ticker];
-                // Try different possible paths for overall score
                 return companyData ? 
                     (companyData.overall?.score || 
                      companyData.overall_score || 
@@ -1846,7 +1847,7 @@
                      0) : 0;
             });
 
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
             
             comparisonCharts.overall = new Chart(ctx, {
                 type: 'bar',
@@ -1855,10 +1856,10 @@
                     datasets: [{
                         label: 'Overall Score',
                         data: data,
-                        backgroundColor: colors.slice(0, tickers.length),
+                        backgroundColor: colors.slice(0, tickers.length).map(color => color + '80'),
                         borderColor: colors.slice(0, tickers.length),
-                        borderWidth: 2,
-                        borderRadius: 8,
+                        borderWidth: 3,
+                        borderRadius: 12,
                         borderSkipped: false,
                     }]
                 },
@@ -1868,15 +1869,50 @@
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y.toFixed(1)}/10`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             max: 10,
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.2)',
+                                drawBorder: false
+                            },
                             ticks: {
+                                color: '#64748b',
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                },
                                 callback: function(value) {
                                     return value.toFixed(1);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
                                 }
                             }
                         }
@@ -1894,7 +1930,7 @@
             }
 
             const scoreTypes = ['business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
             
             const datasets = tickers.map((ticker, index) => {
                 const companyData = comparisonData[ticker];
@@ -1905,16 +1941,21 @@
                 return {
                     label: ticker,
                     data: data,
-                    borderColor: colors[index],
-                    backgroundColor: colors[index] + '20',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.1
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '30',
+                    borderWidth: 3,
+                    pointBackgroundColor: colors[index % colors.length],
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true,
+                    tension: 0.2
                 };
             });
 
             comparisonCharts.individual = new Chart(ctx, {
-                type: 'line',
+                type: 'radar',
                 data: {
                     labels: scoreTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
                     datasets: datasets
@@ -1925,17 +1966,72 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: '#3B82F6',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.r.toFixed(1)}/10`;
+                                }
+                            }
                         }
                     },
                     scales: {
-                        y: {
+                        r: {
                             beginAtZero: true,
                             max: 10,
+                            min: 0,
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.2)',
+                                lineWidth: 1
+                            },
+                            angleLines: {
+                                color: 'rgba(148, 163, 184, 0.1)',
+                                lineWidth: 1
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11,
+                                    weight: '600'
+                                },
+                                color: '#475569',
+                                padding: 8
+                            },
                             ticks: {
+                                display: true,
+                                color: '#64748b',
+                                font: {
+                                    size: 10,
+                                    weight: '500'
+                                },
+                                stepSize: 2,
                                 callback: function(value) {
-                                    return value.toFixed(1);
+                                    return value.toFixed(0);
                                 }
                             }
+                        }
+                    },
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        },
+                        point: {
+                            radius: 6,
+                            hoverRadius: 8
                         }
                     }
                 }
