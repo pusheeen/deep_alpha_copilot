@@ -808,60 +808,122 @@ def query_ceo_info_by_ticker(ticker: str) -> dict:
         return {"error": f"Error retrieving CEO information: {str(e)}"}
 
 # --- Reddit Sentiment Agent ---
-def query_reddit_sentiment(question: str) -> dict:
+def query_reddit_sentiment(ticker: str, limit: int = 20) -> dict:
     """
-    Queries Reddit sentiment data for companies.
-    Analyzes social media sentiment, discussions, and trends.
+    Fetches real-time Reddit sentiment for a specific company ticker.
+    Uses PRAW API with stored credentials to scrape recent posts.
+    
+    Args:
+        ticker: Stock ticker symbol (e.g., 'NVDA', 'AVGO')
+        limit: Number of posts to fetch per subreddit (default 20)
+    
+    Returns:
+        dict: Reddit sentiment analysis including posts, sentiment scores, and trends
     """
     try:
-        # Generate Cypher query for Reddit sentiment analysis
-        tickers_list = "', '".join(TARGET_TICKERS)
-        cypher_query = f"""
-        MATCH (p:RedditPost)-[:MENTIONS]->(c:Company)
-        WHERE c.ticker IN ['{tickers_list}']
-        RETURN c.ticker as ticker, 
-               p.sentiment as sentiment,
-               p.compound_score as compound_score,
-               p.score as post_score,
-               p.subreddit as subreddit,
-               p.title as title,
-               p.created_utc as created_utc,
-               p.topics as topics
-        ORDER BY p.created_utc DESC
-        LIMIT 50
-        """
+        import praw
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
         
-        # result = graphdb.send_query(cypher_query)
-        # Disabled Neo4j functionality
+        ticker = ticker.upper().strip()
+        
+        # Initialize Reddit client
+        reddit_client = praw.Reddit(
+            client_id=os.getenv('REDDIT_CLIENT_ID', "9RrzkLg9kN06g-kpti2ncw"),
+            client_secret=os.getenv('REDDIT_CLIENT_SECRET', "OH0pyFbl8T2ykN0IeAC1m5uNUu287A"),
+            user_agent=os.getenv('REDDIT_USER_AGENT', "FinancialAgent/1.0 by u/Feeling-Berry5335")
+        )
+        
+        # Subreddits to search
+        subreddits = ['stocks', 'investing', 'wallstreetbets', 'SecurityAnalysis', ticker]
+        
+        analyzer = SentimentIntensityAnalyzer()
+        all_posts = []
+        
+        for subreddit_name in subreddits:
+            try:
+                subreddit = reddit_client.subreddit(subreddit_name)
+                for post in subreddit.search(ticker, limit=limit, time_filter='week'):
+                    # Analyze sentiment
+                    sentiment = analyzer.polarity_scores(post.title + " " + post.selftext)
+                    
+                    all_posts.append({
+                        'title': post.title,
+                        'subreddit': subreddit_name,
+                        'score': post.score,
+                        'url': f"https://reddit.com{post.permalink}",
+                        'created_utc': datetime.fromtimestamp(post.created_utc).isoformat(),
+                        'compound_score': sentiment['compound'],
+                        'sentiment': 'bullish' if sentiment['compound'] > 0.05 else 'bearish' if sentiment['compound'] < -0.05 else 'neutral'
+                    })
+            except Exception as e:
+                continue
+        
+        if not all_posts:
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "total_posts": 0,
+                "message": f"No recent Reddit posts found for {ticker}"
+            }
+        
+        # Calculate aggregate sentiment
+        avg_sentiment = sum(p['compound_score'] for p in all_posts) / len(all_posts)
+        bullish_posts = sum(1 for p in all_posts if p['sentiment'] == 'bullish')
+        bearish_posts = sum(1 for p in all_posts if p['sentiment'] == 'bearish')
+        
         return {
-            "query_result": [],
-            "cypher_query": cypher_query,
-            "status": "disabled",
-            "message": "Neo4j functionality disabled - using JSON files"
+            "status": "success",
+            "ticker": ticker,
+            "total_posts": len(all_posts),
+            "average_sentiment": avg_sentiment,
+            "bullish_posts": bullish_posts,
+            "bearish_posts": bearish_posts,
+            "neutral_posts": len(all_posts) - bullish_posts - bearish_posts,
+            "sentiment_summary": f"{'Bullish' if avg_sentiment > 0.05 else 'Bearish' if avg_sentiment < -0.05 else 'Neutral'} (score: {avg_sentiment:.2f})",
+            "recent_posts": all_posts[:10],  # Top 10 most recent
+            "data_source": "Live Reddit API via PRAW",
+            "timeframe": "Past 7 days"
+        }
+        
+    except ImportError:
+        return {
+            "status": "error",
+            "message": "Reddit API not available - praw or vaderSentiment not installed"
         }
     except Exception as e:
-        return {"error": f"Reddit sentiment query failed: {str(e)}"}
+        return {
+            "status": "error",
+            "message": f"Reddit API error: {str(e)}"
+        }
 
 reddit_sentiment_subagent = Agent(
     name="RedditSentiment_Agent",
     model=llm,
     tools=[query_reddit_sentiment],
-    description="Use ONLY for Reddit sentiment analysis, social media discussions, and community sentiment around companies.",
+    description="Use for REAL-TIME Reddit sentiment analysis and social media discussions about stocks.",
     instruction="""
-    Your only task is to analyze Reddit sentiment and discussions about companies.
+    Your task is to fetch and analyze LIVE Reddit sentiment for specific tickers.
 
     CAPABILITIES:
-    - Analyze sentiment trends (bullish/bearish/neutral) for specific tickers
-    - Find most discussed topics and themes
-    - Identify high-engagement posts and comments
-    - Track sentiment changes over time
-    - Compare sentiment across different subreddits
+    - Real-time Reddit sentiment analysis (past 7 days)
+    - Searches r/stocks, r/investing, r/wallstreetbets, r/SecurityAnalysis
+    - Returns bullish/bearish/neutral sentiment scores
+    - Provides recent post titles and discussion trends
+    - Includes aggregate metrics and sentiment summary
 
+    USAGE:
+    - Input: ticker symbol (e.g., 'NVDA', 'AVGO')
+    - Returns: Live sentiment data from Reddit API
+    - Timeframe: Past 7 days
+    
     IMPORTANT:
-    - Focus on Reddit discussions and social sentiment
-    - Provide insights on community sentiment and popular opinions
-    - Include relevant post titles and subreddit sources
-    - Always mention that Reddit sentiment is not financial advice
+    - This is LIVE data, not cached
+    - Always mention that Reddit sentiment is community opinion, not financial advice
+    - Provide context on number of posts and sentiment distribution
+    - Include relevant post titles for context
+    
+    EXAMPLE:
+    query_reddit_sentiment(ticker="NVDA") → Returns live bullish/bearish sentiment from Reddit
     """
 )
 
