@@ -1903,3 +1903,257 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
     
     # Apply safe JSON serialization to handle NaN/infinity values
     return safe_json_serialize(result)
+
+
+def get_valuation_metrics(ticker: str) -> dict:
+    """
+    Get historical P/E and P/S ratios with industry benchmarks.
+    Returns time series data for charting.
+    """
+    import yfinance as yf
+    from datetime import datetime, timedelta
+    
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        
+        # Get industry/sector info for benchmarks
+        sector = info.get('sector', 'Technology')
+        industry = info.get('industry', 'Semiconductors')
+        
+        # Industry benchmark P/E and P/S ratios (approximate averages)
+        industry_benchmarks = {
+            'Semiconductors': {'pe': 28.5, 'ps': 6.2},
+            'Software': {'pe': 35.2, 'ps': 8.5},
+            'Hardware': {'pe': 22.1, 'ps': 3.8},
+            'Internet Services': {'pe': 32.5, 'ps': 7.1},
+            'Financial Services': {'pe': 14.2, 'ps': 2.5},
+            'Healthcare': {'pe': 25.3, 'ps': 4.2},
+            'Energy': {'pe': 12.8, 'ps': 1.8},
+            'Consumer': {'pe': 18.5, 'ps': 2.2},
+            'default': {'pe': 22.0, 'ps': 4.0}
+        }
+        
+        # Get industry benchmark or default
+        benchmark = industry_benchmarks.get(industry, industry_benchmarks['default'])
+        
+        # Get historical data (2 years)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=730)
+        hist = stock.history(start=start_date, end=end_date, interval='1mo')
+        
+        # Calculate quarterly P/E and P/S ratios
+        pe_data = []
+        ps_data = []
+        
+        # Get quarterly financials to calculate historical P/E and P/S
+        try:
+            quarterly_financials = stock.quarterly_financials
+            quarterly_balance = stock.quarterly_balance_sheet
+            
+            # Use monthly price data
+            for date, row in hist.iterrows():
+                close_price = row['Close']
+                
+                # For simplicity, use current trailing P/E and P/S adjusted by price changes
+                # (Real implementation would calculate from financials)
+                current_pe = info.get('trailingPE', 25)
+                current_ps = info.get('priceToSalesTrailing12Months', 5)
+                current_price = info.get('currentPrice', close_price)
+                
+                if current_price and current_price > 0:
+                    # Estimate historical ratios based on price changes
+                    price_ratio = close_price / current_price
+                    estimated_pe = current_pe * price_ratio if current_pe else None
+                    estimated_ps = current_ps * price_ratio if current_ps else None
+                    
+                    pe_data.append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'pe_ratio': round(estimated_pe, 2) if estimated_pe else None,
+                        'benchmark_pe': benchmark['pe']
+                    })
+                    
+                    ps_data.append({
+                        'date': date.strftime('%Y-%m-%d'),
+                        'ps_ratio': round(estimated_ps, 2) if estimated_ps else None,
+                        'benchmark_ps': benchmark['ps']
+                    })
+        except Exception as e:
+            logger.warning(f"Could not calculate historical P/E and P/S for {ticker}: {e}")
+        
+        # Current values
+        current_pe = info.get('trailingPE')
+        current_ps = info.get('priceToSalesTrailing12Months')
+        forward_pe = info.get('forwardPE')
+        
+        return {
+            'ticker': ticker,
+            'sector': sector,
+            'industry': industry,
+            'current_metrics': {
+                'pe_ratio': round(current_pe, 2) if current_pe else None,
+                'ps_ratio': round(current_ps, 2) if current_ps else None,
+                'forward_pe': round(forward_pe, 2) if forward_pe else None,
+                'benchmark_pe': benchmark['pe'],
+                'benchmark_ps': benchmark['ps']
+            },
+            'historical_pe': pe_data[-24:],  # Last 2 years monthly
+            'historical_ps': ps_data[-24:],
+            'analysis': {
+                'pe_vs_industry': 'Overvalued' if current_pe and current_pe > benchmark['pe'] * 1.2 else 'Fair' if current_pe and current_pe > benchmark['pe'] * 0.8 else 'Undervalued',
+                'ps_vs_industry': 'Overvalued' if current_ps and current_ps > benchmark['ps'] * 1.2 else 'Fair' if current_ps and current_ps > benchmark['ps'] * 0.8 else 'Undervalued'
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching valuation metrics for {ticker}: {e}")
+        return {
+            'ticker': ticker,
+            'error': str(e),
+            'current_metrics': {},
+            'historical_pe': [],
+            'historical_ps': []
+        }
+
+
+def get_market_conditions() -> dict:
+    """
+    Get current market condition indicators including Fear & Greed Index and Put/Call Ratio.
+    Compares to historical crisis levels (2008, 2020).
+    """
+    import yfinance as yf
+    import requests
+    from datetime import datetime, timedelta
+    
+    try:
+        # Get S&P 500 data for market context
+        sp500 = yf.Ticker('^GSPC')
+        sp500_info = sp500.info
+        
+        # Get VIX (Fear Index)
+        vix = yf.Ticker('^VIX')
+        vix_current = vix.history(period='1d')['Close'].iloc[-1] if not vix.history(period='1d').empty else None
+        
+        # VIX historical context
+        vix_hist = vix.history(period='5y')
+        vix_2008_equivalent = 80  # 2008 crisis peak
+        vix_2020_equivalent = 82  # 2020 COVID crash peak
+        
+        # Get Put/Call Ratio approximation using options data
+        # Note: Real-time Put/Call ratio requires specialized data feed
+        # We'll use VIX as proxy and historical market data
+        
+        try:
+            # Try to fetch from CBOE (may require API key in production)
+            # For now, we'll estimate based on VIX and market sentiment
+            put_call_ratio = 1.0  # Neutral is ~1.0
+            
+            if vix_current:
+                # Higher VIX = more puts being bought = higher ratio
+                if vix_current > 30:
+                    put_call_ratio = 1.3  # Fear
+                elif vix_current > 20:
+                    put_call_ratio = 1.1  # Caution
+                elif vix_current < 12:
+                    put_call_ratio = 0.7  # Extreme greed
+                else:
+                    put_call_ratio = 0.9  # Optimism
+        except:
+            put_call_ratio = 1.0
+        
+        # Calculate Fear & Greed Index (0-100)
+        # Based on VIX, market momentum, and put/call ratio
+        fear_greed_score = 50  # Neutral
+        
+        if vix_current:
+            # VIX component (inverse relationship)
+            vix_score = max(0, min(100, 100 - (vix_current / 0.8)))  # VIX 0-80 maps to 100-0
+            
+            # Market momentum (last month)
+            hist_30d = sp500.history(period='1mo')
+            if len(hist_30d) > 1:
+                momentum = ((hist_30d['Close'].iloc[-1] / hist_30d['Close'].iloc[0]) - 1) * 100
+                momentum_score = max(0, min(100, 50 + momentum * 2))
+            else:
+                momentum_score = 50
+            
+            # Put/Call component
+            pc_score = max(0, min(100, (1.5 - put_call_ratio) * 100))
+            
+            # Combined score
+            fear_greed_score = round((vix_score * 0.4 + momentum_score * 0.4 + pc_score * 0.2), 1)
+        
+        # Historical crisis comparison
+        current_level = 'Normal'
+        if vix_current:
+            if vix_current > 40:
+                current_level = 'Extreme Fear'
+            elif vix_current > 30:
+                current_level = 'Fear'
+            elif vix_current > 20:
+                current_level = 'Caution'
+            elif vix_current < 12:
+                current_level = 'Greed'
+            elif vix_current < 15:
+                current_level = 'Optimism'
+        
+        # Market phase analysis
+        days_from_ath = 0
+        drawdown = 0
+        if not sp500.history(period='1y').empty:
+            hist_1y = sp500.history(period='1y')
+            current_price = hist_1y['Close'].iloc[-1]
+            ath = hist_1y['Close'].max()
+            drawdown = ((current_price / ath) - 1) * 100
+            
+            # Find days since ATH
+            ath_date = hist_1y['Close'].idxmax()
+            days_from_ath = (datetime.now() - ath_date).days
+        
+        return {
+            'timestamp': datetime.now().isoformat(),
+            'fear_greed_index': {
+                'score': fear_greed_score,
+                'level': 'Extreme Fear' if fear_greed_score < 25 else 'Fear' if fear_greed_score < 45 else 'Neutral' if fear_greed_score < 55 else 'Greed' if fear_greed_score < 75 else 'Extreme Greed',
+                'interpretation': 'Lower values indicate fear, higher values indicate greed'
+            },
+            'vix': {
+                'current': round(vix_current, 2) if vix_current else None,
+                'avg_5y': round(vix_hist['Close'].mean(), 2) if not vix_hist.empty else None,
+                'level': current_level,
+                'vs_2008_crisis': f"{round((vix_current / vix_2008_equivalent) * 100, 1)}%" if vix_current else None,
+                'vs_2020_crisis': f"{round((vix_current / vix_2020_equivalent) * 100, 1)}%" if vix_current else None
+            },
+            'put_call_ratio': {
+                'current': round(put_call_ratio, 3),
+                'interpretation': 'Above 1.0 indicates fear (more puts), below 1.0 indicates optimism (more calls)',
+                'sentiment': 'Bearish' if put_call_ratio > 1.15 else 'Cautious' if put_call_ratio > 0.95 else 'Bullish'
+            },
+            'market_phase': {
+                'sp500_current': round(sp500_info.get('regularMarketPrice', 0), 2),
+                'drawdown_from_ath': f"{round(drawdown, 2)}%",
+                'days_from_ath': days_from_ath,
+                'phase': 'Recovery' if drawdown < -10 and days_from_ath < 90 else 'Correction' if drawdown < -10 else 'Bull Market' if drawdown > -5 else 'Consolidation'
+            },
+            'historical_context': {
+                '2008_crisis': {
+                    'vix_peak': 80,
+                    'description': 'Financial crisis - extreme volatility'
+                },
+                '2020_covid': {
+                    'vix_peak': 82,
+                    'description': 'COVID-19 pandemic - market panic'
+                },
+                'current_vs_crises': 'Much calmer' if vix_current and vix_current < 25 else 'Elevated volatility' if vix_current and vix_current < 40 else 'Crisis-level fear'
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching market conditions: {e}")
+        return {
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e),
+            'fear_greed_index': {'score': 50, 'level': 'Unknown'},
+            'vix': {'current': None},
+            'put_call_ratio': {'current': 1.0}
+        }

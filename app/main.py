@@ -250,6 +250,30 @@ async def get_price_history(ticker: str, period: str = "1m"):
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch price history: {exc}"}
 
+@app.get("/api/valuation-metrics/{ticker}")
+async def get_valuation_metrics(ticker: str):
+    """Return historical P/E and P/S ratios with industry benchmarks."""
+    from app.scoring.engine import get_valuation_metrics
+    
+    try:
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
+
+@app.get("/api/market-conditions")
+async def get_market_conditions():
+    """Return current market condition indicators."""
+    from app.scoring.engine import get_market_conditions
+    
+    try:
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_market_conditions)
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
+
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
     """

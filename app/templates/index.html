@@ -6,7 +6,6 @@
     <title>deepAlpha Copilot</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         #chat-container::-webkit-scrollbar { width: 4px; }
@@ -16,6 +15,28 @@
 <body class="bg-slate-100 min-h-screen text-slate-900">
     <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
         <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
+            <!-- Market Conditions Bar -->
+            <div id="market-conditions" class="bg-slate-800/50 rounded-lg p-3 mb-4 flex flex-wrap items-center gap-4 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Market:</span>
+                    <span id="market-phase" class="font-semibold">Loading...</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Fear & Greed:</span>
+                    <span id="fear-greed-score" class="font-semibold">--</span>
+                    <span id="fear-greed-level" class="px-2 py-0.5 rounded text-xs"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">VIX:</span>
+                    <span id="vix-current" class="font-semibold">--</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">Put/Call:</span>
+                    <span id="put-call-ratio" class="font-semibold">--</span>
+                </div>
+                <div class="ml-auto text-slate-500 text-xs" id="market-update-time">Updating...</div>
+            </div>
+            
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
                     <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">deepAlpha Copilot</p>
@@ -103,11 +124,18 @@
 
             <!-- Comparison Results -->
             <div id="comparison-results" class="hidden">
-                <!-- Score Comparison Radar -->
+                <!-- Overall Scores Comparison -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Score Comparison Radar</h3>
-                    <p class="text-sm text-slate-600 mb-4">Compare performance across all scoring dimensions</p>
-                    <div id="individual-scores-chart" class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Overall Scores</h3>
+                    <div id="overall-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                        <canvas id="overallChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Individual Scores Comparison -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
+                    <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
                         <canvas id="individualChart" width="400" height="300"></canvas>
                     </div>
                 </div>
@@ -141,7 +169,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <h2 class="text-xl font-semibold text-slate-800">Help us test!</h2>
-                    <p class="text-sm text-slate-600 mt-1">Showing stocks with complete financial data. Real-time news and sentiment available for all tickers via Yahoo Finance & Reddit APIs.</p>
+                    <p class="text-sm text-slate-600 mt-1">Check out other companies for testing. Click refresh to load the latest scores.</p>
             </div>
                 <button id="load-all-btn" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -259,17 +287,28 @@
 
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
-        // Only show stocks with complete JSON data (financial, earnings, price history)
-        // Real-time news is available for all stocks via Yahoo Finance API
-        const supportedTickers = ["TSM", "NVDA", "AMD", "AVGO", "ORCL"];
+        const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
         
         // Company metadata for enhanced display
         const companyMetadata = {
             "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
-            "TSM": { name: "Taiwan Semiconductor", industry: "Semiconductors" },
-            "AMD": { name: "Advanced Micro Devices", industry: "Semiconductors" },
+            "MU": { name: "Micron Technology Inc", industry: "Semiconductors" },
             "AVGO": { name: "Broadcom Inc", industry: "Semiconductors" },
-            "ORCL": { name: "Oracle Corporation", industry: "Enterprise Software" }
+            "TSM": { name: "Taiwan Semiconductor Manufacturing Co Ltd", industry: "Semiconductors" },
+            "VRT": { name: "Vertiv Holdings Co", industry: "Industrial Equipment" },
+            "SMCI": { name: "Super Micro Computer Inc", industry: "Computer Hardware" },
+            "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
+            "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
+            "IREN": { name: "Iren Ltd", industry: "Utilities" },
+            "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
+            "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
+            "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
+            "SMR": { name: "NuScale Power Corp", industry: "Nuclear Energy" },
+            "CCJ": { name: "Cameco Corp", industry: "Uranium Mining" },
+            "VST": { name: "Vistra Corp", industry: "Utilities" },
+            "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
+            "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
+            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
         };
 
         async function fetchWithNewsContext(question) {
@@ -736,6 +775,190 @@
         }
 
         let priceChart = null;
+        let peRatioChart = null;
+        let psRatioChart = null;
+
+        // Load market conditions on page load
+        async function loadMarketConditions() {
+            try {
+                const response = await fetch('/api/market-conditions');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    
+                    // Update Fear & Greed
+                    const fgScore = data.fear_greed_index.score;
+                    const fgLevel = data.fear_greed_index.level;
+                    document.getElementById('fear-greed-score').textContent = fgScore.toFixed(0);
+                    document.getElementById('fear-greed-level').textContent = fgLevel;
+                    
+                    // Color code the level
+                    const levelEl = document.getElementById('fear-greed-level');
+                    if (fgLevel.includes('Extreme Fear')) {
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-red-600 text-white';
+                    } else if (fgLevel.includes('Fear')) {
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-orange-500 text-white';
+                    } else if (fgLevel.includes('Greed')) {
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-green-600 text-white';
+                    } else {
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-slate-400 text-white';
+                    }
+                    
+                    // Update VIX
+                    document.getElementById('vix-current').textContent = data.vix.current ? data.vix.current.toFixed(2) : 'N/A';
+                    
+                    // Update Put/Call
+                    const pcRatio = data.put_call_ratio.current;
+                    document.getElementById('put-call-ratio').textContent = pcRatio.toFixed(2);
+                    
+                    // Update market phase
+                    document.getElementById('market-phase').textContent = data.market_phase.phase;
+                    
+                    // Update timestamp
+                    document.getElementById('market-update-time').textContent = 'Updated ' + new Date().toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Error loading market conditions:', error);
+            }
+        }
+
+        // Load valuation metrics for a ticker
+        async function loadValuationMetrics(ticker) {
+            try {
+                const response = await fetch(`/api/valuation-metrics/${ticker}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    renderValuationCharts(data);
+                }
+            } catch (error) {
+                console.error('Error loading valuation metrics:', error);
+            }
+        }
+
+        function renderValuationCharts(data) {
+            // Update current metrics
+            const current = data.current_metrics;
+            document.getElementById('pe-current').textContent = `Current: ${current.pe_ratio || 'N/A'}`;
+            document.getElementById('pe-benchmark').textContent = `Industry: ${current.benchmark_pe}`;
+            document.getElementById('ps-current').textContent = `Current: ${current.ps_ratio || 'N/A'}`;
+            document.getElementById('ps-benchmark').textContent = `Industry: ${current.benchmark_ps}`;
+            
+            // Assessment badges
+            const peAssessment = data.analysis.pe_vs_industry;
+            const psAssessment = data.analysis.ps_vs_industry;
+            
+            const peEl = document.getElementById('pe-assessment');
+            const psEl = document.getElementById('ps-assessment');
+            
+            peEl.textContent = peAssessment;
+            psEl.textContent = psAssessment;
+            
+            const getAssessmentClass = (assessment) => {
+                if (assessment === 'Undervalued') return 'bg-green-100 text-green-800';
+                if (assessment === 'Overvalued') return 'bg-red-100 text-red-800';
+                return 'bg-blue-100 text-blue-800';
+            };
+            
+            peEl.className = `px-2 py-0.5 rounded text-xs ${getAssessmentClass(peAssessment)}`;
+            psEl.className = `px-2 py-0.5 rounded text-xs ${getAssessmentClass(psAssessment)}`;
+            
+            // Render P/E chart
+            if (peRatioChart) peRatioChart.destroy();
+            const peCtx = document.getElementById('peRatioChart').getContext('2d');
+            const peData = data.historical_pe || [];
+            
+            peRatioChart = new Chart(peCtx, {
+                type: 'line',
+                data: {
+                    labels: peData.map(d => d.date),
+                    datasets: [{
+                        label: `${data.ticker} P/E`,
+                        data: peData.map(d => d.pe_ratio),
+                        borderColor: '#3B82F6',
+                        backgroundColor: '#3B82F620',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }, {
+                        label: 'Industry Benchmark',
+                        data: peData.map(d => d.benchmark_pe),
+                        borderColor: '#94A3B8',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + (context.parsed.y ? context.parsed.y.toFixed(2) : 'N/A');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: true, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+                        y: { beginAtZero: false, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+            
+            // Render P/S chart
+            if (psRatioChart) psRatioChart.destroy();
+            const psCtx = document.getElementById('psRatioChart').getContext('2d');
+            const psData = data.historical_ps || [];
+            
+            psRatioChart = new Chart(psCtx, {
+                type: 'line',
+                data: {
+                    labels: psData.map(d => d.date),
+                    datasets: [{
+                        label: `${data.ticker} P/S`,
+                        data: psData.map(d => d.ps_ratio),
+                        borderColor: '#10B981',
+                        backgroundColor: '#10B98120',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }, {
+                        label: 'Industry Benchmark',
+                        data: psData.map(d => d.benchmark_ps),
+                        borderColor: '#94A3B8',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + (context.parsed.y ? context.parsed.y.toFixed(2) : 'N/A');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { display: true, ticks: { maxTicksLimit: 6, font: { size: 10 } } },
+                        y: { beginAtZero: false, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
 
         function showStableTooltip(chartEvent, clickEvent) {
             // Remove any existing stable tooltip
@@ -784,24 +1007,17 @@
                         </div>
                     </div>
                     
-                    <div class="text-xs text-gray-400 flex items-center justify-between">
-                        <div>
-                            <strong>Source:</strong> ${chartEvent.source || 'Market Data'}
-                        </div>
-                        <a href="${chartEvent.link}" target="_blank" 
-                           onclick="document.getElementById('stable-tooltip').remove()"
-                           class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            Read More
+                    <div class="text-xs text-gray-400">
+                        <strong>Source:</strong> 
+                        <a href="${chartEvent.link}" target="_blank" class="text-blue-400 hover:text-blue-300 underline">
+                            ${chartEvent.source || 'Market Data'}
                         </a>
                     </div>
                     
                     <div class="flex justify-end">
                         <button onclick="document.getElementById('stable-tooltip').remove()" 
-                                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors">
-                            Close
+                                class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors">
+                            ✕
                         </button>
                     </div>
                 </div>
@@ -817,7 +1033,7 @@
             }, 10000);
         }
 
-        function renderPriceChart(priceHistory, ticker, period = '1m') {
+        function renderPriceChart(priceHistory, ticker) {
             const canvas = document.getElementById('priceChart');
             if (!canvas || !priceHistory || !priceHistory.price_data || priceHistory.price_data.length === 0) {
                 return '';
@@ -829,31 +1045,8 @@
             }
 
             const ctx = canvas.getContext('2d');
-            let priceData = priceHistory.price_data || [];
-            let events = priceHistory.events || [];
-            
-            // Filter data based on period
-            const now = new Date();
-            let cutoffDate = new Date();
-            switch(period) {
-                case '1m':
-                    cutoffDate.setMonth(now.getMonth() - 1);
-                    break;
-                case '6m':
-                    cutoffDate.setMonth(now.getMonth() - 6);
-                    break;
-                case '1y':
-                    cutoffDate.setFullYear(now.getFullYear() - 1);
-                    break;
-                case '2y':
-                    cutoffDate.setFullYear(now.getFullYear() - 2);
-                    break;
-                default:
-                    cutoffDate.setMonth(now.getMonth() - 1);
-            }
-            
-            priceData = priceData.filter(d => new Date(d.date) >= cutoffDate);
-            events = events.filter(e => new Date(e.date) >= cutoffDate);
+            const priceData = priceHistory.price_data || [];
+            const events = priceHistory.events || [];
 
             // Prepare data for the chart
             const labels = priceData.map(d => d.date);
@@ -1061,7 +1254,7 @@
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data && result.data.price_history && result.data.price_history.price_data && result.data.price_history.price_data.length > 0) {
-                    renderPriceChart(result.data.price_history, ticker, period);
+                    renderPriceChart(result.data.price_history, ticker);
                 } else {
                     console.error('Error refreshing price data:', result.message || 'No data received');
                 }
@@ -1229,69 +1422,34 @@
                 </div>
             ` : ''}
 
-            <!-- Similar Stocks Feature -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
+            <!-- Valuation Metrics Charts -->
+            <div id="valuation-metrics-section" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <span class="mr-2">📊</span> Valuation Metrics vs Industry
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- P/E Ratio Chart -->
                     <div>
-                        <h3 class="text-lg font-semibold text-slate-800 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            Stocks Similar to ${company.ticker}
-                        </h3>
-                        <p class="text-sm text-slate-600 mt-1">Discover companies with comparable business models and fundamentals</p>
-                    </div>
-                    <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Coming Soon
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-lg p-6 border border-blue-100">
-                    <div class="flex items-start space-x-4">
-                        <div class="flex-shrink-0">
-                            <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Earnings (P/E) Ratio</h4>
+                        <div class="relative" style="height: 250px;">
+                            <canvas id="peRatioChart"></canvas>
                         </div>
-                        <div class="flex-1">
-                            <h4 class="text-sm font-semibold text-slate-800 mb-2">Stock Similarity Analysis</h4>
-                            <p class="text-sm text-slate-600 mb-3">
-                                We're building an advanced feature that will analyze:
-                            </p>
-                            <ul class="text-sm text-slate-600 space-y-1 mb-3">
-                                <li class="flex items-start">
-                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Business model & revenue streams</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Financial metrics & growth patterns</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Market sentiment & investor behavior</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span>Industry positioning & competitive landscape</span>
-                                </li>
-                            </ul>
-                            <p class="text-xs text-slate-500 italic">
-                                This feature will help you discover alternative investment opportunities with similar risk/reward profiles.
-                            </p>
+                        <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
+                            <span id="pe-current">Current: --</span>
+                            <span id="pe-benchmark">Industry: --</span>
+                            <span id="pe-assessment" class="px-2 py-0.5 rounded"></span>
+                        </div>
+                    </div>
+                    <!-- P/S Ratio Chart -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Sales (P/S) Ratio</h4>
+                        <div class="relative" style="height: 250px;">
+                            <canvas id="psRatioChart"></canvas>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
+                            <span id="ps-current">Current: --</span>
+                            <span id="ps-benchmark">Industry: --</span>
+                            <span id="ps-assessment" class="px-2 py-0.5 rounded"></span>
                         </div>
                     </div>
                 </div>
@@ -1629,6 +1787,8 @@
                     // Also render the price chart for single stock view
                     const activePeriod = document.querySelector('.period-btn.active')?.dataset.period || '1m';
                     refreshPriceChartData(ticker, activePeriod);
+                    // Load valuation metrics
+                    loadValuationMetrics(ticker);
                 } else {
                     scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
@@ -1742,10 +1902,11 @@
         let comparisonData = {};
         let comparisonCharts = {};
 
-        // Comparison section toggle - open in new tab
+        // Comparison section toggle
         document.getElementById('open-comparison').addEventListener('click', () => {
-            // Open the same page in a new tab with a hash to show comparison
-            window.open(window.location.origin + '/?view=comparison', '_blank');
+            document.getElementById('comparison-section').classList.remove('hidden');
+            document.getElementById('scoreboard').classList.add('hidden');
+            document.getElementById('score-table').classList.add('hidden');
         });
 
         document.getElementById('close-comparison').addEventListener('click', () => {
@@ -1755,6 +1916,10 @@
             
             // Clear comparison data to prevent interference
             comparisonData = {};
+            if (comparisonCharts.overall) {
+                comparisonCharts.overall.destroy();
+                comparisonCharts.overall = null;
+            }
             if (comparisonCharts.individual) {
                 comparisonCharts.individual.destroy();
                 comparisonCharts.individual = null;
@@ -1764,13 +1929,11 @@
                 comparisonCharts.price = null;
             }
             
-            // Hide the comparison results section (don't clear innerHTML to preserve canvases)
+            // Reset the comparison results section
             const resultsDiv = document.getElementById('comparison-results');
             if (resultsDiv) {
                 resultsDiv.classList.add('hidden');
-                // Remove any error/loading messages but keep the chart canvases
-                const loadingDiv = document.getElementById('comparison-loading');
-                if (loadingDiv) loadingDiv.remove();
+                resultsDiv.innerHTML = '';
             }
         });
 
@@ -1802,24 +1965,15 @@
             const resultsDiv = document.getElementById('comparison-results');
             resultsDiv.classList.remove('hidden');
             
-            // DON'T clear innerHTML - just show loading message in a specific area
-            // The canvas elements need to stay in the DOM
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'comparison-loading';
-            loadingDiv.className = 'flex items-center justify-center py-12 bg-white rounded-xl mb-4';
-            loadingDiv.innerHTML = `
-                <div class="text-center">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p class="text-slate-600">Loading comparison data...</p>
+            // Show loading state
+            resultsDiv.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-slate-600">Loading comparison data...</p>
+                    </div>
                 </div>
             `;
-            
-            // Remove old loading div if exists
-            const oldLoading = document.getElementById('comparison-loading');
-            if (oldLoading) oldLoading.remove();
-            
-            // Insert loading at the top
-            resultsDiv.insertBefore(loadingDiv, resultsDiv.firstChild);
 
             try {
                 // Fetch data for all tickers with proper error handling
@@ -1849,21 +2003,19 @@
                     }
                 });
 
-                // Remove loading indicator
-                const loadingDiv = document.getElementById('comparison-loading');
-                if (loadingDiv) loadingDiv.remove();
-                
                 // Check if we have any successful data
                 const successfulTickers = Object.keys(comparisonData);
                 if (successfulTickers.length === 0) {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'text-center py-12 bg-red-50 rounded-xl';
-                    errorDiv.innerHTML = `<p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>`;
-                    resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
+                    resultsDiv.innerHTML = `
+                        <div class="text-center py-12">
+                            <p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>
+                        </div>
+                    `;
                     return;
                 }
 
                 // Render comparison charts with successful data
+                renderOverallScoresChart(successfulTickers);
                 renderIndividualScoresChart(successfulTickers);
                 renderPriceComparisonChart(successfulTickers);
 
@@ -1875,19 +2027,71 @@
 
             } catch (error) {
                 console.error('Error performing comparison:', error);
-                
-                // Remove loading indicator
-                const loadingDiv = document.getElementById('comparison-loading');
-                if (loadingDiv) loadingDiv.remove();
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'text-center py-12 bg-red-50 rounded-xl';
-                errorDiv.innerHTML = `
-                    <p class="text-red-600">Failed to load comparison data. Please try again.</p>
-                    <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
+                resultsDiv.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-600">Failed to load comparison data. Please try again.</p>
+                        <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
+                    </div>
                 `;
-                resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
             }
+        }
+
+        function renderOverallScoresChart(tickers) {
+            const ctx = document.getElementById('overallChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (comparisonCharts.overall) {
+                comparisonCharts.overall.destroy();
+            }
+
+            const data = tickers.map(ticker => {
+                const companyData = comparisonData[ticker];
+                // Try different possible paths for overall score
+                return companyData ? 
+                    (companyData.overall?.score || 
+                     companyData.overall_score || 
+                     companyData.scores?.overall?.score || 
+                     companyData.total_score || 
+                     0) : 0;
+            });
+
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            
+            comparisonCharts.overall = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tickers,
+                    datasets: [{
+                        label: 'Overall Score',
+                        data: data,
+                        backgroundColor: colors.slice(0, tickers.length),
+                        borderColor: colors.slice(0, tickers.length),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function renderIndividualScoresChart(tickers) {
@@ -1898,42 +2102,28 @@
                 comparisonCharts.individual.destroy();
             }
 
-            // Include overall score as the 8th dimension
-            const scoreTypes = ['overall', 'business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+            const scoreTypes = ['business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
             
             const datasets = tickers.map((ticker, index) => {
                 const companyData = comparisonData[ticker];
                 const data = scoreTypes.map(type => {
-                    if (type === 'overall') {
-                        return companyData ? 
-                            (companyData.overall?.score || 
-                             companyData.overall_score || 
-                             companyData.scores?.overall?.score || 
-                             companyData.total_score || 
-                             0) : 0;
-                    }
                     return companyData ? companyData.scores[type]?.score || 0 : 0;
                 });
                 
                 return {
                     label: ticker,
                     data: data,
-                    borderColor: colors[index % colors.length],
-                    backgroundColor: colors[index % colors.length] + '30',
-                    borderWidth: 3,
-                    pointBackgroundColor: colors[index % colors.length],
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    fill: true,
-                    tension: 0.2
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.1
                 };
             });
 
             comparisonCharts.individual = new Chart(ctx, {
-                type: 'radar',
+                type: 'line',
                 data: {
                     labels: scoreTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
                     datasets: datasets
@@ -1944,72 +2134,17 @@
                     plugins: {
                         legend: {
                             position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                pointStyle: 'circle',
-                                padding: 20,
-                                font: {
-                                    size: 12,
-                                    weight: '600'
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: '#3B82F6',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.r.toFixed(1)}/10`;
-                                }
-                            }
                         }
                     },
                     scales: {
-                        r: {
+                        y: {
                             beginAtZero: true,
                             max: 10,
-                            min: 0,
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.2)',
-                                lineWidth: 1
-                            },
-                            angleLines: {
-                                color: 'rgba(148, 163, 184, 0.1)',
-                                lineWidth: 1
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 11,
-                                    weight: '600'
-                                },
-                                color: '#475569',
-                                padding: 8
-                            },
                             ticks: {
-                                display: true,
-                                color: '#64748b',
-                                font: {
-                                    size: 10,
-                                    weight: '500'
-                                },
-                                stepSize: 2,
                                 callback: function(value) {
-                                    return value.toFixed(0);
+                                    return value.toFixed(1);
                                 }
                             }
-                        }
-                    },
-                    elements: {
-                        line: {
-                            borderWidth: 3
-                        },
-                        point: {
-                            radius: 6,
-                            hoverRadius: 8
                         }
                     }
                 }
@@ -2017,86 +2152,54 @@
         }
 
         async function renderPriceComparisonChart(tickers) {
-            const canvas = document.getElementById('priceComparisonChart');
-            if (!canvas) {
-                console.error('Price comparison canvas not found');
-                return;
-            }
-            
-            const ctx = canvas.getContext('2d');
+            const ctx = document.getElementById('priceChart').getContext('2d');
             const period = document.getElementById('price-period').value;
             
             // Destroy existing chart if it exists
             if (comparisonCharts.price) {
                 comparisonCharts.price.destroy();
-                comparisonCharts.price = null;
             }
 
             try {
-                console.log('Fetching price data for tickers:', tickers, 'period:', period);
                 const promises = tickers.map(ticker => fetch(`/api/price-history/${ticker}?period=${period}`));
                 const responses = await Promise.all(promises);
                 const priceData = await Promise.all(responses.map(r => r.json()));
 
-                console.log('Price data received:', priceData);
-
-                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+                const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
                 
                 const datasets = tickers.map((ticker, index) => {
                     const data = priceData[index];
-                    console.log(`Processing ${ticker}:`, data);
-                    
-                    if (data.status === 'success' && data.data && data.data.price_data && data.data.price_data.length > 0) {
+                    if (data.status === 'success' && data.data.price_data) {
                         const prices = data.data.price_data.map(item => ({
-                            x: item.date,
-                            y: item.close
+                            x: item.trading_date || item.date,
+                            y: item.close_price || item.close
                         }));
-                        
-                        console.log(`${ticker} has ${prices.length} price points`);
                         
                         return {
                             label: ticker,
                             data: prices,
-                            borderColor: colors[index % colors.length],
-                            backgroundColor: colors[index % colors.length] + '10',
-                            borderWidth: 2,
-                            fill: true,  // Light fill like single stock view
-                            tension: 0.1,
-                            pointRadius: 0,  // Hide points by default
-                            pointHoverRadius: 6  // Show on hover
-                        };
-                    } else {
-                        console.warn(`${ticker} has no valid price data:`, data);
-                        return {
-                            label: ticker + ' (No Data)',
-                            data: [],
-                            borderColor: colors[index % colors.length],
-                            backgroundColor: colors[index % colors.length] + '20',
+                            borderColor: colors[index],
+                            backgroundColor: colors[index] + '20',
                             borderWidth: 2,
                             fill: false,
                             tension: 0.1
                         };
                     }
+                    return {
+                        label: ticker,
+                        data: [],
+                        borderColor: colors[index],
+                        backgroundColor: colors[index] + '20',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1
+                    };
                 });
-
-                // Filter out empty datasets
-                const validDatasets = datasets.filter(ds => ds.data.length > 0);
-                
-                if (validDatasets.length === 0) {
-                    console.error('No valid datasets to display');
-                    const chartContainer = document.getElementById('price-comparison-chart');
-                    if (chartContainer) {
-                        chartContainer.innerHTML = '<div class="text-center text-red-600 p-4">No price data available for comparison. Please try different tickers or time periods.</div>';
-                    }
-                    return;
-                }
-
-                console.log('Creating chart with datasets:', validDatasets);
 
                 comparisonCharts.price = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        datasets: validDatasets
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
@@ -2104,32 +2207,17 @@
                         plugins: {
                             legend: {
                                 position: 'top',
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
                             }
                         },
                         scales: {
                             x: {
                                 type: 'time',
                                 time: {
-                                    unit: 'day',
-                                    displayFormats: {
-                                        day: 'MMM dd'
-                                    }
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Date'
+                                    unit: 'day'
                                 }
                             },
                             y: {
                                 beginAtZero: false,
-                                title: {
-                                    display: true,
-                                    text: 'Price ($)'
-                                },
                                 ticks: {
                                     callback: function(value) {
                                         return '$' + value.toFixed(2);
@@ -2140,14 +2228,8 @@
                     }
                 });
 
-                console.log('Chart created successfully');
-
             } catch (error) {
-                console.error('Error loading price comparison data:', error);
-                const chartContainer = document.getElementById('price-comparison-chart');
-                if (chartContainer) {
-                    chartContainer.innerHTML = `<div class="text-center text-red-600 p-4">Error loading price data: ${error.message}</div>`;
-                }
+                console.error('Error loading price data:', error);
             }
         }
 
@@ -2159,16 +2241,13 @@
             }
         });
 
-        // Check if we should open comparison view (when opened in new tab)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('view') === 'comparison') {
-            document.getElementById('comparison-section').classList.remove('hidden');
-            document.getElementById('scoreboard').classList.add('hidden');
-            document.getElementById('score-table').classList.add('hidden');
-        } else {
-            loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
-            refreshCoverageTable();
-        }
+        // Load market conditions on page load
+        loadMarketConditions();
+        // Refresh market conditions every 5 minutes
+        setInterval(loadMarketConditions, 300000);
+        
+        loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
+        refreshCoverageTable();
     </script>
 </body>
 </html>
