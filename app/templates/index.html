@@ -784,17 +784,24 @@
                         </div>
                     </div>
                     
-                    <div class="text-xs text-gray-400">
-                        <strong>Source:</strong> 
-                        <a href="${chartEvent.link}" target="_blank" class="text-blue-400 hover:text-blue-300 underline">
-                            ${chartEvent.source || 'Market Data'}
+                    <div class="text-xs text-gray-400 flex items-center justify-between">
+                        <div>
+                            <strong>Source:</strong> ${chartEvent.source || 'Market Data'}
+                        </div>
+                        <a href="${chartEvent.link}" target="_blank" 
+                           onclick="document.getElementById('stable-tooltip').remove()"
+                           class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Read More
                         </a>
                     </div>
                     
                     <div class="flex justify-end">
                         <button onclick="document.getElementById('stable-tooltip').remove()" 
-                                class="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors">
-                            ✕
+                                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors">
+                            Close
                         </button>
                     </div>
                 </div>
@@ -1221,6 +1228,74 @@
                     </div>
                 </div>
             ` : ''}
+
+            <!-- Similar Stocks Feature -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Stocks Similar to ${company.ticker}
+                        </h3>
+                        <p class="text-sm text-slate-600 mt-1">Discover companies with comparable business models and fundamentals</p>
+                    </div>
+                    <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Coming Soon
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 border border-blue-100">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-slate-800 mb-2">AI-Powered Stock Similarity Analysis</h4>
+                            <p class="text-sm text-slate-600 mb-3">
+                                We're building an advanced feature that will analyze:
+                            </p>
+                            <ul class="text-sm text-slate-600 space-y-1 mb-3">
+                                <li class="flex items-start">
+                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Business model & revenue streams</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Financial metrics & growth patterns</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Market sentiment & investor behavior</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Industry positioning & competitive landscape</span>
+                                </li>
+                            </ul>
+                            <p class="text-xs text-slate-500 italic">
+                                This feature will help you discover alternative investment opportunities with similar risk/reward profiles.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Combined Performance Analysis & Scores -->
             <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
@@ -1984,10 +2059,12 @@
                             label: ticker,
                             data: prices,
                             borderColor: colors[index % colors.length],
-                            backgroundColor: colors[index % colors.length] + '20',
+                            backgroundColor: colors[index % colors.length] + '10',
                             borderWidth: 2,
-                            fill: true,  // Fill area like single stock view
-                            tension: 0.1
+                            fill: true,  // Light fill like single stock view
+                            tension: 0.1,
+                            pointRadius: 0,  // Hide points by default
+                            pointHoverRadius: 6  // Show on hover
                         };
                     } else {
                         console.warn(`${ticker} has no valid price data:`, data);
