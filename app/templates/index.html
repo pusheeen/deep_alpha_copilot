@@ -147,7 +147,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <h2 class="text-xl font-semibold text-slate-800">Help us test!</h2>
-                    <p class="text-sm text-slate-600 mt-1">Check out other companies for testing. Click refresh to load the latest scores.</p>
+                    <p class="text-sm text-slate-600 mt-1">Showing stocks with complete financial data. Real-time news and sentiment available for all tickers via Yahoo Finance & Reddit APIs.</p>
             </div>
                 <button id="load-all-btn" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -265,28 +265,17 @@
 
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
-        const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
+        // Only show stocks with complete JSON data (financial, earnings, price history)
+        // Real-time news is available for all stocks via Yahoo Finance API
+        const supportedTickers = ["TSM", "NVDA", "AMD", "AVGO", "ORCL"];
         
         // Company metadata for enhanced display
         const companyMetadata = {
             "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
-            "MU": { name: "Micron Technology Inc", industry: "Semiconductors" },
+            "TSM": { name: "Taiwan Semiconductor", industry: "Semiconductors" },
+            "AMD": { name: "Advanced Micro Devices", industry: "Semiconductors" },
             "AVGO": { name: "Broadcom Inc", industry: "Semiconductors" },
-            "TSM": { name: "Taiwan Semiconductor Manufacturing Co Ltd", industry: "Semiconductors" },
-            "VRT": { name: "Vertiv Holdings Co", industry: "Industrial Equipment" },
-            "SMCI": { name: "Super Micro Computer Inc", industry: "Computer Hardware" },
-            "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
-            "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
-            "IREN": { name: "Iren Ltd", industry: "Utilities" },
-            "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
-            "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
-            "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
-            "SMR": { name: "NuScale Power Corp", industry: "Nuclear Energy" },
-            "CCJ": { name: "Cameco Corp", industry: "Uranium Mining" },
-            "VST": { name: "Vistra Corp", industry: "Utilities" },
-            "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
-            "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
-            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
+            "ORCL": { name: "Oracle Corporation", industry: "Enterprise Software" }
         };
 
         async function fetchWithNewsContext(question) {
@@ -827,7 +816,7 @@
             }, 10000);
         }
 
-        function renderPriceChart(priceHistory, ticker) {
+        function renderPriceChart(priceHistory, ticker, period = '1m') {
             const canvas = document.getElementById('priceChart');
             if (!canvas || !priceHistory || !priceHistory.price_data || priceHistory.price_data.length === 0) {
                 return '';
@@ -839,8 +828,31 @@
             }
 
             const ctx = canvas.getContext('2d');
-            const priceData = priceHistory.price_data || [];
-            const events = priceHistory.events || [];
+            let priceData = priceHistory.price_data || [];
+            let events = priceHistory.events || [];
+            
+            // Filter data based on period
+            const now = new Date();
+            let cutoffDate = new Date();
+            switch(period) {
+                case '1m':
+                    cutoffDate.setMonth(now.getMonth() - 1);
+                    break;
+                case '6m':
+                    cutoffDate.setMonth(now.getMonth() - 6);
+                    break;
+                case '1y':
+                    cutoffDate.setFullYear(now.getFullYear() - 1);
+                    break;
+                case '2y':
+                    cutoffDate.setFullYear(now.getFullYear() - 2);
+                    break;
+                default:
+                    cutoffDate.setMonth(now.getMonth() - 1);
+            }
+            
+            priceData = priceData.filter(d => new Date(d.date) >= cutoffDate);
+            events = events.filter(e => new Date(e.date) >= cutoffDate);
 
             // Prepare data for the chart
             const labels = priceData.map(d => d.date);
@@ -1048,7 +1060,7 @@
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data && result.data.price_history && result.data.price_history.price_data && result.data.price_history.price_data.length > 0) {
-                    renderPriceChart(result.data.price_history, ticker);
+                    renderPriceChart(result.data.price_history, ticker, period);
                 } else {
                     console.error('Error refreshing price data:', result.message || 'No data received');
                 }
@@ -1911,7 +1923,7 @@
         }
 
         async function renderPriceComparisonChart(tickers) {
-            const ctx = document.getElementById('priceChart').getContext('2d');
+            const ctx = document.getElementById('priceComparisonChart').getContext('2d');
             const period = document.getElementById('price-period').value;
             
             // Destroy existing chart if it exists
