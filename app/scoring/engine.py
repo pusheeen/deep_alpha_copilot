@@ -125,6 +125,75 @@ def load_ceo_profile(ticker: str) -> Optional[Dict[str, object]]:
     return row.iloc[0].to_dict()
 
 
+_reddit_sentiment_cache = {}
+_reddit_cache_timestamps = {}
+REDDIT_CACHE_TTL = 21600  # 6 hours in seconds
+
+def get_live_reddit_sentiment(ticker: str) -> Optional[dict]:
+    """
+    Fetch live Reddit sentiment with 6-hour caching to balance freshness and latency.
+    Falls back to cached JSON files if API fails.
+    """
+    try:
+        import praw
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+        
+        ticker = ticker.upper()
+        now = datetime.now(timezone.utc).timestamp()
+        
+        # Check cache first
+        if ticker in _reddit_sentiment_cache:
+            cache_age = now - _reddit_cache_timestamps.get(ticker, 0)
+            if cache_age < REDDIT_CACHE_TTL:
+                return _reddit_sentiment_cache[ticker]
+        
+        # Fetch live data
+        reddit_client = praw.Reddit(
+            client_id=os.getenv('REDDIT_CLIENT_ID', "9RrzkLg9kN06g-kpti2ncw"),
+            client_secret=os.getenv('REDDIT_CLIENT_SECRET', "OH0pyFbl8T2ykN0IeAC1m5uNUu287A"),
+            user_agent=os.getenv('REDDIT_USER_AGENT', "FinancialAgent/1.0 by u/Feeling-Berry5335")
+        )
+        
+        subreddits = ['stocks', 'investing', 'wallstreetbets']
+        analyzer = SentimentIntensityAnalyzer()
+        all_posts = []
+        
+        for subreddit_name in subreddits:
+            try:
+                subreddit = reddit_client.subreddit(subreddit_name)
+                for post in subreddit.search(ticker, limit=10, time_filter='week'):
+                    sentiment = analyzer.polarity_scores(post.title)
+                    all_posts.append({
+                        'sentiment': 'bullish' if sentiment['compound'] > 0.05 else 'bearish' if sentiment['compound'] < -0.05 else 'neutral',
+                        'compound_score': sentiment['compound']
+                    })
+            except:
+                continue
+        
+        if not all_posts:
+            return None
+        
+        # Calculate aggregate
+        bullish = sum(1 for p in all_posts if p['sentiment'] == 'bullish')
+        bearish = sum(1 for p in all_posts if p['sentiment'] == 'bearish')
+        
+        result = {
+            'total_posts': len(all_posts),
+            'bullish_posts': bullish,
+            'bearish_posts': bearish,
+            'neutral_posts': len(all_posts) - bullish - bearish
+        }
+        
+        # Cache the result
+        _reddit_sentiment_cache[ticker] = result
+        _reddit_cache_timestamps[ticker] = now
+        
+        return result
+        
+    except Exception as e:
+        # Fallback to cached files
+        return None
+
 @lru_cache(maxsize=1)
 def load_latest_reddit_summary() -> Dict[str, dict]:
     if not REDDIT_DIR.exists():
@@ -1578,8 +1647,11 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
         info = {}
         news_items = []
     
+    # Try live Reddit sentiment first (with 6-hour cache), fallback to static files
     try:
-        reddit_summary = load_latest_reddit_summary().get(ticker)
+        reddit_summary = get_live_reddit_sentiment(ticker)
+        if not reddit_summary:
+            reddit_summary = load_latest_reddit_summary().get(ticker)
     except Exception:
         reddit_summary = None
 
