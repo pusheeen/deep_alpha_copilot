@@ -287,28 +287,25 @@
 
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
-        const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
+        const supportedTickers = ["TSM", "NVDA", "AMD", "AVGO", "ORCL", "MP", "LAC", "UAMY", "CRML", "NMG", "PPTA", "NVA", "NAK", "NB", "ALB"];
         
         // Company metadata for enhanced display
         const companyMetadata = {
+            "TSM": { name: "Taiwan Semiconductor", industry: "Semiconductors" },
             "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
-            "MU": { name: "Micron Technology Inc", industry: "Semiconductors" },
+            "AMD": { name: "Advanced Micro Devices", industry: "Semiconductors" },
             "AVGO": { name: "Broadcom Inc", industry: "Semiconductors" },
-            "TSM": { name: "Taiwan Semiconductor Manufacturing Co Ltd", industry: "Semiconductors" },
-            "VRT": { name: "Vertiv Holdings Co", industry: "Industrial Equipment" },
-            "SMCI": { name: "Super Micro Computer Inc", industry: "Computer Hardware" },
-            "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
-            "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
-            "IREN": { name: "Iren Ltd", industry: "Utilities" },
-            "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
-            "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
-            "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
-            "SMR": { name: "NuScale Power Corp", industry: "Nuclear Energy" },
-            "CCJ": { name: "Cameco Corp", industry: "Uranium Mining" },
-            "VST": { name: "Vistra Corp", industry: "Utilities" },
-            "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
-            "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
-            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
+            "ORCL": { name: "Oracle Corporation", industry: "Enterprise Software" },
+            "MP": { name: "MP Materials Corp", industry: "Rare Earth Mining" },
+            "LAC": { name: "Lithium Americas Corp", industry: "Lithium Mining" },
+            "UAMY": { name: "United States Antimony", industry: "Antimony Mining" },
+            "CRML": { name: "Critical Minerals Corp", industry: "Critical Minerals" },
+            "NMG": { name: "Nouveau Monde Graphite", industry: "Graphite Mining" },
+            "PPTA": { name: "Perpetua Resources", industry: "Gold & Antimony" },
+            "NVA": { name: "Nova Minerals Ltd", industry: "Gold Mining" },
+            "NAK": { name: "Northern Dynasty Minerals", industry: "Copper & Gold" },
+            "NB": { name: "NioCorp Developments", industry: "Niobium Mining" },
+            "ALB": { name: "Albemarle Corporation", industry: "Lithium & Specialty Chemicals" }
         };
 
         async function fetchWithNewsContext(question) {
