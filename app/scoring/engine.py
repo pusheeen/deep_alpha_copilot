@@ -1905,13 +1905,114 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
     return safe_json_serialize(result)
 
 
+def get_historical_sector_benchmarks(sector: str) -> list:
+    """
+    Load historical sector P/E and P/S benchmarks from sector_metrics JSON files.
+    Returns a list of benchmarks sorted by timestamp.
+    """
+    import json
+    import glob
+    import os
+    from datetime import datetime
+    
+    benchmarks = []
+    
+    try:
+        # Find all sector_metrics files
+        pattern = os.path.join(DATA_ROOT, 'structured', 'sector_metrics', 'sector_metrics_*.json')
+        files = glob.glob(pattern)
+        
+        for file_path in files:
+            try:
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                    
+                    # Check if this sector exists in the file
+                    if 'sectors' in data and sector in data['sectors']:
+                        sector_data = data['sectors'][sector]
+                        
+                        # Extract timestamp from fetch_timestamp or filename
+                        timestamp_str = data.get('fetch_timestamp', '')
+                        if timestamp_str:
+                            try:
+                                timestamp = datetime.fromisoformat(timestamp_str)
+                            except:
+                                # Try to extract from filename
+                                filename = os.path.basename(file_path)
+                                timestamp_part = filename.replace('sector_metrics_', '').replace('.json', '')
+                                timestamp = datetime.strptime(timestamp_part, '%Y%m%d_%H%M%S')
+                        else:
+                            # Fallback to file modification time
+                            timestamp = datetime.fromtimestamp(os.path.getmtime(file_path))
+                        
+                        benchmarks.append({
+                            'timestamp': timestamp,
+                            'date': timestamp.strftime('%Y-%m-%d'),
+                            'avg_pe_ratio': sector_data.get('avg_pe_ratio'),
+                            'median_pe_ratio': sector_data.get('median_pe_ratio'),
+                            'avg_ps_ratio': sector_data.get('avg_ps_ratio'),
+                            'median_ps_ratio': sector_data.get('median_ps_ratio')
+                        })
+            except Exception as e:
+                logger.warning(f"Error loading sector metrics from {file_path}: {e}")
+                continue
+        
+        # Sort by timestamp
+        benchmarks.sort(key=lambda x: x['timestamp'])
+        
+        logger.info(f"Loaded {len(benchmarks)} historical sector benchmarks for {sector}")
+        return benchmarks
+        
+    except Exception as e:
+        logger.error(f"Error loading historical sector benchmarks: {e}")
+        return []
+
+
+def get_sector_benchmark_for_date(benchmarks_history: list, target_date, metric_type: str):
+    """
+    Find the closest sector benchmark for a given date.
+    metric_type: 'pe' or 'ps'
+    Returns None if no benchmark is available.
+    """
+    if not benchmarks_history:
+        return None
+    
+    from datetime import datetime
+    
+    # Convert target_date to datetime if it's not already
+    if not isinstance(target_date, datetime):
+        target_date = datetime.fromisoformat(str(target_date))
+    
+    # Find the closest benchmark (prefer the one just before or at the target date)
+    closest_benchmark = None
+    min_diff = float('inf')
+    
+    for benchmark in benchmarks_history:
+        diff = abs((benchmark['timestamp'] - target_date).days)
+        if diff < min_diff:
+            min_diff = diff
+            closest_benchmark = benchmark
+    
+    if closest_benchmark:
+        if metric_type == 'pe':
+            return closest_benchmark.get('median_pe_ratio') or closest_benchmark.get('avg_pe_ratio')
+        elif metric_type == 'ps':
+            return closest_benchmark.get('median_ps_ratio') or closest_benchmark.get('avg_ps_ratio')
+    
+    return None
+
+
 def get_valuation_metrics(ticker: str) -> dict:
     """
     Get historical P/E and P/S ratios with industry benchmarks.
     Returns time series data for charting.
+    Uses sector-level P/E and P/S from JSON files when available.
     """
     import yfinance as yf
     from datetime import datetime, timedelta
+    import json
+    import glob
+    import os
     
     try:
         stock = yf.Ticker(ticker)
@@ -1921,31 +2022,47 @@ def get_valuation_metrics(ticker: str) -> dict:
         sector = info.get('sector', 'Technology')
         industry = info.get('industry', 'Semiconductors')
         
-        # Get real-time industry benchmarks (cached for 24h)
-        try:
-            industry_benchmarks = get_real_industry_benchmarks()
-            benchmark_data = industry_benchmarks.get(industry, industry_benchmarks.get('default', {'pe': 22.0, 'ps': 4.0}))
-            benchmark = {'pe': benchmark_data['pe'], 'ps': benchmark_data['ps']}
-            benchmark_source = benchmark_data.get('source', 'unknown')
-            benchmark_etf = benchmark_data.get('etf', 'N/A')
-            is_placeholder = benchmark_data.get('is_placeholder', True)
-            benchmark_note = benchmark_data.get('note', '')
-        except Exception as e:
-            logger.warning(f"Failed to get real-time benchmarks, using static: {e}")
-            # Fallback to static values
-            static_benchmarks = {
-                'Semiconductors': {'pe': 28.5, 'ps': 6.2},
-                'Enterprise Software': {'pe': 30.5, 'ps': 7.8},
-                'Rare Earth Mining': {'pe': 18.5, 'ps': 3.2},
-                'Lithium Mining': {'pe': 22.0, 'ps': 8.5},
-                'Gold Mining': {'pe': 18.0, 'ps': 2.5},
-                'default': {'pe': 22.0, 'ps': 4.0}
+        # Try to get sector benchmarks from JSON files first
+        sector_benchmarks_history = get_historical_sector_benchmarks(sector)
+        
+        if sector_benchmarks_history:
+            # Use the most recent sector benchmark
+            latest_benchmark = sector_benchmarks_history[-1]
+            benchmark = {
+                'pe': latest_benchmark.get('median_pe_ratio', latest_benchmark.get('avg_pe_ratio', 22.0)),
+                'ps': latest_benchmark.get('median_ps_ratio', latest_benchmark.get('avg_ps_ratio', 4.0))
             }
-            benchmark = static_benchmarks.get(industry, static_benchmarks['default'])
-            benchmark_source = 'static'
+            benchmark_source = 'sector_data'
             benchmark_etf = 'N/A'
-            is_placeholder = True
-            benchmark_note = 'Placeholder - no ETF available'
+            is_placeholder = False
+            benchmark_note = f'From sector metrics: {sector}'
+            logger.info(f"Using sector benchmarks for {ticker}: P/E={benchmark['pe']}, P/S={benchmark['ps']}")
+        else:
+            # Fallback to ETF-based benchmarks
+            try:
+                industry_benchmarks = get_real_industry_benchmarks()
+                benchmark_data = industry_benchmarks.get(industry, industry_benchmarks.get('default', {'pe': 22.0, 'ps': 4.0}))
+                benchmark = {'pe': benchmark_data['pe'], 'ps': benchmark_data['ps']}
+                benchmark_source = benchmark_data.get('source', 'unknown')
+                benchmark_etf = benchmark_data.get('etf', 'N/A')
+                is_placeholder = benchmark_data.get('is_placeholder', True)
+                benchmark_note = benchmark_data.get('note', '')
+            except Exception as e:
+                logger.warning(f"Failed to get real-time benchmarks, using static: {e}")
+                # Fallback to static values
+                static_benchmarks = {
+                    'Semiconductors': {'pe': 28.5, 'ps': 6.2},
+                    'Enterprise Software': {'pe': 30.5, 'ps': 7.8},
+                    'Rare Earth Mining': {'pe': 18.5, 'ps': 3.2},
+                    'Lithium Mining': {'pe': 22.0, 'ps': 8.5},
+                    'Gold Mining': {'pe': 18.0, 'ps': 2.5},
+                    'default': {'pe': 22.0, 'ps': 4.0}
+                }
+                benchmark = static_benchmarks.get(industry, static_benchmarks['default'])
+                benchmark_source = 'static'
+                benchmark_etf = 'N/A'
+                is_placeholder = True
+                benchmark_note = 'Placeholder - no ETF available'
         
         # Get real historical data from actual financials
         pe_data = []
@@ -2003,18 +2120,26 @@ def get_valuation_metrics(ticker: str) -> dict:
                                 
                                 # Only add if ratios are reasonable (filter outliers)
                                 if pe_ratio and 0 < pe_ratio < 500:
-                                    pe_data.append({
+                                    # Find matching sector benchmark for this date
+                                    benchmark_pe = get_sector_benchmark_for_date(sector_benchmarks_history, quarter_dt, 'pe')
+                                    pe_entry = {
                                         'date': quarter_dt.strftime('%Y-%m-%d'),
                                         'pe_ratio': round(pe_ratio, 2)
-                                        # Note: Historical industry P/E benchmark not available in data files
-                                    })
+                                    }
+                                    if benchmark_pe is not None:
+                                        pe_entry['benchmark_pe'] = benchmark_pe
+                                    pe_data.append(pe_entry)
                                 
                                 if ps_ratio and 0 < ps_ratio < 100:
-                                    ps_data.append({
+                                    # Find matching sector benchmark for this date
+                                    benchmark_ps = get_sector_benchmark_for_date(sector_benchmarks_history, quarter_dt, 'ps')
+                                    ps_entry = {
                                         'date': quarter_dt.strftime('%Y-%m-%d'),
                                         'ps_ratio': round(ps_ratio, 2)
-                                        # Note: Historical industry P/S benchmark not available in data files
-                                    })
+                                    }
+                                    if benchmark_ps is not None:
+                                        ps_entry['benchmark_ps'] = benchmark_ps
+                                    ps_data.append(ps_entry)
                     
                     except Exception as e:
                         logger.warning(f"Error calculating ratios for {ticker} quarter {quarter_date}: {e}")

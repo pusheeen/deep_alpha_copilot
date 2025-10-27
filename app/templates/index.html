@@ -907,13 +907,14 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark (Current)',
-                        data: peData.map(d => current.benchmark_pe), // Use current benchmark for all points
+                        label: 'Sector Benchmark',
+                        data: peData.map(d => d.benchmark_pe !== undefined ? d.benchmark_pe : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
-                        tension: 0
+                        tension: 0,
+                        spanGaps: true  // Connect line even if some points are missing
                     }]
                 },
                 options: {
@@ -954,13 +955,14 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark (Current)',
-                        data: psData.map(d => current.benchmark_ps), // Use current benchmark for all points
+                        label: 'Sector Benchmark',
+                        data: psData.map(d => d.benchmark_ps !== undefined ? d.benchmark_ps : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
-                        tension: 0
+                        tension: 0,
+                        spanGaps: true  // Connect line even if some points are missing
                     }]
                 },
                 options: {
