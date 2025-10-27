@@ -1928,6 +1928,8 @@ def get_valuation_metrics(ticker: str) -> dict:
             benchmark = {'pe': benchmark_data['pe'], 'ps': benchmark_data['ps']}
             benchmark_source = benchmark_data.get('source', 'unknown')
             benchmark_etf = benchmark_data.get('etf', 'N/A')
+            is_placeholder = benchmark_data.get('is_placeholder', True)
+            benchmark_note = benchmark_data.get('note', '')
         except Exception as e:
             logger.warning(f"Failed to get real-time benchmarks, using static: {e}")
             # Fallback to static values
@@ -1942,6 +1944,8 @@ def get_valuation_metrics(ticker: str) -> dict:
             benchmark = static_benchmarks.get(industry, static_benchmarks['default'])
             benchmark_source = 'static'
             benchmark_etf = 'N/A'
+            is_placeholder = True
+            benchmark_note = 'Placeholder - no ETF available'
         
         # Get real historical data from actual financials
         pe_data = []
@@ -2078,7 +2082,9 @@ def get_valuation_metrics(ticker: str) -> dict:
             'benchmark_info': {
                 'source': benchmark_source,
                 'etf': benchmark_etf,
-                'updated': 'Real-time (24h cache)' if benchmark_source == 'real-time' else 'Static'
+                'updated': 'Real-time (24h cache)' if benchmark_source == 'real-time' else 'Static',
+                'is_placeholder': is_placeholder,
+                'note': benchmark_note
             },
             'analysis': {
                 'pe_vs_industry': 'Overvalued' if current_pe and current_pe > benchmark['pe'] * 1.2 else 'Fair' if current_pe and current_pe > benchmark['pe'] * 0.8 else 'Undervalued',
@@ -2167,7 +2173,8 @@ def get_real_industry_benchmarks() -> dict:
                 'pe': round(pe, 2) if pe else 22.0,
                 'ps': ps,
                 'etf': etf_ticker,
-                'source': 'real-time' if pe else 'fallback'
+                'source': 'real-time' if pe else 'fallback',
+                'is_placeholder': not pe  # P/S is always placeholder, but P/E might be real
             }
             
             logger.info(f"{industry} ({etf_ticker}): P/E={pe}")
@@ -2179,7 +2186,8 @@ def get_real_industry_benchmarks() -> dict:
                 'pe': 22.0,
                 'ps': 3.0,
                 'etf': etf_ticker,
-                'source': 'static'
+                'source': 'static',
+                'is_placeholder': True
             }
     
     # Add industries without ETFs (use static values)
@@ -2203,7 +2211,9 @@ def get_real_industry_benchmarks() -> dict:
             'pe': values['pe'],
             'ps': values['ps'],
             'etf': None,
-            'source': 'static'
+            'source': 'static',
+            'is_placeholder': True,
+            'note': 'Placeholder - no ETF available'
         }
     
     # Cache the results
