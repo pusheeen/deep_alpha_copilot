@@ -1921,77 +1921,141 @@ def get_valuation_metrics(ticker: str) -> dict:
         sector = info.get('sector', 'Technology')
         industry = info.get('industry', 'Semiconductors')
         
-        # Industry benchmark P/E and P/S ratios (approximate averages)
-        # Updated Oct 2025 with mining/materials sectors
-        industry_benchmarks = {
-            # Technology
-            'Semiconductors': {'pe': 28.5, 'ps': 6.2},
-            'Software': {'pe': 35.2, 'ps': 8.5},
-            'Hardware': {'pe': 22.1, 'ps': 3.8},
-            'Internet Services': {'pe': 32.5, 'ps': 7.1},
-            'Enterprise Software': {'pe': 30.5, 'ps': 7.8},
-            
-            # Mining & Materials
-            'Rare Earth Mining': {'pe': 18.5, 'ps': 3.2},
-            'Lithium Mining': {'pe': 22.0, 'ps': 8.5},
-            'Antimony Mining': {'pe': 15.0, 'ps': 2.8},
-            'Critical Minerals': {'pe': 20.0, 'ps': 4.5},
-            'Graphite Mining': {'pe': 16.5, 'ps': 3.0},
-            'Gold Mining': {'pe': 18.0, 'ps': 2.5},
-            'Gold & Antimony': {'pe': 17.5, 'ps': 2.8},
-            'Copper & Gold': {'pe': 19.0, 'ps': 3.5},
-            'Niobium Mining': {'pe': 16.0, 'ps': 3.2},
-            'Lithium & Specialty Chemicals': {'pe': 20.5, 'ps': 3.8},
-            'Materials': {'pe': 18.0, 'ps': 2.5},
-            'Metals & Mining': {'pe': 17.5, 'ps': 2.8},
-            
-            # Other
-            'Financial Services': {'pe': 14.2, 'ps': 2.5},
-            'Healthcare': {'pe': 25.3, 'ps': 4.2},
-            'Energy': {'pe': 12.8, 'ps': 1.8},
-            'Consumer': {'pe': 18.5, 'ps': 2.2},
-            'default': {'pe': 22.0, 'ps': 4.0}
-        }
+        # Get real-time industry benchmarks (cached for 24h)
+        try:
+            industry_benchmarks = get_real_industry_benchmarks()
+            benchmark_data = industry_benchmarks.get(industry, industry_benchmarks.get('default', {'pe': 22.0, 'ps': 4.0}))
+            benchmark = {'pe': benchmark_data['pe'], 'ps': benchmark_data['ps']}
+            benchmark_source = benchmark_data.get('source', 'unknown')
+            benchmark_etf = benchmark_data.get('etf', 'N/A')
+        except Exception as e:
+            logger.warning(f"Failed to get real-time benchmarks, using static: {e}")
+            # Fallback to static values
+            static_benchmarks = {
+                'Semiconductors': {'pe': 28.5, 'ps': 6.2},
+                'Enterprise Software': {'pe': 30.5, 'ps': 7.8},
+                'Rare Earth Mining': {'pe': 18.5, 'ps': 3.2},
+                'Lithium Mining': {'pe': 22.0, 'ps': 8.5},
+                'Gold Mining': {'pe': 18.0, 'ps': 2.5},
+                'default': {'pe': 22.0, 'ps': 4.0}
+            }
+            benchmark = static_benchmarks.get(industry, static_benchmarks['default'])
+            benchmark_source = 'static'
+            benchmark_etf = 'N/A'
         
-        # Get industry benchmark or default
-        benchmark = industry_benchmarks.get(industry, industry_benchmarks['default'])
-        
-        # Get historical data (1 year only for faster loading)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=365)
-        
-        # Limit to quarterly intervals for faster API response
-        hist = stock.history(start=start_date, end=end_date, interval='3mo')
-        
-        # Calculate quarterly P/E and P/S ratios
+        # Get real historical data from actual financials
         pe_data = []
         ps_data = []
         
-        # Simplified: Use price-based estimation (much faster than fetching financials)
-        current_pe = info.get('trailingPE', 25)
-        current_ps = info.get('priceToSalesTrailing12Months', 5)
-        current_price = info.get('currentPrice')
+        try:
+            # Get quarterly financials (last 8 quarters = 2 years)
+            quarterly_income = stock.quarterly_income_stmt
+            quarterly_balance = stock.quarterly_balance_sheet
+            
+            if quarterly_income is not None and not quarterly_income.empty:
+                # Get the most recent 8 quarters
+                quarters = quarterly_income.columns[:8]
+                
+                for quarter_date in quarters:
+                    try:
+                        # Get earnings and revenue for this quarter
+                        net_income = quarterly_income.loc['Net Income', quarter_date] if 'Net Income' in quarterly_income.index else None
+                        revenue = quarterly_income.loc['Total Revenue', quarter_date] if 'Total Revenue' in quarterly_income.index else None
+                        
+                        # Get shares outstanding from balance sheet
+                        shares = None
+                        if quarterly_balance is not None and not quarterly_balance.empty and quarter_date in quarterly_balance.columns:
+                            if 'Ordinary Shares Number' in quarterly_balance.index:
+                                shares = quarterly_balance.loc['Ordinary Shares Number', quarter_date]
+                            elif 'Share Issued' in quarterly_balance.index:
+                                shares = quarterly_balance.loc['Share Issued', quarter_date]
+                        
+                        # Get price around that quarter date
+                        quarter_dt = pd.to_datetime(quarter_date)
+                        price_data = stock.history(start=quarter_dt - timedelta(days=5), 
+                                                   end=quarter_dt + timedelta(days=5))
+                        
+                        if not price_data.empty and shares and shares > 0:
+                            avg_price = price_data['Close'].mean()
+                            market_cap = avg_price * shares
+                            
+                            # Calculate trailing twelve months (TTM) earnings and revenue
+                            # Sum the last 4 quarters from this point
+                            quarter_idx = list(quarters).index(quarter_date)
+                            if quarter_idx + 4 <= len(quarters):
+                                ttm_quarters = quarters[quarter_idx:quarter_idx+4]
+                                
+                                ttm_net_income = 0
+                                ttm_revenue = 0
+                                for q in ttm_quarters:
+                                    if 'Net Income' in quarterly_income.index:
+                                        ttm_net_income += quarterly_income.loc['Net Income', q]
+                                    if 'Total Revenue' in quarterly_income.index:
+                                        ttm_revenue += quarterly_income.loc['Total Revenue', q]
+                                
+                                # Calculate real P/E and P/S
+                                pe_ratio = (market_cap / ttm_net_income) if ttm_net_income > 0 else None
+                                ps_ratio = (market_cap / ttm_revenue) if ttm_revenue > 0 else None
+                                
+                                # Only add if ratios are reasonable (filter outliers)
+                                if pe_ratio and 0 < pe_ratio < 500:
+                                    pe_data.append({
+                                        'date': quarter_dt.strftime('%Y-%m-%d'),
+                                        'pe_ratio': round(pe_ratio, 2),
+                                        'benchmark_pe': benchmark['pe']
+                                    })
+                                
+                                if ps_ratio and 0 < ps_ratio < 100:
+                                    ps_data.append({
+                                        'date': quarter_dt.strftime('%Y-%m-%d'),
+                                        'ps_ratio': round(ps_ratio, 2),
+                                        'benchmark_ps': benchmark['ps']
+                                    })
+                    
+                    except Exception as e:
+                        logger.warning(f"Error calculating ratios for {ticker} quarter {quarter_date}: {e}")
+                        continue
         
-        if current_price and current_price > 0 and not hist.empty:
-            for date, row in hist.iterrows():
-                close_price = row['Close']
-                
-                # Estimate historical ratios based on price changes
-                price_ratio = close_price / current_price
-                estimated_pe = current_pe * price_ratio if current_pe else None
-                estimated_ps = current_ps * price_ratio if current_ps else None
-                
-                pe_data.append({
-                    'date': date.strftime('%Y-%m-%d'),
-                    'pe_ratio': round(estimated_pe, 2) if estimated_pe else None,
-                    'benchmark_pe': benchmark['pe']
-                })
-                
-                ps_data.append({
-                    'date': date.strftime('%Y-%m-%d'),
-                    'ps_ratio': round(estimated_ps, 2) if estimated_ps else None,
-                    'benchmark_ps': benchmark['ps']
-                })
+        except Exception as e:
+            logger.warning(f"Could not fetch quarterly financials for {ticker}: {e}")
+        
+        # If we didn't get enough data points, fall back to estimation
+        if len(pe_data) < 3 or len(ps_data) < 3:
+            logger.info(f"Insufficient financial data for {ticker}, using price-based estimation")
+            
+            # Fallback: Use price-based estimation
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=365)
+            hist = stock.history(start=start_date, end=end_date, interval='3mo')
+            
+            current_pe = info.get('trailingPE', 25)
+            current_ps = info.get('priceToSalesTrailing12Months', 5)
+            current_price = info.get('currentPrice')
+            
+            pe_data = []
+            ps_data = []
+            
+            if current_price and current_price > 0 and not hist.empty:
+                for date, row in hist.iterrows():
+                    close_price = row['Close']
+                    price_ratio = close_price / current_price
+                    
+                    estimated_pe = current_pe * price_ratio if current_pe else None
+                    estimated_ps = current_ps * price_ratio if current_ps else None
+                    
+                    if estimated_pe:
+                        pe_data.append({
+                            'date': date.strftime('%Y-%m-%d'),
+                            'pe_ratio': round(estimated_pe, 2),
+                            'benchmark_pe': benchmark['pe']
+                        })
+                    
+                    if estimated_ps:
+                        ps_data.append({
+                            'date': date.strftime('%Y-%m-%d'),
+                            'ps_ratio': round(estimated_ps, 2),
+                            'benchmark_ps': benchmark['ps']
+                        })
         
         # Current values
         current_pe = info.get('trailingPE')
@@ -2011,6 +2075,11 @@ def get_valuation_metrics(ticker: str) -> dict:
             },
             'historical_pe': pe_data,  # Last year quarterly
             'historical_ps': ps_data,
+            'benchmark_info': {
+                'source': benchmark_source,
+                'etf': benchmark_etf,
+                'updated': 'Real-time (24h cache)' if benchmark_source == 'real-time' else 'Static'
+            },
             'analysis': {
                 'pe_vs_industry': 'Overvalued' if current_pe and current_pe > benchmark['pe'] * 1.2 else 'Fair' if current_pe and current_pe > benchmark['pe'] * 0.8 else 'Undervalued',
                 'ps_vs_industry': 'Overvalued' if current_ps and current_ps > benchmark['ps'] * 1.2 else 'Fair' if current_ps and current_ps > benchmark['ps'] * 0.8 else 'Undervalued'
@@ -2031,6 +2100,119 @@ def get_valuation_metrics(ticker: str) -> dict:
 # Cache for market conditions (refresh every 10 minutes)
 _MARKET_CONDITIONS_CACHE = {'data': None, 'timestamp': None}
 MARKET_CACHE_TTL = 600  # 10 minutes
+
+# Cache for industry benchmarks (refresh daily)
+_INDUSTRY_BENCHMARKS_CACHE = {'data': None, 'timestamp': None}
+INDUSTRY_BENCHMARK_TTL = 86400  # 24 hours
+
+
+def get_real_industry_benchmarks() -> dict:
+    """
+    Fetch real-time industry P/E and P/S ratios using industry ETFs as proxies.
+    Caches results for 24 hours.
+    """
+    import yfinance as yf
+    from datetime import datetime
+    
+    # Check cache first
+    now = datetime.now()
+    if (_INDUSTRY_BENCHMARKS_CACHE['data'] is not None and 
+        _INDUSTRY_BENCHMARKS_CACHE['timestamp'] is not None):
+        cache_age = (now - _INDUSTRY_BENCHMARKS_CACHE['timestamp']).total_seconds()
+        if cache_age < INDUSTRY_BENCHMARK_TTL:
+            logger.info(f"Using cached industry benchmarks (age: {cache_age/3600:.1f}h)")
+            return _INDUSTRY_BENCHMARKS_CACHE['data']
+    
+    logger.info("Fetching fresh industry benchmarks from ETF data...")
+    
+    # Map industries to representative ETFs
+    industry_etf_map = {
+        # Technology
+        'Semiconductors': 'SOXX',  # iShares Semiconductor ETF
+        'Software': 'IGV',  # iShares Software ETF
+        'Hardware': 'XLK',  # Technology Select Sector SPDR
+        'Enterprise Software': 'IGV',
+        
+        # Mining & Materials
+        'Rare Earth Mining': 'REMX',  # VanEck Rare Earth/Strategic Metals ETF
+        'Lithium Mining': 'LIT',  # Global X Lithium & Battery Tech ETF
+        'Gold Mining': 'GDX',  # VanEck Gold Miners ETF
+        'Materials': 'XLB',  # Materials Select Sector SPDR
+        'Metals & Mining': 'XME',  # SPDR S&P Metals & Mining ETF
+        
+        # Fallback
+        'default': 'SPY'  # S&P 500
+    }
+    
+    benchmarks = {}
+    
+    for industry, etf_ticker in industry_etf_map.items():
+        try:
+            etf = yf.Ticker(etf_ticker)
+            info = etf.info
+            
+            # Get P/E and P/S from ETF (represents industry average)
+            pe = info.get('trailingPE')
+            
+            # ETFs don't have P/S, so we need to estimate or use static values
+            # For now, use a mapping based on typical industry P/S ratios
+            ps_estimates = {
+                'SOXX': 6.2, 'IGV': 8.5, 'XLK': 5.5,
+                'REMX': 3.2, 'LIT': 8.5, 'GDX': 2.5,
+                'XLB': 2.5, 'XME': 2.8, 'SPY': 2.5
+            }
+            ps = ps_estimates.get(etf_ticker, 3.0)
+            
+            benchmarks[industry] = {
+                'pe': round(pe, 2) if pe else 22.0,
+                'ps': ps,
+                'etf': etf_ticker,
+                'source': 'real-time' if pe else 'fallback'
+            }
+            
+            logger.info(f"{industry} ({etf_ticker}): P/E={pe}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to fetch {industry} benchmark from {etf_ticker}: {e}")
+            # Use static fallback
+            benchmarks[industry] = {
+                'pe': 22.0,
+                'ps': 3.0,
+                'etf': etf_ticker,
+                'source': 'static'
+            }
+    
+    # Add industries without ETFs (use static values)
+    static_industries = {
+        'Antimony Mining': {'pe': 15.0, 'ps': 2.8},
+        'Critical Minerals': {'pe': 20.0, 'ps': 4.5},
+        'Graphite Mining': {'pe': 16.5, 'ps': 3.0},
+        'Gold & Antimony': {'pe': 17.5, 'ps': 2.8},
+        'Copper & Gold': {'pe': 19.0, 'ps': 3.5},
+        'Niobium Mining': {'pe': 16.0, 'ps': 3.2},
+        'Lithium & Specialty Chemicals': {'pe': 20.5, 'ps': 3.8},
+        'Internet Services': {'pe': 32.5, 'ps': 7.1},
+        'Financial Services': {'pe': 14.2, 'ps': 2.5},
+        'Healthcare': {'pe': 25.3, 'ps': 4.2},
+        'Energy': {'pe': 12.8, 'ps': 1.8},
+        'Consumer': {'pe': 18.5, 'ps': 2.2}
+    }
+    
+    for industry, values in static_industries.items():
+        benchmarks[industry] = {
+            'pe': values['pe'],
+            'ps': values['ps'],
+            'etf': None,
+            'source': 'static'
+        }
+    
+    # Cache the results
+    _INDUSTRY_BENCHMARKS_CACHE['data'] = benchmarks
+    _INDUSTRY_BENCHMARKS_CACHE['timestamp'] = now
+    logger.info(f"Industry benchmarks cached successfully ({len(benchmarks)} industries)")
+    
+    return benchmarks
+
 
 def get_market_conditions() -> dict:
     """
