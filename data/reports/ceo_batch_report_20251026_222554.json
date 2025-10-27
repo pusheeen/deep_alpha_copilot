@@ -1,0 +1,51 @@
+{
+  "batch_info": {
+    "timestamp": "2025-10-26T22:25:54.526217",
+    "total_companies": 2,
+    "successful_fetches": 2,
+    "failed_fetches": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "CRML",
+        "company_name": "Critical Metals Corp.",
+        "ceo_name": "Mr. Antony William-Paul Sage B.Bus, B.Com., BCom, C.A., CA, FCPA, FTIA",
+        "ceo_title": "Chairman of the Board & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:25:49.544219",
+        "age": 64,
+        "year_born": 1960
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NVA",
+        "company_name": "Nova Minerals Ltd",
+        "ceo_name": "Mr. Christopher  Gerteisen",
+        "ceo_title": "CEO & Executive Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:25:52.129911",
+        "age": 51,
+        "year_born": 1973,
+        "total_pay": 253037
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    }
+  ]
+}

@@ -23,6 +23,32 @@ import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from datetime import datetime, timedelta
+import time
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def retry_on_failure(max_retries=3, delay=1, backoff=2):
+    """Decorator to retry a function on failure with exponential backoff."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            current_delay = delay
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    retries += 1
+                    if retries >= max_retries:
+                        logger.error(f"{func.__name__} failed after {max_retries} retries: {e}")
+                        raise
+                    logger.warning(f"{func.__name__} failed (attempt {retries}/{max_retries}): {e}. Retrying in {current_delay}s...")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+            return None
+        return wrapper
+    return decorator
 
 
 def safe_json_serialize(obj):
@@ -1761,12 +1787,18 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
     except ScoreComputationError:
         price_df = pd.DataFrame()  # Empty DataFrame as fallback
 
-    # Get Yahoo Finance data with error handling
-    try:
+    # Get Yahoo Finance data with error handling and retry logic
+    @retry_on_failure(max_retries=3, delay=2, backoff=2)
+    def fetch_yfinance_data(ticker):
         instrument = yf.Ticker(ticker)
         info = instrument.info or {}
         news_items = instrument.news or []
-    except Exception:
+        return info, news_items
+    
+    try:
+        info, news_items = fetch_yfinance_data(ticker)
+    except Exception as e:
+        logger.warning(f"Failed to fetch Yahoo Finance data for {ticker} after retries: {e}")
         info = {}
         news_items = []
     

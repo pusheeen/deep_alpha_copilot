@@ -134,7 +134,7 @@
 
                 <!-- Individual Scores Comparison -->
                 <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Score Comparison Radar</h3>
                     <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
                         <canvas id="individualChart" width="400" height="300"></canvas>
                     </div>
@@ -1280,7 +1280,49 @@
                 const result = await response.json();
                 
                 if (result.status === 'success' && result.data && result.data.price_history && result.data.price_history.price_data && result.data.price_history.price_data.length > 0) {
-                    renderPriceChart(result.data.price_history, ticker);
+                    const priceHistory = result.data.price_history;
+                    
+                    // Filter data based on period
+                    const now = new Date();
+                    let cutoffDate;
+                    
+                    switch(period) {
+                        case '1d':
+                            cutoffDate = new Date(now.setDate(now.getDate() - 1));
+                            break;
+                        case '5d':
+                            cutoffDate = new Date(now.setDate(now.getDate() - 5));
+                            break;
+                        case '1m':
+                            cutoffDate = new Date(now.setMonth(now.getMonth() - 1));
+                            break;
+                        case '6m':
+                            cutoffDate = new Date(now.setMonth(now.getMonth() - 6));
+                            break;
+                        case '1y':
+                            cutoffDate = new Date(now.setFullYear(now.getFullYear() - 1));
+                            break;
+                        case '2y':
+                            cutoffDate = new Date(now.setFullYear(now.getFullYear() - 2));
+                            break;
+                        case '5y':
+                            cutoffDate = new Date(now.setFullYear(now.getFullYear() - 5));
+                            break;
+                        case 'max':
+                            cutoffDate = new Date(0); // Unix epoch (show all data)
+                            break;
+                        default:
+                            cutoffDate = new Date(now.setMonth(now.getMonth() - 1)); // Default to 1 month
+                    }
+                    
+                    // Filter price data
+                    const filteredPriceData = priceHistory.price_data.filter(d => new Date(d.date) >= cutoffDate);
+                    const filteredEvents = (priceHistory.events || []).filter(e => new Date(e.date) >= cutoffDate);
+                    
+                    renderPriceChart({
+                        price_data: filteredPriceData,
+                        events: filteredEvents
+                    }, ticker);
                 } else {
                     console.error('Error refreshing price data:', result.message || 'No data received');
                 }
@@ -1417,10 +1459,14 @@
                         </h3>
                         <!-- Google Finance style time period buttons -->
                         <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1d">1D</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="5d">5D</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="5y">5Y</button>
+                            <button class="time-period-btn px-2 py-1 text-xs rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="max">Max</button>
                         </div>
                     </div>
                     <div class="flex items-center justify-between mb-4 text-xs">
@@ -2172,28 +2218,36 @@
                 comparisonCharts.individual.destroy();
             }
 
-            const scoreTypes = ['business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
-            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
+            // Include overall score in the radar chart
+            const scoreTypes = ['overall', 'business', 'financial', 'sentiment', 'critical', 'leadership', 'earnings', 'technical'];
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
             
             const datasets = tickers.map((ticker, index) => {
                 const companyData = comparisonData[ticker];
                 const data = scoreTypes.map(type => {
+                    if (type === 'overall') {
+                        return companyData ? (companyData.overall?.score || companyData.overall_score || 0) : 0;
+                    }
                     return companyData ? companyData.scores[type]?.score || 0 : 0;
                 });
                 
                 return {
                     label: ticker,
                     data: data,
-                    borderColor: colors[index],
-                    backgroundColor: colors[index] + '20',
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '30',
                     borderWidth: 2,
-                    fill: false,
-                    tension: 0.1
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: colors[index % colors.length],
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
                 };
             });
 
             comparisonCharts.individual = new Chart(ctx, {
-                type: 'line',
+                type: 'radar',
                 data: {
                     labels: scoreTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
                     datasets: datasets
@@ -2204,15 +2258,35 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.r.toFixed(1);
+                                }
+                            }
                         }
                     },
                     scales: {
-                        y: {
+                        r: {
                             beginAtZero: true,
                             max: 10,
+                            min: 0,
                             ticks: {
+                                stepSize: 2,
                                 callback: function(value) {
-                                    return value.toFixed(1);
+                                    return value.toFixed(0);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11
                                 }
                             }
                         }
