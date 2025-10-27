@@ -540,6 +540,24 @@ def compute_business_score(ticker: str, fin_df: pd.DataFrame, info: dict) -> Com
     if revenue_series.empty:
         raise ScoreComputationError(f"Total Revenue series missing for {ticker}")
 
+    # Check if revenue is zero or very low
+    revenue_sum = revenue_series.sum()
+    if revenue_sum == 0 or revenue_sum < 1e6:  # Less than $1M total revenue
+        logger.warning(f"Company {ticker} has zero or very low revenue for business score. Assigning low score.")
+        industry = info.get("industry") or ""
+        sector = info.get("sector") or ""
+        return ComponentScore(
+            score=3.5,  # Below average score for pre-revenue companies
+            summary=f"Pre-revenue company in {industry or sector} - no established business operations. High operational risk.",
+            inputs={
+                "revenue_cagr": 0.0,
+                "gross_margin": None,
+                "rnd_intensity": None,
+                "industry_score": SECTOR_GROWTH_BONUS.get(industry, SECTOR_GROWTH_BONUS.get(sector, 6.0)),
+            },
+            notes=["Pre-revenue/exploration stage company with no meaningful revenue"]
+        )
+
     gross_profit_series = safe_series(fin_df, "Gross Profit")
     gross_margin_series = (gross_profit_series / revenue_series).dropna() if not gross_profit_series.empty else pd.Series(dtype=float)
 
@@ -617,6 +635,25 @@ def compute_financial_score(fin_df: pd.DataFrame, info: dict) -> ComponentScore:
     net_income_series = safe_series(fin_df, "Net Income")
     if revenue_series.empty or net_income_series.empty:
         raise ScoreComputationError("Insufficient revenue/net income data for financial scoring.")
+
+    # Check if revenue is zero or very low (pre-revenue company)
+    revenue_sum = revenue_series.sum()
+    if revenue_sum == 0 or revenue_sum < 1e6:  # Less than $1M total revenue
+        logger.warning(f"Company has zero or very low revenue (${revenue_sum:,.0f}). Assigning low financial score.")
+        return ComponentScore(
+            score=2.0,  # Very low score for pre-revenue companies
+            summary="Pre-revenue company with no significant revenue recorded. High financial risk.",
+            inputs={
+                "revenue_cagr": 0.0,
+                "net_margin": None,
+                "free_cashflow": info.get("freeCashflow"),
+                "total_debt": info.get("totalDebt"),
+                "debt_to_equity": info.get("debtToEquity"),
+                "trailing_pe": info.get("trailingPE"),
+                "price_to_sales": info.get("priceToSalesTrailing12Months"),
+            },
+            notes=["Company has zero or very low revenue - pre-revenue/exploration stage"]
+        )
 
     revenue_cagr = calculate_cagr(revenue_series[-4:])
     net_margin_series = (net_income_series / revenue_series).dropna()
