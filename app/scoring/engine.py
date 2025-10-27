@@ -1922,11 +1922,30 @@ def get_valuation_metrics(ticker: str) -> dict:
         industry = info.get('industry', 'Semiconductors')
         
         # Industry benchmark P/E and P/S ratios (approximate averages)
+        # Updated Oct 2025 with mining/materials sectors
         industry_benchmarks = {
+            # Technology
             'Semiconductors': {'pe': 28.5, 'ps': 6.2},
             'Software': {'pe': 35.2, 'ps': 8.5},
             'Hardware': {'pe': 22.1, 'ps': 3.8},
             'Internet Services': {'pe': 32.5, 'ps': 7.1},
+            'Enterprise Software': {'pe': 30.5, 'ps': 7.8},
+            
+            # Mining & Materials
+            'Rare Earth Mining': {'pe': 18.5, 'ps': 3.2},
+            'Lithium Mining': {'pe': 22.0, 'ps': 8.5},
+            'Antimony Mining': {'pe': 15.0, 'ps': 2.8},
+            'Critical Minerals': {'pe': 20.0, 'ps': 4.5},
+            'Graphite Mining': {'pe': 16.5, 'ps': 3.0},
+            'Gold Mining': {'pe': 18.0, 'ps': 2.5},
+            'Gold & Antimony': {'pe': 17.5, 'ps': 2.8},
+            'Copper & Gold': {'pe': 19.0, 'ps': 3.5},
+            'Niobium Mining': {'pe': 16.0, 'ps': 3.2},
+            'Lithium & Specialty Chemicals': {'pe': 20.5, 'ps': 3.8},
+            'Materials': {'pe': 18.0, 'ps': 2.5},
+            'Metals & Mining': {'pe': 17.5, 'ps': 2.8},
+            
+            # Other
             'Financial Services': {'pe': 14.2, 'ps': 2.5},
             'Healthcare': {'pe': 25.3, 'ps': 4.2},
             'Energy': {'pe': 12.8, 'ps': 1.8},
