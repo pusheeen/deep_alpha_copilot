@@ -907,8 +907,8 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark',
-                        data: peData.map(d => d.benchmark_pe),
+                        label: 'Industry Benchmark (Current)',
+                        data: peData.map(d => current.benchmark_pe), // Use current benchmark for all points
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -954,8 +954,8 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark',
-                        data: psData.map(d => d.benchmark_ps),
+                        label: 'Industry Benchmark (Current)',
+                        data: psData.map(d => current.benchmark_ps), // Use current benchmark for all points
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -1957,7 +1957,7 @@
             const resultsDiv = document.getElementById('comparison-results');
             if (resultsDiv) {
                 resultsDiv.classList.add('hidden');
-                resultsDiv.innerHTML = '';
+                // Don't clear innerHTML - keep canvas elements intact
             }
         });
 
@@ -1989,15 +1989,27 @@
             const resultsDiv = document.getElementById('comparison-results');
             resultsDiv.classList.remove('hidden');
             
-            // Show loading state
-            resultsDiv.innerHTML = `
-                <div class="flex items-center justify-center py-12">
+            // Show loading indicator (without clearing canvas elements)
+            let loadingDiv = document.getElementById('comparison-loading');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'comparison-loading';
+                loadingDiv.className = 'flex items-center justify-center py-12';
+                loadingDiv.innerHTML = `
                     <div class="text-center">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                         <p class="text-slate-600">Loading comparison data...</p>
                     </div>
-                </div>
-            `;
+                `;
+                resultsDiv.insertBefore(loadingDiv, resultsDiv.firstChild);
+            } else {
+                loadingDiv.classList.remove('hidden');
+            }
+            
+            // Hide the chart divs while loading
+            document.getElementById('overall-scores-chart')?.parentElement.classList.add('hidden');
+            document.getElementById('individual-scores-chart')?.parentElement.classList.add('hidden');
+            document.querySelector('#price-period')?.parentElement.parentElement.classList.add('hidden');
 
             try {
                 // Fetch data for all tickers with proper error handling
@@ -2029,14 +2041,33 @@
 
                 // Check if we have any successful data
                 const successfulTickers = Object.keys(comparisonData);
+                
+                // Hide loading indicator
+                if (loadingDiv) {
+                    loadingDiv.classList.add('hidden');
+                }
+                
                 if (successfulTickers.length === 0) {
-                    resultsDiv.innerHTML = `
-                        <div class="text-center py-12">
-                            <p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>
-                        </div>
-                    `;
+                    // Show error message without clearing canvases
+                    let errorDiv = document.getElementById('comparison-error');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.id = 'comparison-error';
+                        errorDiv.className = 'text-center py-12';
+                        resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
+                    }
+                    errorDiv.innerHTML = `<p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>`;
+                    errorDiv.classList.remove('hidden');
                     return;
                 }
+                
+                // Hide error div if it exists
+                document.getElementById('comparison-error')?.classList.add('hidden');
+                
+                // Show the chart divs
+                document.getElementById('overall-scores-chart')?.parentElement.classList.remove('hidden');
+                document.getElementById('individual-scores-chart')?.parentElement.classList.remove('hidden');
+                document.querySelector('#price-period')?.parentElement.parentElement.classList.remove('hidden');
 
                 // Render comparison charts with successful data
                 renderOverallScoresChart(successfulTickers);
@@ -2051,12 +2082,25 @@
 
             } catch (error) {
                 console.error('Error performing comparison:', error);
-                resultsDiv.innerHTML = `
-                    <div class="text-center py-12">
-                        <p class="text-red-600">Failed to load comparison data. Please try again.</p>
-                        <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
-                    </div>
+                
+                // Hide loading indicator
+                if (loadingDiv) {
+                    loadingDiv.classList.add('hidden');
+                }
+                
+                // Show error message without clearing canvases
+                let errorDiv = document.getElementById('comparison-error');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.id = 'comparison-error';
+                    errorDiv.className = 'text-center py-12';
+                    resultsDiv.insertBefore(errorDiv, resultsDiv.firstChild);
+                }
+                errorDiv.innerHTML = `
+                    <p class="text-red-600">Failed to load comparison data. Please try again.</p>
+                    <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
                 `;
+                errorDiv.classList.remove('hidden');
             }
         }
 
@@ -2176,7 +2220,7 @@
         }
 
         async function renderPriceComparisonChart(tickers) {
-            const ctx = document.getElementById('priceChart').getContext('2d');
+            const ctx = document.getElementById('priceComparisonChart').getContext('2d');
             const period = document.getElementById('price-period').value;
             
             // Destroy existing chart if it exists

@@ -2005,15 +2005,15 @@ def get_valuation_metrics(ticker: str) -> dict:
                                 if pe_ratio and 0 < pe_ratio < 500:
                                     pe_data.append({
                                         'date': quarter_dt.strftime('%Y-%m-%d'),
-                                        'pe_ratio': round(pe_ratio, 2),
-                                        'benchmark_pe': benchmark['pe']
+                                        'pe_ratio': round(pe_ratio, 2)
+                                        # Note: Historical industry P/E benchmark not available in data files
                                     })
                                 
                                 if ps_ratio and 0 < ps_ratio < 100:
                                     ps_data.append({
                                         'date': quarter_dt.strftime('%Y-%m-%d'),
-                                        'ps_ratio': round(ps_ratio, 2),
-                                        'benchmark_ps': benchmark['ps']
+                                        'ps_ratio': round(ps_ratio, 2)
+                                        # Note: Historical industry P/S benchmark not available in data files
                                     })
                     
                     except Exception as e:
@@ -2050,15 +2050,15 @@ def get_valuation_metrics(ticker: str) -> dict:
                     if estimated_pe:
                         pe_data.append({
                             'date': date.strftime('%Y-%m-%d'),
-                            'pe_ratio': round(estimated_pe, 2),
-                            'benchmark_pe': benchmark['pe']
+                            'pe_ratio': round(estimated_pe, 2)
+                            # Note: Historical industry P/E benchmark not available
                         })
                     
                     if estimated_ps:
                         ps_data.append({
                             'date': date.strftime('%Y-%m-%d'),
-                            'ps_ratio': round(estimated_ps, 2),
-                            'benchmark_ps': benchmark['ps']
+                            'ps_ratio': round(estimated_ps, 2)
+                            # Note: Historical industry P/S benchmark not available
                         })
         
         # Current values
