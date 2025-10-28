@@ -7,7 +7,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$_VERSION_TAG'
       - '-t'
       - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:latest'
       - '.'
@@ -16,7 +16,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$_VERSION_TAG'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -29,7 +29,7 @@ steps:
       - 'run'
       - 'deploy'
       - 'deep-alpha-copilot'
-      - '--image=gcr.io/$PROJECT_ID/deep-alpha-copilot:$SHORT_SHA'
+      - '--image=gcr.io/$PROJECT_ID/deep-alpha-copilot:$_VERSION_TAG'
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
@@ -39,11 +39,11 @@ steps:
       - '--set-env-vars=GCP_PROJECT_ID=$PROJECT_ID'
 
 images:
-  - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:$_VERSION_TAG'
   - 'gcr.io/$PROJECT_ID/deep-alpha-copilot:latest'
 
 substitutions:
-  _SHORT_SHA: '${SHORT_SHA:-manual}'
+  _VERSION_TAG: 'manual'
 
 timeout: '1200s'
 
