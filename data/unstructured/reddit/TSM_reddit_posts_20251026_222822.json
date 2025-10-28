@@ -1,0 +1,40 @@
+{
+  "ticker": "TSM",
+  "posts": [
+    {
+      "id": "1ogk26b",
+      "title": "I made a spreadsheet to quickly find good buys",
+      "selftext": "I created a spreadsheet that uses analyst EPS estimates 2025-2027 to rank stocks on my watchlist. It uses a weighted PEG-ratio of 20% 2025, 50% 2026 and 30% 2027 estimate\n\nI also added SPY and QQQ (green and blue lines) to quickly see which stocks are cheaper when sorting by my weighted metric.\n\nI tried to be conservative on the 2-3 year CAGR on each stock and optimistic on SPY and QQQ to add some margin of safety.\n\nThis is work in progress that probably has taken me around 200-300 hours with research, spreadsheet functions, stock analysis etc. I share it with you all for free and would appreciate feedback. Is there something i can add, features or data?\n\nI am working on creating a Price to Free Cash Flow metric that is transformed to a comparable number that can be added to my weighted PEG number\n\nHere is a link to the sheet: https://imgur.com/a/0wwqbdm\n\nTo be transparent, i have positions in GOOG, NFLX, AMZN, TSM, UBER. These buys are recent and i used the sheet to find them",
+      "score": 104,
+      "upvote_ratio": 0.86,
+      "num_comments": 18,
+      "created_utc": 1761483738.0,
+      "subreddit": "investing",
+      "url": "https://reddit.com/r/investing/comments/1ogk26b/i_made_a_spreadsheet_to_quickly_find_good_buys/",
+      "mentioned_tickers": [
+        "TSM"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.9753,
+      "positive_score": 0.142,
+      "negative_score": 0.0,
+      "topics": [
+        "technical_analysis",
+        "fundamentals",
+        "market_sentiment",
+        "renewable"
+      ],
+      "comments": []
+    }
+  ],
+  "total_posts": 1,
+  "bullish_posts": 1,
+  "bearish_posts": 0,
+  "neutral_posts": 0,
+  "subreddits": [
+    "investing"
+  ],
+  "avg_sentiment": 0.9753,
+  "bullish_score": 10,
+  "fetch_timestamp": "2025-10-26T22:28:22.300884"
+}

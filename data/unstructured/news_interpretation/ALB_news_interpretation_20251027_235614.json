@@ -1,0 +1,73 @@
+{
+  "ticker": "ALB",
+  "interpretation": "News interpretation unavailable - Anthropic API not configured.",
+  "news_file": "ALB_news_20251027_235614.json",
+  "news_timestamp": "2025-10-27T23:56:14.394099",
+  "interpretation_timestamp": "2025-10-27T23:57:38.425838",
+  "num_articles_analyzed": 7,
+  "articles": [
+    {
+      "title": "Daily market wrap: top stocks - Qualcomm, Keurig Dr Pepper, and Albemarle",
+      "publisher": "TheStreet",
+      "link": "https://www.thestreet.com/investing/stocks/daily-market-wrap-top-stocks-qualcomm-keurig-dr-pepper-and-albemarle",
+      "publish_time": "2025-10-28T05:07:00Z",
+      "content_type": "STORY",
+      "summary": "Monday, October 27, 2025 The Market was bullish today, with a new wave of fresh records in the three major indices. The S&P 500 was up 1.2% at closing, thanks to easing US-China trade tensions.The Nasdaq Composite, up 1.9% gained more than 400 points on Monday.The Dow Jones Industrial Average ...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/4obaVLCZDO6WHqZWyEPPlw--~B/aD02NzU7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/thestreet_881/60dc70b9a1a650e25c9728fe8544bd8c"
+    },
+    {
+      "title": "Albemarle (ALB) Stock Slides as Market Rises: Facts to Know Before You Trade",
+      "publisher": "Zacks",
+      "link": "https://finance.yahoo.com/news/albemarle-alb-stock-slides-market-215003032.html",
+      "publish_time": "2025-10-27T21:50:03Z",
+      "content_type": "STORY",
+      "summary": "In the most recent trading session, Albemarle (ALB) closed at $96.23, indicating a -8.91% shift from the previous trading day.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/xopQugjeNyS1VO21qlHkcQ--~B/aD02NzU7dz05MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/zacks.com/3cb5117fc22f5e37890d1860dcd61f9f"
+    },
+    {
+      "title": "US Equity Indexes Touch Record Highs as Potential China Trade Deal Boosts Big-Tech Ahead of Earnings",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/us-equity-indexes-touch-record-204852828.html",
+      "publish_time": "2025-10-27T20:48:52Z",
+      "content_type": "STORY",
+      "summary": "US equity indexes broke records on Monday as a potential trade deal with China prompted investors to",
+      "thumbnail": null
+    },
+    {
+      "title": "US Equity Markets Close at Record Highs Amid High Expectations for US-China Trade Deal",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/us-equity-markets-close-record-200738209.html",
+      "publish_time": "2025-10-27T20:07:38Z",
+      "content_type": "STORY",
+      "summary": "US equity indexes closed higher on Monday, reaching record highs after expectations for a US-China t",
+      "thumbnail": null
+    },
+    {
+      "title": "US Equity Indexes Jump as Potential China Trade Deal, Earnings Expectations Lift Big-Tech",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/us-equity-indexes-jump-potential-195634966.html",
+      "publish_time": "2025-10-27T19:56:34Z",
+      "content_type": "STORY",
+      "summary": "US equity indexes rose on Monday as anticipation of a trade deal with China and expectations for rob",
+      "thumbnail": null
+    },
+    {
+      "title": "Top Midday Decliners",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/top-midday-decliners-185637191.html",
+      "publish_time": "2025-10-27T18:56:37Z",
+      "content_type": "STORY",
+      "summary": "Intellia Therapeutics (NTLA) shares sank 41% after the firm said Monday it has paused dosing and scr",
+      "thumbnail": null
+    },
+    {
+      "title": "Big-Tech Helps US Equity Indexes Break Records as China Trade Deal Expectations Slash Tail Risk",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/big-tech-helps-us-equity-173536203.html",
+      "publish_time": "2025-10-27T17:35:36Z",
+      "content_type": "STORY",
+      "summary": "US equity indexes broke records in midday trading on Monday as anticipation of a trade deal with Chi",
+      "thumbnail": null
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "ticker": "ORCL",
+  "articles": [
+    {
+      "title": "Oracle Is Flying High in the AI Age. Top Executives Sold Shares.",
+      "publisher": "Barrons.com",
+      "link": "https://www.barrons.com/articles/oracle-ai-stock-sale-4a0a112f?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-26T06:00:00Z",
+      "content_type": "STORY",
+      "summary": "Oracle  has been one of the biggest beneficiaries of the artificial-intelligence boom, and several top executives are taking the opportunity to sell company stock.  Two executives made sales last week, and a director has notified the Securities and Exchange Commission of his intent to make a sale.  The highest-ranking official who sold stock was Clay Magouyrk, who was appointed co-CEO alongside Mike Sicilia in September.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/SuldKujz8jUVeEGtkKDOkA--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/Barrons.com/9eddc6a7372566e11d9a950b5a7579d7",
+      "filter_reason": "The article reports factual news about multiple Oracle executives selling company stock, including details about specific leadership personnel.",
+      "filtered_by_llm": true
+    }
+  ],
+  "total_articles": 1,
+  "total_articles_before_filter": 4,
+  "filtered_with_llm": true,
+  "days_range": 1,
+  "fetch_timestamp": "2025-10-26T23:04:19.921703"
+}

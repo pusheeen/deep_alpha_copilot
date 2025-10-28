@@ -1,0 +1,51 @@
+{
+  "ticker": "MP",
+  "posts": [
+    {
+      "id": "1odl8kv",
+      "title": "Stocks the American government owns",
+      "selftext": "Is it a good idee to follow the stocks the american government is making? Like \n\nIntel\nMp materials \nLithium americas\n\nI know its more that buying the companies for gains, but do you realy think they would buy these companies to lose money? \n\nWhat are your thoughts on this?\n\nThx :)\n\n",
+      "score": 11,
+      "upvote_ratio": 0.92,
+      "num_comments": 11,
+      "created_utc": 1761168822.0,
+      "subreddit": "ValueInvesting",
+      "url": "https://reddit.com/r/ValueInvesting/comments/1odl8kv/stocks_the_american_government_owns/",
+      "mentioned_tickers": [
+        "MP"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.8482,
+      "positive_score": 0.204,
+      "negative_score": 0.053,
+      "topics": [
+        "AI"
+      ],
+      "comments": [
+        {
+          "id": "nkv2nzq",
+          "body": "I am also curious. I ask minara \"Following government stock picks like Intel, MP Materials, and Lithium Americas is\u00a0\u00a0**not a smart retail strategy**\u00a0because you're fundamentally misunderstanding their playbook. The government isn't investing to make money \u2014 they're paying a\u00a0\u00a0**strategic premium**\u00a0for national security, accepting losses taxpayers will fund, with infinite time horizons and no accountability for returns. You've already missed the initial pump (80%, 55%, 37% gains from their entry),",
+          "score": 3,
+          "created_utc": 1761173487.0,
+          "mentioned_tickers": [
+            "TSM",
+            "MP",
+            "LAC"
+          ],
+          "sentiment": "bullish",
+          "compound_score": 0.6582
+        }
+      ]
+    }
+  ],
+  "total_posts": 1,
+  "bullish_posts": 1,
+  "bearish_posts": 0,
+  "neutral_posts": 0,
+  "subreddits": [
+    "ValueInvesting"
+  ],
+  "avg_sentiment": 0.8482,
+  "bullish_score": 9,
+  "fetch_timestamp": "2025-10-25T00:30:41.678732"
+}

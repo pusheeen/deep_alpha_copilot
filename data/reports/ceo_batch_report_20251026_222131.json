@@ -1,0 +1,321 @@
+{
+  "batch_info": {
+    "timestamp": "2025-10-26T22:21:31.482103",
+    "total_companies": 15,
+    "successful_fetches": 15,
+    "failed_fetches": 0
+  },
+  "results": [
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NVDA",
+        "company_name": "NVIDIA CORP",
+        "ceo_name": "Mr. Jen-Hsun  Huang",
+        "ceo_title": "Co-Founder, CEO, President & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:20:33.882579",
+        "age": 61,
+        "year_born": 1963,
+        "total_pay": 11054945
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "AVGO",
+        "company_name": "Broadcom Inc.",
+        "ceo_name": "Mr. Hock E. Tan",
+        "ceo_title": "President, CEO & Executive Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:20:41.643989",
+        "age": 72,
+        "year_born": 1952,
+        "total_pay": 2634542
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "ORCL",
+        "company_name": "ORACLE CORP",
+        "ceo_name": "Mr. Michael D. Sicilia",
+        "ceo_title": "Chief Executive Officer & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:20:49.436452",
+        "age": 53,
+        "year_born": 1971
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "AMD",
+        "company_name": "ADVANCED MICRO DEVICES INC",
+        "ceo_name": "Dr. Lisa T. Su Ph.D.",
+        "ceo_title": "Chair, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:20:57.532031",
+        "age": 54,
+        "year_born": 1970,
+        "total_pay": 3062598
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "MP",
+        "company_name": "MP Materials Corp. / DE",
+        "ceo_name": "Mr. James Henry Litinsky",
+        "ceo_title": "Co-Founder, Chairman, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:00.372098",
+        "age": 45,
+        "year_born": 1979,
+        "total_pay": 2961300
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "ALB",
+        "company_name": "ALBEMARLE CORP",
+        "ceo_name": "Mr. Jerry Kent Masters Jr.",
+        "ceo_title": "Chairman, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:02.941830",
+        "age": 64,
+        "year_born": 1960,
+        "total_pay": 3987611
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "PPTA",
+        "company_name": "PERPETUA RESOURCES CORP.",
+        "ceo_name": "Mr. Jonathan  Cherry P.Eng.",
+        "ceo_title": "CEO, President & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:05.612874",
+        "age": 54,
+        "year_born": 1970,
+        "total_pay": 674528
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "LAC",
+        "company_name": "LITHIUM AMERICAS CORP.",
+        "ceo_name": "Mr. Jonathan D. Evans",
+        "ceo_title": "President, CEO & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:08.182819",
+        "age": 53,
+        "year_born": 1971,
+        "total_pay": 1495800
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NAK",
+        "company_name": "NORTHERN DYNASTY MINERALS LTD",
+        "ceo_name": "Mr. Ronald William Thiessen C.P.A., CA, F.C.A., FCPA",
+        "ceo_title": "President, CEO & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:10.811949",
+        "age": 72,
+        "year_born": 1952,
+        "total_pay": 361248
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "CRML",
+        "company_name": "Critical Metals Corp.",
+        "ceo_name": "Mr. Antony William-Paul Sage B.Bus, B.Com., BCom, C.A., CA, FCPA, FTIA",
+        "ceo_title": "Chairman of the Board & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:15.519136",
+        "age": 64,
+        "year_born": 1960
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NB",
+        "company_name": "NIOCORP DEVELOPMENTS LTD",
+        "ceo_name": "Mr. Mark Allan Smith Esq., P.E.",
+        "ceo_title": "Executive Chairman, President & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:18.088152",
+        "age": 65,
+        "year_born": 1959,
+        "total_pay": 325000
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "UAMY",
+        "company_name": "UNITED STATES ANTIMONY CORP",
+        "ceo_name": "Mr. Gary C. Evans",
+        "ceo_title": "CEO & Chairman",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:20.999364",
+        "age": 67,
+        "year_born": 1957,
+        "total_pay": 373740
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NMG",
+        "company_name": "Nouveau Monde Graphite Inc.",
+        "ceo_name": "Mr. Eric  Desaulniers M.Sc., MSc, P.Geo",
+        "ceo_title": "Founder, President, CEO & Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:23.611449",
+        "age": 44,
+        "year_born": 1980,
+        "total_pay": 509852
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "NVA",
+        "company_name": "Nova Minerals Ltd",
+        "ceo_name": "Mr. Christopher  Gerteisen",
+        "ceo_title": "CEO & Executive Director",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:26.191829",
+        "age": 51,
+        "year_born": 1973,
+        "total_pay": 253037
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    },
+    {
+      "success": true,
+      "ceo_data": {
+        "ticker": "TSM",
+        "company_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+        "ceo_name": "Dr. C. C.  Wei Ph.D.",
+        "ceo_title": "Chairman & CEO",
+        "tenure_duration": "Not found",
+        "start_date": "Not found",
+        "linkedin_url": "Not found",
+        "source": "yfinance + LinkedIn",
+        "past_experience": [],
+        "education": "Not found",
+        "career_highlights": [],
+        "fetch_timestamp": "2025-10-26T22:21:28.853743",
+        "total_pay": 21379473
+      },
+      "note": "CEO information from yfinance and LinkedIn"
+    }
+  ]
+}

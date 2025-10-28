@@ -1,0 +1,9 @@
+{
+  "ticker": "TSM",
+  "articles": [],
+  "total_articles": 0,
+  "total_articles_before_filter": 6,
+  "filtered_with_llm": true,
+  "days_range": 1,
+  "fetch_timestamp": "2025-10-26T22:57:15.715242"
+}

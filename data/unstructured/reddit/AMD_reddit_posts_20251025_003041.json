@@ -1,0 +1,112 @@
+{
+  "ticker": "AMD",
+  "posts": [
+    {
+      "id": "1of0oyb",
+      "title": "IBM says key quantum computing error correction algorithm can run on conventional AMD chips. Stock Up 7%",
+      "selftext": "https://www.reuters.com/business/ibm-says-key-quantum-computing-algorithm-can-run-conventional-amd-chips-2025-10-24/\n\n> SAN FRANCISCO, Oct 24 (Reuters) - IBM (IBM.N), opens new tab said on Friday it is able to run a key quantum computing error correction algorithm on commonly available chips from Advanced Micro Devices (AMD.O), opens new tab, in a step toward commercializing super-powerful computers.",
+      "score": 138,
+      "upvote_ratio": 0.95,
+      "num_comments": 12,
+      "created_utc": 1761319456.0,
+      "subreddit": "stocks",
+      "url": "https://reddit.com/r/stocks/comments/1of0oyb/ibm_says_key_quantum_computing_error_correction/",
+      "mentioned_tickers": [
+        "AMD"
+      ],
+      "sentiment": "bearish",
+      "compound_score": -0.5267,
+      "positive_score": 0.029,
+      "negative_score": 0.079,
+      "topics": [
+        "technical_analysis",
+        "AI"
+      ],
+      "comments": []
+    },
+    {
+      "id": "1oez8o7",
+      "title": "Amd 250 call +1900%",
+      "selftext": "Made back about 1/4 of my losses this morning ",
+      "score": 136,
+      "upvote_ratio": 0.94,
+      "num_comments": 23,
+      "created_utc": 1761316119.0,
+      "subreddit": "wallstreetbets",
+      "url": "https://reddit.com/r/wallstreetbets/comments/1oez8o7/amd_250_call_1900/",
+      "mentioned_tickers": [
+        "AMD"
+      ],
+      "sentiment": "bearish",
+      "compound_score": -0.4019,
+      "positive_score": 0.0,
+      "negative_score": 0.184,
+      "topics": [],
+      "comments": []
+    },
+    {
+      "id": "1ofgiqf",
+      "title": "First gain post that feels like a loss - AMD (this is a reminder to not sell options)",
+      "selftext": "https://preview.redd.it/xdufgy5o76xf1.png?width=1934&format=png&auto=webp&s=6679806d8f87bbd941149628cc66338c729660a0\n\nI am physically sick looking at that stupid short call.",
+      "score": 4,
+      "upvote_ratio": 0.61,
+      "num_comments": 21,
+      "created_utc": 1761360077.0,
+      "subreddit": "wallstreetbets",
+      "url": "https://reddit.com/r/wallstreetbets/comments/1ofgiqf/first_gain_post_that_feels_like_a_loss_amd_this/",
+      "mentioned_tickers": [
+        "AMD"
+      ],
+      "sentiment": "bearish",
+      "compound_score": -0.4767,
+      "positive_score": 0.152,
+      "negative_score": 0.231,
+      "topics": [
+        "AI"
+      ],
+      "comments": []
+    },
+    {
+      "id": "1oe92la",
+      "title": "INTC Is A Sleeping Dragon",
+      "selftext": "https://preview.redd.it/cneb9e699wwf1.png?width=1024&format=png&auto=webp&s=98cf08539a407513c6ba31936b34601c2b164024\n\n# INTC IS A SLEEPING DRAGON\n\n**TLDR; No tldr, you have to read it and make an educated decision**\n\n# Intro\n\nI've been researching INTC ever since China started taking more interest in supporting the war in Ukraine. With the orange man talking about how he will not aid NATO in EU it got me thinking. Why would he say that? Could they be gearing up for a multi-front war and wouldn't be able to stretch their forces?\n\nI put on my tin foil hat and started digging in. Taiwan is obviously a very important geopolitical player due to their advanced microchip manufacturing. Recall what chaos happened when COVID struck and TSMC fell behind,.. It took several years to recover. So here I am thinking, who is the only microchip manufacturer that can produce a microchip from nothing.\n\nINTC\n\n# 8-10 Months ago - First play, didn't post DD but regret\n\nBefore Trumps election I was looking into their fundamentals and I came to a simple conclusion:\n\n* They were\u00a0**undervalued at < $20**, because book value was approx. $22.5 at the time\n\nI hesitated but eventually bought in when it went up to $20.12. Buying 800 shares. The idea behind the play was simple, INTC is a critical US asset:\n\n* They are a DoD contractor, all the chips in any weapons, computers, gps ... chances are it's Intel.\n* They are the only manufacturer that can produce chips from the ground up\n* New CEO with a very good track record of turning around dying companies\n\n**Problems INTC faced:**\n\n* A lot of investments into startups, they tried to be like Microsoft but failed miserably\n* Very bad middle management and disproportionately big for the company (I even have some insider info from this)\n* Innovation was stalling (well except for a few things)\n\n**Advantages of INTC:**\n\n* Servers are still predominantely INTC, although they were losing ground\n* TEE dominance, if you need a trusted execution environment - you will use INTCs SGX (and now they're newer one)\n* FHE investments - for those who don't know Fully Homomorphic Encryption is the \"holy grail of encryption\", most of FHE schemes are also QUANTUM resistant\n\n# CEO fixed most problems\n\nCEO started doing all the right plays\n\n* Fired a lot of the middle management and made the company lean\n* Sold other investments that they had which was good even if it was a loss to generate money\n* Started focusing INTC to be engineer-first again\n\nI expected a $60 PT within 3 years on INTC as a very pessimistic/conservative estimate.\n\n# Trump invests, SoftBank invests, NVIDIA\n\nI expected Trump and I did expect some bank funding, what I didn't expect was NVIDIA but it makes sense.\n\nAMD was gaining ground with their GPUs and although NVDA is much better when it comes to:\n\n* Infra, i.e. networking for HPCs\n* Software, i.e. cuda\n* Results\n\nNVDA knew that it's just a matter of time when AMD catches ground. So how do you fix this issue? You advance your technology or you make sure that you have preferential treatment at the available foundries.\n\n# The new DD, Mystery client unveiling\n\nI was extremely mad, when on one day I forgot to buy my 1 year leaps for $40 CALLS on INTC, because the next day I see that NVDA invests and suddenly the premiums were 3x. But I still bought, and now I'm buying more. This time I plan on writing my DD to explain why.\n\nI've kept on researching and trying to assess if they will gain more ground. Why would NVDA invest? What technology does INTC have that AMD/TSMC does not?\n\nWell as I've investigated I found several exciting pieces of information:\n\n1. The CEO of INTC has invested and is on the board of a Swiss startup that not so long ago demonstrated a new microchip cooling technology this new micro-fluid cooling technology is supplementary to traditional cooling. And here's the kicker... MSFT has interest in this startup as well\u00a0[https://news.microsoft.com/source/features/innovation/microfluidics-liquid-cooling-ai-chips/](https://news.microsoft.com/source/features/innovation/microfluidics-liquid-cooling-ai-chips/). So why is this impressive? Well for starters it's 3x more effective than traditional cooling (and that's just the start). A lot of datacenters have to waste money not only to power the GPUs themselves, but to also power the cooling. But it has another kicker and I will get to that in the next chapter as it has even BIGGER implications.\n2. INTC has technology that sets it apart from TSMC and gives them a year-two head start. This technology is called \"backside power delivery\". To put it briefly, you power it from the back of the wafer instead of the front, where it needs to go through multiple layers of metal -> each layer adds resistance -> voltage drops, heat goes up -> wasted power, more cooling needed -> more wasted power. So again, less power? Less cooling? Two different technologies?\n3. Now there are rumors about a potential big client for new AI datacenters and it's rumored that it's MSFT. Well I'm pretty certain it is MSFT -> see the first point. A big client that will manufacture in INTC foundries will mean the foundry will start printing money. Let me clarify for you, NVDA invested and shared tech, but didn't manufacture YET.\n4. Why would NVDA share GPU tech with INTC? Well because they figured out that INTC 18A is happening and it's gonna be a bomb with the lower power input needed. Specifically for laptops. Now you're gonna have laptops with Intel and NVDA cramming up the market. People will develop more (think of it as a vendor-lock) for NVDA (CUDA) and the demand for NVDA datacenters will grow. Because it will grow, and TSMC is already filled to the brim with orders, you need to get manufacturing done somewhere else, so why not with INTC CPUs - The tech was already tested for several years anyway and more importantly. It will create a bigger foothold for NVDA GPU datacenters. Remember you have to wait like a year or two before you get a H100.\n\nThis means that the NVDA investment was a long term strategic investment.\n\n# Ok so what's the big deal about cooling - why it's so important?\n\nWell one of the main reasons and I'm gonna keep it short here is that if you want to shrink transistors, you need to be able to cool them. The smaller you go, the more they start failing in high heat and the more you have of them the more it heats up. The road to <2nm tech is through improved cooling especially due to things like quantum tunneling. The moment you go to 1nm quantum tunneling is a thing and transistors start leaking energy because electrons behave like waves -> power loss and heat. With advanced cooling you can overcome this.\n\nHere comes a little bit of quantum hype... Have you heard about the Majorana-1 chip? Yes, developed by microsoft. INTC is more than ever setting itself up to become the main goto manufacturer of quantum microchips.\n\n# Foundries are fully operational\n\nArizona\u2019s Fab 52 is fully operational and set to reach high-volume production using Intel 18A later this year, strengthening U.S. technology and manufacturing leadership. They are already producing 18A chips that they debuted not so long ago and are already being shipped to clients.\n\n# A hidden shark\n\nThere was one big client of INTC that was very unhappy with the fact that the chips were overheating, AAPL. There are rumors they are looking into INTC and see how they perform. Additional rumors indicate that they might test them out with \"less flashy\" orders like apple remotes etc.\n\n# Possible manufacturing bottleneck\n\nThere is a possibility that INTC will become the new manufacturing bottleneck - such an event would explode INTC's price up.\n\n# PT\n\nThese are my estimates and will cause me to reconsider my long term strategy depending on how it goes:\n\nOverly Optimistic: $80+ within a 1 year  \nOptimistic: $100+ within 2-3 years.  \nRealistic/Pessimistic: $80 in 2 years.\n\n# So why invest now?\n\nCompany is back on track, has secured a lot of funding/investments, has strong govermental support and rising tensions with China play into INTCs cards. The company is completely restructured and set to be innovative, they have a strong base and good book value to be \"start-up like\" but with actual ground to stand on.\n\n# Catalysts and what to look out for\n\nPossibly positive catalysts:\n\n* Earning Calls are expected to be very positive. Might also include the reveal of the client, but doubt it. Depending on what they share the price might skyrocket\n* Jan26, we will have news about the Arizona FAB 52 and how well it's performing\n* Q4 2025, Q2, Q3 2026 earning calls -> These will have the most impact in the upcoming year with Q4 being the biggest.\n* Higher tensions in Russian-Ukranian war. China has funded Russia and in return requested paratrooper training. The longer the RU/UA war goes the higher the chance China will decide to go for Taiwan.\n* Autumn / April of each year going onwards. This is the window if I'm not mistaken when there aren't high seas in the taiwan strait, making it possible to perform an amphibious landing.\n\nNegative catalysts:\n\n* Jan26, failing production\n* Q2-Q3, failing interest in 18A - undelivered promises, overheats etc.\n* TSMC moves advance tech on US soil (unlikely, will incentives US to abandon Taiwan)\n\n# What am I doing?\n\nIncreasing my position with leaps\u00a0**before and after earning calls**. As the current earning calls can have the opposite effect given what's been happening lately.\n\nhttps://preview.redd.it/n81k9p979wwf1.png?width=823&format=png&auto=webp&s=abd7259515f6707d29a324b72176bcbe685aa806\n\nP.S. Sorry for grammar mistakes, I didn't use chatgpt or any other autocorrect to write this.\n\n**DISCLAIMER: This is not financial advice, invest only at your own risk and after doing some additional research into the company. Keep in mind that INTC was very violent and jumpy the last few years. My position is bullish, but market downturn or recession can happen at any moment.**",
+      "score": 17,
+      "upvote_ratio": 0.61,
+      "num_comments": 49,
+      "created_utc": 1761239525.0,
+      "subreddit": "wallstreetbets",
+      "url": "https://reddit.com/r/wallstreetbets/comments/1oe92la/intc_is_a_sleeping_dragon/",
+      "mentioned_tickers": [
+        "NVDA",
+        "AMD"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.9974,
+      "positive_score": 0.123,
+      "negative_score": 0.08,
+      "topics": [
+        "earnings",
+        "technical_analysis",
+        "fundamentals",
+        "news",
+        "partnerships",
+        "regulatory",
+        "market_sentiment",
+        "AI",
+        "renewable"
+      ],
+      "comments": []
+    }
+  ],
+  "total_posts": 4,
+  "bullish_posts": 1,
+  "bearish_posts": 3,
+  "neutral_posts": 0,
+  "subreddits": [
+    "wallstreetbets",
+    "stocks"
+  ],
+  "avg_sentiment": -0.101975,
+  "bullish_score": 5,
+  "fetch_timestamp": "2025-10-25T00:30:41.678732"
+}

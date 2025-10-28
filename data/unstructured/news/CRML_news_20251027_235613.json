@@ -1,0 +1,37 @@
+{
+  "ticker": "CRML",
+  "articles": [
+    {
+      "title": "USA Rare Earth, Iren, Novartis, Softbank: Trending Stocks",
+      "publisher": "Yahoo Finance Video",
+      "link": "https://finance.yahoo.com/video/usa-rare-earth-iren-novartis-121925328.html",
+      "publish_time": "2025-10-27T12:19:25Z",
+      "content_type": "VIDEO",
+      "summary": "Rare earths companies CRML, MP, USA Rare Earth (USAR) and Lynas (LYC.AX, LYSDY, LYSCF, LYI.MU, LYIC.BE) fall on U.S.-China trade optimism. Softbank (9984.T, 3AG1.F, SFTBY, SFT.VI, SFTU.SG) approves the final chunk in one of the biggest ever AI investments: $22.5 billion in OpenAI. IREN, the crypto miner now providing computing power for AI, is up around 900% in six months. Novartis (NVS, NOVN.SW, NOT.F, NOT.MU, NOVNN.MX) plans to acquire a Californian biotech firm (RNA) for $12 billion. And Porsche (PAH3.DE, 1PORS.MI, POAHY) follows GM and Ford (F) in shifting its strategy away from EV's. For more live coverage of markets watch the full episode of Market Sunrise and head to Yahoo Finance.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/Bp36Xhab5jO6XoCzTCnooQ--~B/aD0yNzAwO3c9NDc5MzthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2025-10/65e9c470-b32b-11f0-bbbf-d4a00304a309"
+    },
+    {
+      "title": "Top Midday Stories: Qualcomm Debuts Chips to Rival Nvidia, AMD; Huntington to Acquire Cadence Bank for $7.4 Billion",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/top-midday-stories-qualcomm-debuts-160140622.html",
+      "publish_time": "2025-10-27T16:01:40Z",
+      "content_type": "STORY",
+      "summary": "All three major US stock indexes were up in midday trading Monday, as investors were buoyed by hopes",
+      "thumbnail": null
+    },
+    {
+      "title": "Rare Earth Stocks Hit By U.S.-China Trade Deal, But Details Await",
+      "publisher": "Investor's Business Daily",
+      "link": "https://www.investors.com/news/rare-earth-stocks-sink-us-china-trade-deal-three-explanations/?src=A00220&yptr=yahoo",
+      "publish_time": "2025-10-27T14:48:17Z",
+      "content_type": "STORY",
+      "summary": "China will delay its new rare earth export controls, buy U.S. soybeans and finalize a TikTok deal, Treasury Secretary Scott Bessent said Sunday.  S&P 500 futures jumped early Monday, while rare earth stocks including MP Materials and USA Rare Earth tumbled on deal terms that seem to be about as good as could've been hoped for the U.S. side.  There are three possible explanations, though some combination of the three may be at play: 1) Beijing may have decided to backpedal after the stringent export controls announced on Oct. 9 sparked a backlash among major global trading partners.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/ZzUHDhUlBJM3uA.8PX64cA--~B/aD01NjM7dz0xMDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/ibd.com/7cbb2448124155c971e83643fc4c2e51"
+    }
+  ],
+  "total_articles": 3,
+  "total_articles_before_filter": 3,
+  "filtered_with_llm": true,
+  "days_range": 1,
+  "fetch_timestamp": "2025-10-27T23:56:13.591293"
+}

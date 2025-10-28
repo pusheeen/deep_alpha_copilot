@@ -1,0 +1,91 @@
+{
+  "ticker": "AVGO",
+  "interpretation": "News interpretation unavailable - Anthropic API not configured.",
+  "news_file": "AVGO_news_20251027_235612.json",
+  "news_timestamp": "2025-10-27T23:56:12.876205",
+  "interpretation_timestamp": "2025-10-27T23:57:38.422809",
+  "num_articles_analyzed": 9,
+  "articles": [
+    {
+      "title": "Seeking Exposure to AI Stocks? Use This Tool",
+      "publisher": "Zacks",
+      "link": "https://finance.yahoo.com/news/seeking-exposure-ai-stocks-tool-231000279.html",
+      "publish_time": "2025-10-27T23:10:00Z",
+      "content_type": "STORY",
+      "summary": "AI stocks have been the craze for understandable reasons. This Zacks tool will let you find those companies quickly.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/rYP8VPOUfQj30jWv52_m5w--~B/aD00MDA7dz02MzU7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/zacks.com/53d9a3fd304ab73d580828e5367313eb"
+    },
+    {
+      "title": "Qualcomm Was Primed for an AI Boost",
+      "publisher": "The Wall Street Journal",
+      "link": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-10-27-2025/card/qualcomm-was-primed-for-an-ai-boost-FEe02Km6Cdu4oekDt2RZ?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-27T21:32:25Z",
+      "content_type": "STORY",
+      "summary": "Qualcomm has been notably left out of the AI party.  A deal with Saudi Arabia seems to have gotten the chip maker a foot in the door.  Qualcomm\u2019s share price surged 11% Monday after the company announced a deal to supply its latest AI accelerator chips to the Saudis\u2019 Humain venture, which is building an extensive AI network in the oil-rich kingdom.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/Fwf5HL4GsEGPbDfR3MJBPg--~B/aD02MzA7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/wsj.com/7b2c285183be07ca3c4e8242b25a59a8"
+    },
+    {
+      "title": "Palantir Stock Bolts Back Into Buy Range. Now Comes This.",
+      "publisher": "Investor's Business Daily",
+      "link": "https://www.investors.com/research/how-to-find-the-best-stocks-to-buy/palantir-stock-pltr-back-into-buy-range-q3-earnings-due/?src=A00220&yptr=yahoo",
+      "publish_time": "2025-10-27T20:20:36Z",
+      "content_type": "STORY",
+      "summary": "With earnings due next week, Palantir stock has refurbished an earlier breakout, continuing to ride a wave of AI-fueled growth.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/AJAFfZMqLehv3Cn8NZ7RXA--~B/aD01NjM7dz0xMDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/ibd.com/4c0239cd7177cb40d4bc34b293d6a31b"
+    },
+    {
+      "title": "High-Quality Stocks Fumbled Without AI. Own Them Anyway.",
+      "publisher": "Barrons.com",
+      "link": "https://www.barrons.com/articles/quality-stocks-ai-growth-nvidia-685f9f5b?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-27T17:23:00Z",
+      "content_type": "STORY",
+      "summary": "Quality and value underperformed in the third quarter. But there\u2019s more to the market than Nvidia and AI.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/Wxbd3dtuo1rZamVqhNgWuA--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/Barrons.com/11bac9bd668ae5f99d71b63e77ad84d4"
+    },
+    {
+      "title": "Nvidia Stock Nears All-Time High. How Earnings Could Push Shares Even Higher.",
+      "publisher": "Barrons.com",
+      "link": "https://www.barrons.com/articles/nvidia-stock-price-tech-earnings-f3522c2e?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-27T14:08:00Z",
+      "content_type": "STORY",
+      "summary": "Nvidia\u2019s largest customers are expected to continue making significant capital expenditures on artificial intelligence.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/g9OCFNzBbk8Mjii1lo3GXg--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/Barrons.com/66960813aaaf7a964eae931655009daa"
+    },
+    {
+      "title": "Jim Cramer Recommends This \u2018Very Low Multiple\u2019 AI Stock",
+      "publisher": "Insider Monkey",
+      "link": "https://finance.yahoo.com/news/jim-cramer-recommends-very-low-130621165.html",
+      "publish_time": "2025-10-27T13:06:21Z",
+      "content_type": "STORY",
+      "summary": "We recently published 10 Buzzing News to Watch as Investors Look for Best AI Stocks Amid Fed Rate Cuts. Cisco Systems Inc (NASDAQ:CSCO) is one of the best AI stocks amid Fed rate cuts. Jim Cramer in a program earlier in October said that Cisco\u2019s valuation is attractive and the company can benefit amid rising [\u2026]",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/jdIoxUeIzUChkxTTfoBDmw--~B/aD02MDk7dz03ODY7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/insidermonkey.com/8a4e7856e2996053c8f2db7eca28fab3"
+    },
+    {
+      "title": "Broadcom Inc. (AVGO) is Attracting Investor Attention: Here is What You Should Know",
+      "publisher": "Zacks",
+      "link": "https://finance.yahoo.com/news/broadcom-inc-avgo-attracting-investor-130003032.html",
+      "publish_time": "2025-10-27T13:00:03Z",
+      "content_type": "STORY",
+      "summary": "Broadcom Inc. (AVGO) has received quite a bit of attention from Zacks.com users lately. Therefore, it is wise to be aware of the facts that can impact the stock's prospects.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/e0VWXB5.wUFiKGuJPPpLzg--~B/aD02MDA7dz05MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/zacks.com/a7cdcede0bb5a646be035f4a7e678781"
+    },
+    {
+      "title": "Here's How Much You'd Have If You Invested $1000 in Broadcom Inc. a Decade Ago",
+      "publisher": "Zacks",
+      "link": "https://finance.yahoo.com/news/heres-much-youd-invested-1000-123002812.html",
+      "publish_time": "2025-10-27T12:30:02Z",
+      "content_type": "STORY",
+      "summary": "Investing in certain stocks can pay off in the long run, especially if you hold on for a decade or more.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/OL7xfT5pzuzwP2wxb1pcSw--~B/aD02MjU7dz05MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/zacks.com/7ea641b46fe75c0a913349e5e610d6a2"
+    },
+    {
+      "title": "Analyst Recommends Broadcom (AVGO) Amid Sora AI, $2 Trillion Market",
+      "publisher": "Insider Monkey",
+      "link": "https://finance.yahoo.com/news/analyst-recommends-broadcom-avgo-amid-121653649.html",
+      "publish_time": "2025-10-27T12:16:53Z",
+      "content_type": "STORY",
+      "summary": "We recently published 10 Buzzing News to Watch as Investors Look for Best AI Stocks Amid Fed Rate Cuts. Broadcom Inc (NASDAQ:AVGO) is one of the best AI stocks amid Fed rate cuts. Ben Reitzes, Melius Research\u2019s head of technology research, said in a recent program on CNBC that Broadcom Inc (NASDAQ:AVGO) is one of [\u2026]",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/3FndPEtXJ9gCvfD328H4xw--~B/aD04MDA7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/insidermonkey.com/57e1b9693fbbe99815a1150ee61e3902"
+    }
+  ]
+}

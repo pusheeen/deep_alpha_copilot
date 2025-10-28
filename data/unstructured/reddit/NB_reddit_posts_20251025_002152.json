@@ -1,0 +1,41 @@
+{
+  "ticker": "NB",
+  "posts": [
+    {
+      "id": "1ofg7ft",
+      "title": "Is this a good time to get into rare metals?",
+      "selftext": "\nI'll preface this by saying i don't own stocks in any of the companies mentioned in this post, I'm mainly interested in the potential of this segment.\n\n\nMy main points:\n- China doesn't seem to have plans to change their policy of allowing rare earth metals to be exported only if they agree with their use. This means without them the US can't even build tech or defense systems, something China is obviously okay with.\n- You can find rare earth metals literally everywhere, as evident by the weekly news articles about huge deposits being found. The rareness comes from the lack and difficulty of stablishing processing facilities.\n- LYC (Lynas Rare Earths Ltd) is back to where it was before the deal with the US is signed\n- Other stocks like UAMY, USAR, NB, UUUU, etc were gaining a lot of steam until the deal, when they saw a significant drop and some of them haven't fully recovered\n-  Few countries have the resources to invest in this, and seeing how China has been in a steady pace to be self reliant no doubt more will follow. This coupled with the current government trying (or at least saying) to reshore manufacturing, means that the Australia deal is mainly a temporary band aid. \n- US companies know this, there are multiple reports of increase investment like [Aclara](https://www.opportunitylouisiana.gov/news/aclara-invests-277-million-to-build-nations-first-heavy-rare-earth-separation-facility-in-southwest-louisiana) \n- [Simply Wall St](https://simplywall.st/en/stocks/us/materials/nasdaq-usar/usa-rare-earth) Community fair value forecasts for USAR are reaching $80 (current price is 23)\n- Something I haven't seen mentioned much. Since not every country has the resources to process these metals, establishing a US pipeline for them not only would allow not depending on China/Australia for them, but would also open the market for exports with all current trading partners.\n\nI think long-term growth is fairly safe, but short term the segment is a bit shaky, mainly due to government meddling. The only way this trend reverses is if China changes their policy, but the more self reliant they get, the least they depend on other countries, so changing their policy doesn't make any sense (specially since this is the plan they've been following for the past ~20 years)\n\nSo the question is not really how much is this segment going to grow, but when. So, is this only a buy & hold or is there potential for short-term movement as well?",
+      "score": 0,
+      "upvote_ratio": 0.44,
+      "num_comments": 16,
+      "created_utc": 1761359082.0,
+      "subreddit": "stocks",
+      "url": "https://reddit.com/r/stocks/comments/1ofg7ft/is_this_a_good_time_to_get_into_rare_metals/",
+      "mentioned_tickers": [
+        "UAMY",
+        "NB"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.9672,
+      "positive_score": 0.09,
+      "negative_score": 0.02,
+      "topics": [
+        "technical_analysis",
+        "news",
+        "partnerships",
+        "AI"
+      ],
+      "comments": []
+    }
+  ],
+  "total_posts": 1,
+  "bullish_posts": 1,
+  "bearish_posts": 0,
+  "neutral_posts": 0,
+  "subreddits": [
+    "stocks"
+  ],
+  "avg_sentiment": 0.9672,
+  "bullish_score": 10,
+  "fetch_timestamp": "2025-10-25T00:21:52.952611"
+}

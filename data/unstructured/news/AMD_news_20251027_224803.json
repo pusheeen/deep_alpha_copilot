@@ -1,0 +1,65 @@
+{
+  "ticker": "AMD",
+  "articles": [
+    {
+      "title": "Qualcomm unveils AI data center chips, competing with Nvidia, AMD",
+      "publisher": "Yahoo Finance Video",
+      "link": "https://finance.yahoo.com/video/qualcomm-unveils-2-chips-part-143408887.html",
+      "publish_time": "2025-10-27T14:34:08Z",
+      "content_type": "VIDEO",
+      "summary": "Semiconductor manufacturer Qualcomm (QCOM) is reportedly entering the AI data center race as it announces two new chips, supplementing its partnership with Saudi Arabia-based Humain in the coming years. Yahoo Finance tech editor Dan Howley speaks more on this development and how Qualcomm's new products could compete with Nvidia (NVDA) and Advanced Micro Devices (AMD). To watch more expert insights and analysis on the latest market action, check out more&nbsp;Market Domination Overtime.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/LHddv4_XGFzDzB7WyMFlFg--~B/aD0xNzkyO3c9MzE4MjthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2025-10/c17d9b80-b377-11f0-9eff-a13717bc9e0d",
+      "filter_reason": "The article reports a concrete company action - Qualcomm's announcement of two new AI data center chips and its partnership with Humain.",
+      "filtered_by_llm": true
+    },
+    {
+      "title": "GlobalFoundries finance chief John Hollister departs, Sam Franklin named interim CFO",
+      "publisher": "Reuters",
+      "link": "https://finance.yahoo.com/news/globalfoundries-finance-chief-john-hollister-222750804.html",
+      "publish_time": "2025-10-27T22:27:50Z",
+      "content_type": "STORY",
+      "summary": "The management reshuffle comes at a time when the company has pledged to invest $16 billion partly towards building more manufacturing facilities on American soil amid U.S. President Donald Trump's push to onshore supply chains.  The company, unlike leader TSMC, does not largely produce cutting-edge artificial intelligence chips and is spending heavily on upgrading its manufacturing processes to produce more advanced chips for markets such as automotive and smartphones.  While Taiwan's TSMC  manufactures the most advanced processors designed by the likes of Nvidia, AMD  and Qualcomm, GlobalFoundries produces the chips used alongside them that form an essential part of electronic systems.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/4gqDyneT_uviAR.y2C9PjA--~B/aD01NTg7dz04MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/reuters-finance.com/9416e29c9c32b90055f1b6e07d688d9d",
+      "filter_reason": "The article reports concrete factual events: a CFO departure/replacement and specific investment amounts in manufacturing facilities, without editorializing or making predictions.",
+      "filtered_by_llm": true
+    },
+    {
+      "title": "Qualcomm (QCOM) Stock Trades Up, Here Is Why",
+      "publisher": "StockStory",
+      "link": "https://finance.yahoo.com/news/qualcomm-qcom-stock-trades-why-214549449.html",
+      "publish_time": "2025-10-27T21:45:49Z",
+      "content_type": "STORY",
+      "summary": "Shares of wireless chipmaker Qualcomm (NASDAQ:QCOM) jumped 12.3% in the afternoon session after the company announced its entry into the data center artificial intelligence (AI) market with two new chips designed to compete with industry leaders. The semiconductor giant unveiled its Qualcomm AI200 and AI250 chips, which were designed for running AI applications. This move marked a significant push for the company to diversify beyond smartphones and expand into the fast-growing AI infrastructure",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/pOyJU8g7jEtMdigVrIaS3g--~B/aD03MDA7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/stockstory_922/1d5516b4db23b041bf7158e3e7472adf",
+      "filter_reason": "The article strictly reports a factual event - Qualcomm's announcement of two new AI chips (AI200 and AI250) for the data center market, along with the corresponding stock price movement.",
+      "filtered_by_llm": true
+    },
+    {
+      "title": "Qualcomm Was Primed for an AI Boost",
+      "publisher": "The Wall Street Journal",
+      "link": "https://www.wsj.com/livecoverage/stock-market-today-dow-sp-500-nasdaq-10-27-2025/card/qualcomm-was-primed-for-an-ai-boost-FEe02Km6Cdu4oekDt2RZ?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-27T21:32:25Z",
+      "content_type": "STORY",
+      "summary": "Qualcomm has been notably left out of the AI party.  A deal with Saudi Arabia seems to have gotten the chip maker a foot in the door.  Qualcomm\u2019s share price surged 11% Monday after the company announced a deal to supply its latest AI accelerator chips to the Saudis\u2019 Humain venture, which is building an extensive AI network in the oil-rich kingdom.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/Fwf5HL4GsEGPbDfR3MJBPg--~B/aD02MzA7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/wsj.com/7b2c285183be07ca3c4e8242b25a59a8",
+      "filter_reason": "The article reports a concrete factual event: Qualcomm announced a deal to supply AI accelerator chips to Saudi Arabia's Humain venture, and its stock rose 11% following the announcement.",
+      "filtered_by_llm": true
+    },
+    {
+      "title": "These Stocks Are Moving the Most Today: Qualcomm, MP Materials, USA Rare Earth, Tesla, Avidity, Newmont, Microsoft, and More",
+      "publisher": "Barrons.com",
+      "link": "https://www.barrons.com/articles/stock-movers-1d56d32f?siteid=yhoof2&yptr=yahoo",
+      "publish_time": "2025-10-27T20:34:00Z",
+      "content_type": "STORY",
+      "summary": "Qualcomm soars after introducing new artificial-intelligence servers meant to compete with Nvidia and AMD, while MP Materials falls as Treasury Secretary Scott Bessent says he expects China to defer its tightened export controls on rare-earth materials.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/h.gAnyjUGEHAtvZuX6OA4g--~B/aD02NDA7dz0xMjgwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/Barrons.com/bcdcf2de03ec4933bf400ed21fdc57a4",
+      "filter_reason": "The article reports a concrete company action (Qualcomm's product launch of new AI servers) and factual market event (MP Materials stock movement tied to Treasury Secretary's statement about China export controls).",
+      "filtered_by_llm": true
+    }
+  ],
+  "total_articles": 5,
+  "total_articles_before_filter": 10,
+  "filtered_with_llm": true,
+  "days_range": 1,
+  "fetch_timestamp": "2025-10-27T22:48:03.874463"
+}

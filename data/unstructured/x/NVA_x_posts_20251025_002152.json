@@ -1,0 +1,18 @@
+{
+  "ticker": "NVA",
+  "company_name": "Nova Minerals Ltd",
+  "company_x_handle": null,
+  "ceo_name": "Mr. Christopher  Gerteisen",
+  "ceo_x_handle": null,
+  "company_posts": [],
+  "ceo_posts": [],
+  "total_posts": 0,
+  "total_company_posts": 0,
+  "total_ceo_posts": 0,
+  "bullish_score": null,
+  "average_sentiment": null,
+  "overall_sentiment": "neutral",
+  "fetch_timestamp": "2025-10-25T00:23:23.012517",
+  "time_range_hours": 24,
+  "data_source": "Official company and CEO X/Twitter accounts only"
+}

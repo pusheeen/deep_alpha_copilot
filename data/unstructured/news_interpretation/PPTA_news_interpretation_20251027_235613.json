@@ -1,0 +1,37 @@
+{
+  "ticker": "PPTA",
+  "interpretation": "News interpretation unavailable - Anthropic API not configured.",
+  "news_file": "PPTA_news_20251027_235613.json",
+  "news_timestamp": "2025-10-27T23:56:13.858788",
+  "interpretation_timestamp": "2025-10-27T23:57:38.424884",
+  "num_articles_analyzed": 3,
+  "articles": [
+    {
+      "title": "Perpetua Resources Raises $255 Million From Agnico Eagle, JPMorgan for Idaho Mining Project",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/perpetua-resources-raises-255-million-124026684.html",
+      "publish_time": "2025-10-27T12:40:26Z",
+      "content_type": "STORY",
+      "summary": "Perpetua Resources (PPTA) said Monday that it has signed agreements to raise $255 million in equity",
+      "thumbnail": null
+    },
+    {
+      "title": "JPMorgan\u2019s \u2018America First\u2019 fund launches with investment in gold miner",
+      "publisher": "Financial Times",
+      "link": "https://finance.yahoo.com/news/jpmorgan-backs-miner-initial-investment-123840864.html",
+      "publish_time": "2025-10-27T12:38:40Z",
+      "content_type": "STORY",
+      "summary": "JPMorgan Chase has invested $75mn in an Idaho-based mining company, its first deal as part of plans to plough $10bn into industries that the...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/wwe61jUy7_Q2.K6A6x3Wgw--~B/aD01MDgxO3c9NzYyMjthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2025-10/d9480620-b335-11f0-aabf-ba1488f29b02"
+    },
+    {
+      "title": "Perpetua Resources Up 6% After Securing US$255 Million Financing From Agnico Eagle, JPMorganChase",
+      "publisher": "MT Newswires",
+      "link": "https://finance.yahoo.com/news/perpetua-resources-6-securing-us-120521174.html",
+      "publish_time": "2025-10-27T12:05:21Z",
+      "content_type": "STORY",
+      "summary": "Perpetua Resources (PPTA.TO) traded 6.4% up at last look Monday in Nasdaq pre-market trading as it e",
+      "thumbnail": null
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "ticker": "AMD",
+  "articles": [
+    {
+      "title": "Bitcoin 'just doesn\u2019t cut it anymore': Miners' pivot to AI sends stocks soaring",
+      "publisher": "Yahoo Finance",
+      "link": "https://finance.yahoo.com/news/bitcoin-just-doesnt-cut-it-anymore-miners-pivot-to-ai-sends-stocks-soaring-150018229.html",
+      "publish_time": "2025-10-26T15:00:18Z",
+      "content_type": "STORY",
+      "summary": "Bitcoin miners have been pivoting to using their high computing power to service AI as crypto mining profits get squeezed.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/QEESGRvKOpUU1x2rONIyOA--~B/aD0yNTAyO3c9MzkzMTthcHBpZD15dGFjaHlvbg--/https://s.yimg.com/os/creatr-uploaded-images/2021-04/5af69a20-a8e5-11eb-bf7f-5f2e9fe992ce"
+    },
+    {
+      "title": "Can AMD\u2019s Rally Continue After a 58.6% Surge in the Past Month?",
+      "publisher": "Simply Wall St.",
+      "link": "https://finance.yahoo.com/news/amd-rally-continue-58-6-160929696.html",
+      "publish_time": "2025-10-26T16:09:29Z",
+      "content_type": "STORY",
+      "summary": "If you are trying to decide what to do with Advanced Micro Devices stock, you are definitely not alone right now. The past few months have been a wild ride for AMD, giving investors plenty to cheer about. After a steady upward climb, the stock closed at $252.92, with a stunning 109.7% gain year-to-date and an eye-popping 58.6% pop just in the last month. That sort of momentum naturally has everyone wondering: is there more room to run, or is this as good as it gets? Much of this excitement...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/qQQ8mpCpMuvTPXTeKADXJQ--~B/aD00MzI7dz0xMTk0O2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/simply_wall_st__316/a882d53b581ebe737458ea1484ce4133"
+    },
+    {
+      "title": "AMD quietly cracks open quantum opportunity",
+      "publisher": "TheStreet",
+      "link": "https://www.thestreet.com/technology/amd-quietly-cracks-open-quantum-opportunity",
+      "publish_time": "2025-10-26T15:33:00Z",
+      "content_type": "STORY",
+      "summary": "Quantum computing has run red-hot this year, as it marches toward utility. In 2025, \u201csomeday\u201d even started to sound like \u201csoon\u201d for the quantum computing space. Analysts forecast the global quantum market to surge to more than a whopping $7 billion by 2030, growing at 34.6% annually. Businesses are ...",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/OAt1mMAkRIQImi5xpoR_4g--~B/aD02NzU7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/thestreet_881/84fff83492ebfaf285e90377248a4513"
+    },
+    {
+      "title": "2 Technology Stocks That Could Make Big Moves in 2026",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/26/2-tech-stocks-could-make-big-moves-2026/",
+      "publish_time": "2025-10-26T13:25:00Z",
+      "content_type": "STORY",
+      "summary": "AMD and Unity Software have the potential to deliver accelerating growth next year.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/uVbqDDhp7vHGXaSPeji6gA--~B/aD03MjA7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/462578215807b9dabe53a1d20021871b"
+    },
+    {
+      "title": "Is ASML Stock a Buy?",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/26/is-asml-stock-a-buy/",
+      "publish_time": "2025-10-26T08:05:00Z",
+      "content_type": "STORY",
+      "summary": "The Dutch company is an under-the-radar AI winner.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/NoywZEt9TbkGPS_cPWpjBA--~B/aD04NDE7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/e4499964cbed201df494bf57b44d0727"
+    },
+    {
+      "title": "Better Artificial Intelligence Stock: Palantir vs. Advanced Micro Devices",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/26/better-artificial-intelligence-stock-palantir-vs-a/",
+      "publish_time": "2025-10-26T07:05:00Z",
+      "content_type": "STORY",
+      "summary": "These stocks are both highfliers, but one has the advantage.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/dDEElnsNkuPGVTnzI0Qv8w--~B/aD04NTA7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/2c048cc026bf9a9144e0a4e49a90ee63"
+    }
+  ],
+  "total_articles": 6,
+  "days_range": 1,
+  "fetch_timestamp": "2025-10-26T22:43:54.842454"
+}

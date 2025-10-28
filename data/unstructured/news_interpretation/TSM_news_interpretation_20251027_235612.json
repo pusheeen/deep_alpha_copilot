@@ -1,0 +1,91 @@
+{
+  "ticker": "TSM",
+  "interpretation": "News interpretation unavailable - Anthropic API not configured.",
+  "news_file": "TSM_news_20251027_235612.json",
+  "news_timestamp": "2025-10-27T23:56:12.370104",
+  "interpretation_timestamp": "2025-10-27T23:57:38.421415",
+  "num_articles_analyzed": 9,
+  "articles": [
+    {
+      "title": "Prediction: Taiwan Semiconductor Manufacturing Will Skyrocket in the Next 5 Years. Here's 1 Reason Why.",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/prediction-taiwan-semiconductor-manufacturing-coul/",
+      "publish_time": "2025-10-28T01:05:00Z",
+      "content_type": "STORY",
+      "summary": "The expected increase in AI infrastructure spending should bode well for TSMC.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/fhk07CS8CAJG62d5fwRcqQ--~B/aD04NDA7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/235b9dcdb919f02f2c9af262b7ccb059"
+    },
+    {
+      "title": "GlobalFoundries finance chief John Hollister departs, Sam Franklin named interim CFO",
+      "publisher": "Reuters",
+      "link": "https://finance.yahoo.com/news/globalfoundries-finance-chief-john-hollister-222750804.html",
+      "publish_time": "2025-10-27T22:27:50Z",
+      "content_type": "STORY",
+      "summary": "The management reshuffle comes at a time when the company has pledged to invest $16 billion partly towards building more manufacturing facilities on American soil amid U.S. President Donald Trump's push to onshore supply chains.  The company, unlike leader TSMC, does not largely produce cutting-edge artificial intelligence chips and is spending heavily on upgrading its manufacturing processes to produce more advanced chips for markets such as automotive and smartphones.  While Taiwan's TSMC  manufactures the most advanced processors designed by the likes of Nvidia, AMD  and Qualcomm, GlobalFoundries produces the chips used alongside them that form an essential part of electronic systems.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/4gqDyneT_uviAR.y2C9PjA--~B/aD01NTg7dz04MDA7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/reuters-finance.com/9416e29c9c32b90055f1b6e07d688d9d"
+    },
+    {
+      "title": "Is Now the Time to Buy Taiwan Semiconductor Manufacturing (TSM) Stock?",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/is-now-the-time-to-buy-taiwan-semiconductor-manufa/",
+      "publish_time": "2025-10-27T22:05:00Z",
+      "content_type": "STORY",
+      "summary": "How does a 1,257% gain over 10 years sound?",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/7u6bqtFAyNyGrXcgHg.ppg--~B/aD05MzM7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/3622150c2097d06f96ec00417a9dd0ad"
+    },
+    {
+      "title": "Rigetti Computing vs. Taiwan Semiconductor: Wall Street Says Buy One and Sell the Other",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/rigetti-vs-tsmc-stock-buy-one-sell-the-other/",
+      "publish_time": "2025-10-27T15:30:00Z",
+      "content_type": "STORY",
+      "summary": "These two chipmaking leaders are at the forefront of two megatrends.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/8Y.yPFHCmjCt_KQfeBLc7A--~B/aD02NjA7dz0xMjAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/50220095e22b8dfcd22a347a2022e7bf"
+    },
+    {
+      "title": "Buy These 5 Dividend Growth Stocks as U.S. Inflation Rate Hits 3%",
+      "publisher": "Zacks",
+      "link": "https://finance.yahoo.com/news/buy-5-dividend-growth-stocks-134600329.html",
+      "publish_time": "2025-10-27T13:46:00Z",
+      "content_type": "STORY",
+      "summary": "As U.S. inflation hits 3%, dividend growth stocks like Vertiv, TSM, Oracle, Lam Research, and Elbit Systems shine.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/hb34T5JpqfOKFdxuauyatA--~B/aD00MDA7dz02MzU7YXBwaWQ9eXRhY2h5b24-/https://media.zenfs.com/en/zacks.com/560ce7090345bb7408c706b8e0a8c3fc"
+    },
+    {
+      "title": "How Investing Has Changed in the Last 5 Years",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/how-investing-has-changed-in-the-last-5-years/",
+      "publish_time": "2025-10-27T11:39:00Z",
+      "content_type": "STORY",
+      "summary": "Stocks with a high short interest have outperformed the market over the past five years, but is this meme trading or a new trend in long-term investing? Plus, the crew talks about Taiwan Semiconductor's earnings, Google's medical AI, and the \"cockroaches\" that could be hiding in the market.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/F25GIZS.Ml6dPmKWOTLg5Q--~B/aD0xMDgwO3c9MTkyMDthcHBpZD15dGFjaHlvbg--/https://media.zenfs.com/en/motleyfool.com/731ea2a024378e9de6dd629d0392ed3a"
+    },
+    {
+      "title": "Prediction: This Unstoppable AI Stock Will Join Nvidia, Microsoft, Apple, and Alphabet in the $3 Trillion Club by 2029",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/prediction-this-unstoppable-ai-stock-will-join-nvi/",
+      "publish_time": "2025-10-27T10:30:00Z",
+      "content_type": "STORY",
+      "summary": "Taiwan Semiconductor needs four years of 20% growth to accomplish this goal.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/EOYGd6eDxtrtOqHSniSrhQ--~B/aD05MzM7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/da5786b5ca1c45570be33eeeda2f50dc"
+    },
+    {
+      "title": "3 Artificial Intelligence Stocks to Buy and Hold Through 2035",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/3-artificial-intelligence-stocks-to-buy-and-hold-t/",
+      "publish_time": "2025-10-27T09:45:00Z",
+      "content_type": "STORY",
+      "summary": "These three stocks have wide moats that should make them AI winners over the next decade.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/nsinuqP9ZTx3fizRK3mU_A--~B/aD03ODc7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/e4aef1ec3d6158fafef8b4526a418d9a"
+    },
+    {
+      "title": "2 Top Bargain Stocks Ready for a Bull Run",
+      "publisher": "Motley Fool",
+      "link": "https://www.fool.com/investing/2025/10/27/2-top-bargain-stocks-ready-for-a-bull-run/",
+      "publish_time": "2025-10-27T07:50:00Z",
+      "content_type": "STORY",
+      "summary": "Alphabet and TSMC are two of the most attractively valued AI leaders in the market today.",
+      "thumbnail": "https://s.yimg.com/uu/api/res/1.2/vJudG51SgSR0wzSG.ofgBA--~B/aD05MzM7dz0xNDAwO2FwcGlkPXl0YWNoeW9u/https://media.zenfs.com/en/motleyfool.com/a7e8d5764b943e35813384754c24902c"
+    }
+  ]
+}

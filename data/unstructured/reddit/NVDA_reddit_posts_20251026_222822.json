@@ -1,0 +1,76 @@
+{
+  "ticker": "NVDA",
+  "posts": [
+    {
+      "id": "1ogdbjo",
+      "title": "Best buy and hold stocks over the past 20 years in S&P500",
+      "selftext": "Over the past 20 years, the best buy and hold stocks in the S&P 500 have been dominated by a few exceptional longterm compounders, which shows that a handful of stocks drive most market gains, underscoring why broad diversification still matters.\n\nAn investment in these five stocks would have turned $10,000 in 2005 into between $1.6 million and $6 million today.\n\n1. Apple (AAPL) return approx. 59,900% \n\n2. Monster Beverage (MNST) return approx. 59,300% \n\n3. NVIDIA (NVDA) return approx. 28,700%\n\n4. Intuitive Surgical (ISRG) return approx. 18,200%\n\n5. Booking Holdings (BKNG) return approx. 16,300% \n\n",
+      "score": 294,
+      "upvote_ratio": 0.86,
+      "num_comments": 123,
+      "created_utc": 1761459398.0,
+      "subreddit": "stocks",
+      "url": "https://reddit.com/r/stocks/comments/1ogdbjo/best_buy_and_hold_stocks_over_the_past_20_years/",
+      "mentioned_tickers": [
+        "NVDA"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.9038,
+      "positive_score": 0.107,
+      "negative_score": 0.0,
+      "topics": [
+        "AI"
+      ],
+      "comments": []
+    },
+    {
+      "id": "1ogd2s3",
+      "title": "Why would a company hold a large amount of US treasuries in their current Assets?",
+      "selftext": "I have been looking at NVDA just for fun. I see a couple of things of things like increasing receivables and inventory since the data center market took off.  But one thing which I cannot completely come to terms with is the debt securities in the current assets. About 45% of their current asset is securities, approx 50-50 US government debt and corporate debt.\n\nOne reason I can think of is the risk-free yield that comes with it, at least on US treasuries.\n\nFor what other reasons, does a company hold debt securities?\n\nEdit: Ratio of cash assets to Revenue is relatively high in comparison to other fabless SC. Apple is kind of holding the lowest in terms of % of assets and current assets.\n\nAnyone telling it is the quick cash for business? - as a fabless, I think that the cost of revenue is scalable based on demand. So only the operational expenses are recurring and they are not as big.",
+      "score": 8,
+      "upvote_ratio": 0.68,
+      "num_comments": 49,
+      "created_utc": 1761458472.0,
+      "subreddit": "ValueInvesting",
+      "url": "https://reddit.com/r/ValueInvesting/comments/1ogd2s3/why_would_a_company_hold_a_large_amount_of_us/",
+      "mentioned_tickers": [
+        "NVDA"
+      ],
+      "sentiment": "bullish",
+      "compound_score": 0.7423,
+      "positive_score": 0.143,
+      "negative_score": 0.088,
+      "topics": [
+        "earnings",
+        "technical_analysis",
+        "fundamentals",
+        "regulatory",
+        "AI"
+      ],
+      "comments": [
+        {
+          "id": "nlhk4ag",
+          "body": "NVIDIA\n\nBy hoarding cash, he\u2019s telling you one or more of the following:\n1. He will need the cash to defend their market share. They are likely going to generate more than $110 bil. of net income over the next 12 months if the industry stays as it is. I think they have 90% market share in GPUs. Google, Amazon, and AMD are already trying to compete for this.\n2. He will need the cash to help his customers. You are seeing investments in OpenAI. Oracle just took loans of $56 bil. to build data cente",
+          "score": 2,
+          "created_utc": 1761491509.0,
+          "mentioned_tickers": [
+            "AMD"
+          ],
+          "sentiment": "bullish",
+          "compound_score": 0.9493
+        }
+      ]
+    }
+  ],
+  "total_posts": 2,
+  "bullish_posts": 2,
+  "bearish_posts": 0,
+  "neutral_posts": 0,
+  "subreddits": [
+    "stocks",
+    "ValueInvesting"
+  ],
+  "avg_sentiment": 0.8230500000000001,
+  "bullish_score": 9,
+  "fetch_timestamp": "2025-10-26T22:28:22.300884"
+}

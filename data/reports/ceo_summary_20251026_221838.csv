@@ -1,0 +1,16 @@
+ticker,company_name,ceo_name,ceo_title,tenure_duration,start_date,education,num_past_roles,num_highlights,linkedin_url,source,fetch_timestamp
+NVDA,NVIDIA CORP,Mr. Jen-Hsun  Huang,"Co-Founder, CEO, President & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:17:44.610652
+AVGO,Broadcom Inc.,Mr. Hock E. Tan,"President, CEO & Executive Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:17:52.334440
+ORCL,ORACLE CORP,Mr. Michael D. Sicilia,Chief Executive Officer & Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:00.063972
+AMD,ADVANCED MICRO DEVICES INC,Dr. Lisa T. Su Ph.D.,"Chair, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:07.729293
+MP,MP Materials Corp. / DE,Mr. James Henry Litinsky,"Co-Founder, Chairman, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:10.399321
+ALB,ALBEMARLE CORP,Mr. Jerry Kent Masters Jr.,"Chairman, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:12.950651
+PPTA,PERPETUA RESOURCES CORP.,Mr. Jonathan  Cherry P.Eng.,"CEO, President & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:15.556491
+LAC,LITHIUM AMERICAS CORP.,Mr. Jonathan D. Evans,"President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:18.113068
+NAK,NORTHERN DYNASTY MINERALS LTD,"Mr. Ronald William Thiessen C.P.A., CA, F.C.A., FCPA","President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:20.666191
+CRML,Critical Metals Corp.,"Mr. Antony William-Paul Sage B.Bus, B.Com., BCom, C.A., CA, FCPA, FTIA",Chairman of the Board & CEO,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:23.179336
+NB,NIOCORP DEVELOPMENTS LTD,"Mr. Mark Allan Smith Esq., P.E.","Executive Chairman, President & CEO",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:25.760162
+UAMY,UNITED STATES ANTIMONY CORP,Mr. Gary C. Evans,CEO & Chairman,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:28.334114
+NMG,Nouveau Monde Graphite Inc.,"Mr. Eric  Desaulniers M.Sc., MSc, P.Geo","Founder, President, CEO & Director",Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:30.869352
+NVA,Nova Minerals Ltd,Mr. Christopher  Gerteisen,CEO & Executive Director,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:33.410350
+TSM,TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD,Dr. C. C.  Wei Ph.D.,Chairman & CEO,Not found,Not found,Not found,0,0,Not found,yfinance + LinkedIn,2025-10-26T22:18:35.931434
