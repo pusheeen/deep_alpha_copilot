@@ -55,6 +55,20 @@ if ADK_AVAILABLE:
         print("Warning: Could not import agents. Agent features will be disabled.")
 from app.scoring import compute_company_scores, ScoreComputationError
 load_dotenv()
+import math
+
+# Utility function to sanitize data for JSON serialization
+def sanitize_for_json(obj):
+    """Recursively replace NaN and infinity values with None for JSON compliance."""
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_for_json(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    return obj
 
 # --- Configuration ---
 APP_DIR = Path(__file__).resolve().parent
@@ -246,6 +260,8 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
             return {"status": "error", "message": f"Failed to fetch news: {exc}"}
     try:
         data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
+        # Sanitize data to handle NaN/infinity values
+        data = sanitize_for_json(data)
         return {"status": "success", "data": data}
     except ScoreComputationError as exc:
         return {"status": "error", "message": str(exc)}
@@ -256,12 +272,13 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
 async def get_price_history(ticker: str, period: str = "1m"):
     """Return price history with events for a specific time period."""
     from app.scoring.engine import get_price_history_with_events
-    
+
     try:
         # For now, we'll use empty news items since we're focusing on significant moves
         news_items = []
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, get_price_history_with_events, ticker.upper(), news_items, period)
+        data = sanitize_for_json(data)
         return {"status": "success", "data": data}
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch price history: {exc}"}
@@ -270,10 +287,11 @@ async def get_price_history(ticker: str, period: str = "1m"):
 async def get_valuation_metrics(ticker: str):
     """Return historical P/E and P/S ratios with industry benchmarks."""
     from app.scoring.engine import get_valuation_metrics
-    
+
     try:
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
+        data = sanitize_for_json(data)
         return {"status": "success", "data": data}
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
