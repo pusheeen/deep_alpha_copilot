@@ -23,6 +23,10 @@ import yfinance as yf
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from datetime import datetime, timedelta
+import logging
+
+# Logger for this module
+logger = logging.getLogger(__name__)
 
 
 def safe_json_serialize(obj):
@@ -512,6 +516,13 @@ def load_price_history(ticker: str) -> pd.DataFrame:
         raise ScoreComputationError(f"Price history not found for {ticker}")
     df = pd.read_csv(path, parse_dates=["Date"])
     df = df.sort_values("Date").set_index("Date")
+
+    # Convert index to DatetimeIndex and strip timezone info
+    if not isinstance(df.index, pd.DatetimeIndex):
+        df.index = pd.to_datetime(df.index, utc=True)
+    if df.index.tz is not None:
+        df.index = df.index.tz_convert('UTC').tz_localize(None)
+
     return df
 
 
@@ -1539,27 +1550,76 @@ def get_score_benchmarks(component_scores: dict, info: dict) -> dict:
 def get_price_history_with_events(ticker: str, news_items: List[dict], period: str = "1m") -> dict:
     """
     Fetch historical price data and annotate with major events.
-    Identifies significant price movements (>10% daily change) and correlates with news.
+    For intraday periods (1d, 1w), fetches live minute/hour data from yfinance.
+    For longer periods, uses local CSV data.
     Returns time series data suitable for charting with event markers.
     """
     try:
-        import yfinance as yf
-        
-        # Map period to yfinance format
-        period_map = {
-            "1m": "1mo",
-            "6m": "6mo", 
-            "1y": "1y",
-            "2y": "2y"
-        }
-        yf_period = period_map.get(period, "1mo")
-        
-        # Fetch historical data
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period=yf_period)
-        
-        if hist.empty:
-            return {"price_data": [], "events": []}
+        # For intraday data (1d, 1w), fetch from yfinance with appropriate interval
+        if period in ["1d", "1w"]:
+            try:
+                import yfinance as yf
+
+                # Set appropriate interval
+                if period == "1d":
+                    yf_period = "1d"
+                    interval = "5m"  # 5-minute intervals for 1 day
+                else:  # 1w
+                    yf_period = "5d"
+                    interval = "30m"  # 30-minute intervals for 1 week
+
+                stock = yf.Ticker(ticker)
+                hist = stock.history(period=yf_period, interval=interval)
+
+                if hist.empty:
+                    logger.warning(f"No intraday data available for {ticker} period {period}")
+                    return {"price_data": [], "events": [], "error": "No intraday data available"}
+
+                # Strip timezone info
+                if isinstance(hist.index, pd.DatetimeIndex) and hist.index.tz is not None:
+                    hist.index = hist.index.tz_convert('UTC').tz_localize(None)
+
+            except Exception as e:
+                logger.error(f"Error fetching intraday data for {ticker}: {e}")
+                return {"price_data": [], "events": [], "error": str(e)}
+        else:
+            # For longer periods, use local CSV data
+            try:
+                price_df = load_price_history(ticker)
+            except ScoreComputationError:
+                return {"price_data": [], "events": []}
+
+            if price_df.empty:
+                return {"price_data": [], "events": []}
+
+            # Strip timezone info from the index to avoid comparison issues
+            if isinstance(price_df.index, pd.DatetimeIndex) and price_df.index.tz is not None:
+                # Convert to UTC first, then remove timezone info
+                price_df.index = price_df.index.tz_convert('UTC').tz_localize(None)
+
+            # Filter by period - convert period to number of days
+            period_days_map = {
+                "5d": 5, "1m": 30, "1mo": 30, "3m": 90, "3mo": 90,
+                "6m": 180, "6mo": 180, "1y": 365, "2y": 730, "5y": 1825,
+                "10y": 3650, "ytd": None, "max": None
+            }
+
+            days = period_days_map.get(period, 30)  # Default to 30 days if unknown period
+
+            # Use timezone-naive datetime for filtering
+            if days:
+                cutoff_date = datetime.now() - timedelta(days=days)
+                hist = price_df[price_df.index >= cutoff_date]
+            elif period == "ytd":
+                # Year to date
+                current_year = datetime.now().year
+                cutoff_date = datetime(current_year, 1, 1)
+                hist = price_df[price_df.index >= cutoff_date]
+            else:  # max
+                hist = price_df
+
+            if hist.empty:
+                return {"price_data": [], "events": []}
         
         # Prepare price data and identify significant movements
         price_data = []
@@ -1570,7 +1630,7 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
             daily_change = ((row['Close'] - row['Open']) / row['Open'] * 100) if row['Open'] > 0 else 0
             
             price_data.append({
-                "date": date.strftime("%Y-%m-%d"),
+                "date": date.strftime("%Y-%m-%d %H:%M") if period in ["1d", "1w"] else date.strftime("%Y-%m-%d"),
                 "open": float(row['Open']),
                 "high": float(row['High']),
                 "low": float(row['Low']),
@@ -1589,8 +1649,8 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
         
         # Create a map of news by date for quick lookup
         news_by_date = {}
-        now = datetime.now(timezone.utc)
-        
+        now = datetime.now()  # Use timezone-naive datetime
+
         for item in news_items or []:
             content = item.get("content") or {}
             title = content.get("title") or item.get("title") or "Event"
@@ -1602,12 +1662,16 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                 or (content.get("canonicalUrl") or {}).get("url")
             )
             provider_time = item.get("providerPublishTime") or content.get("pubDate")
-            
+
             if isinstance(provider_time, (int, float)):
-                published_at = datetime.fromtimestamp(provider_time, tz=timezone.utc)
+                # Convert to timezone-naive datetime
+                published_at = datetime.fromtimestamp(provider_time)
             elif isinstance(provider_time, str) and provider_time:
                 try:
+                    # Parse and remove timezone info
                     published_at = datetime.fromisoformat(provider_time.replace("Z", "+00:00"))
+                    if published_at.tzinfo is not None:
+                        published_at = published_at.replace(tzinfo=None)
                 except ValueError:
                     published_at = now
             else:
@@ -1693,12 +1757,34 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
         # Combine and sort all events
         all_events = events + recent_news_events
         all_events.sort(key=lambda x: x['date'], reverse=True)
-        
+
+        # Calculate period trend
+        trend = None
+        if len(price_data) >= 2:
+            start_price = price_data[0]['close']
+            end_price = price_data[-1]['close']
+            price_change = end_price - start_price
+            price_change_pct = (price_change / start_price) * 100 if start_price > 0 else 0
+
+            trend = {
+                "start_date": price_data[0]['date'],
+                "end_date": price_data[-1]['date'],
+                "start_price": round(start_price, 2),
+                "end_price": round(end_price, 2),
+                "price_change": round(price_change, 2),
+                "price_change_pct": round(price_change_pct, 2),
+                "direction": "up" if price_change >= 0 else "down",
+                "high": round(max(p['high'] for p in price_data), 2),
+                "low": round(min(p['low'] for p in price_data), 2),
+                "avg_volume": int(sum(p['volume'] for p in price_data) / len(price_data))
+            }
+
         return {
             "price_data": price_data,
             "events": all_events[:15],  # Limit to 15 most relevant events
             "significant_moves": len(significant_moves),
-            "period": period
+            "period": period,
+            "trend": trend
         }
     except Exception as e:
         print(f"Error fetching price history: {e}")
@@ -1936,47 +2022,73 @@ def get_valuation_metrics(ticker: str) -> dict:
         
         # Get industry benchmark or default
         benchmark = industry_benchmarks.get(industry, industry_benchmarks['default'])
-        
+
         # Get historical data (2 years)
         end_date = datetime.now()
         start_date = end_date - timedelta(days=730)
         hist = stock.history(start=start_date, end=end_date, interval='1mo')
-        
+
+        # Fetch S&P 500 historical data to calculate time-varying benchmarks
+        spy_hist = None
+        try:
+            spy = yf.Ticker('SPY')
+            spy_hist = spy.history(start=start_date, end=end_date, interval='1mo')
+            spy_info = spy.info
+            spy_current_pe = spy_info.get('trailingPE', 22.0)  # S&P 500 average P/E
+        except:
+            spy_current_pe = 22.0
+            logger.warning("Could not fetch SPY data for benchmark adjustment")
+
         # Calculate quarterly P/E and P/S ratios
         pe_data = []
         ps_data = []
-        
+
         # Get quarterly financials to calculate historical P/E and P/S
         try:
             quarterly_financials = stock.quarterly_financials
             quarterly_balance = stock.quarterly_balance_sheet
-            
+
             # Use monthly price data
             for date, row in hist.iterrows():
                 close_price = row['Close']
-                
+
+                # Calculate time-varying benchmark based on market conditions
+                if spy_hist is not None and date in spy_hist.index:
+                    spy_price_at_date = spy_hist.loc[date, 'Close']
+                    spy_current_price = spy_hist.iloc[-1]['Close']
+
+                    # Adjust benchmark proportionally to S&P 500 price changes
+                    # This approximates how market-wide valuations changed
+                    spy_price_ratio = spy_price_at_date / spy_current_price
+                    historical_benchmark_pe = benchmark['pe'] * spy_price_ratio
+                    historical_benchmark_ps = benchmark['ps'] * spy_price_ratio
+                else:
+                    # Fallback to static benchmark
+                    historical_benchmark_pe = benchmark['pe']
+                    historical_benchmark_ps = benchmark['ps']
+
                 # For simplicity, use current trailing P/E and P/S adjusted by price changes
                 # (Real implementation would calculate from financials)
                 current_pe = info.get('trailingPE', 25)
                 current_ps = info.get('priceToSalesTrailing12Months', 5)
                 current_price = info.get('currentPrice', close_price)
-                
+
                 if current_price and current_price > 0:
                     # Estimate historical ratios based on price changes
                     price_ratio = close_price / current_price
                     estimated_pe = current_pe * price_ratio if current_pe else None
                     estimated_ps = current_ps * price_ratio if current_ps else None
-                    
+
                     pe_data.append({
                         'date': date.strftime('%Y-%m-%d'),
                         'pe_ratio': round(estimated_pe, 2) if estimated_pe else None,
-                        'benchmark_pe': benchmark['pe']
+                        'benchmark_pe': round(historical_benchmark_pe, 2)
                     })
-                    
+
                     ps_data.append({
                         'date': date.strftime('%Y-%m-%d'),
                         'ps_ratio': round(estimated_ps, 2) if estimated_ps else None,
-                        'benchmark_ps': benchmark['ps']
+                        'benchmark_ps': round(historical_benchmark_ps, 2)
                     })
         except Exception as e:
             logger.warning(f"Could not calculate historical P/E and P/S for {ticker}: {e}")
@@ -2106,8 +2218,15 @@ def get_market_conditions() -> dict:
             ath = hist_1y['Close'].max()
             drawdown = ((current_price / ath) - 1) * 100
             
-            # Find days since ATH
+            # Find days since ATH (ensure timezone-naive)
             ath_date = hist_1y['Close'].idxmax()
+            try:
+                # If pandas Timestamp, convert to Python datetime and strip tzinfo
+                if hasattr(ath_date, 'to_pydatetime'):
+                    ath_dt = ath_date.to_pydatetime()
+                    ath_date = ath_dt.replace(tzinfo=None)
+            except Exception:
+                pass
             days_from_ath = (datetime.now() - ath_date).days
         
         return {
@@ -2150,10 +2269,12 @@ def get_market_conditions() -> dict:
         
     except Exception as e:
         logger.error(f"Error fetching market conditions: {e}")
+        # Return default structure to avoid missing keys in UI
         return {
             'timestamp': datetime.now().isoformat(),
             'error': str(e),
             'fear_greed_index': {'score': 50, 'level': 'Unknown'},
             'vix': {'current': None},
-            'put_call_ratio': {'current': 1.0}
+            'put_call_ratio': {'current': 1.0},
+            'market_phase': {'phase': 'Unknown'}
         }

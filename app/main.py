@@ -10,12 +10,18 @@ from starlette.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 
-# --- ADK Imports ---
+# --- ADK Imports (Optional) ---
 from typing import Optional, Dict, Any
-from google.adk.agents import Agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
+try:
+    from google.adk.agents import Agent
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai import types
+    ADK_AVAILABLE = True
+except ImportError:
+    ADK_AVAILABLE = False
+    print("Warning: Google ADK not available. Agent features will be disabled.")
+
 # Add this import
 from fastapi.middleware.cors import CORSMiddleware 
 import os
@@ -41,7 +47,12 @@ app.add_middleware(
 )
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
-from app.agents.agents import root_agent, search_latest_news
+if ADK_AVAILABLE:
+    try:
+        from app.agents.agents import root_agent, search_latest_news
+    except ImportError:
+        ADK_AVAILABLE = False
+        print("Warning: Could not import agents. Agent features will be disabled.")
 from app.scoring import compute_company_scores, ScoreComputationError
 load_dotenv()
 
@@ -117,74 +128,79 @@ async def get_current_user(request: Request):
     return user
 
 # --- ADK Agent Runner Setup ---
-class AgentCaller:
-    """A simple wrapper class for interacting with an ADK agent."""
-    def __init__(self, agent: Agent, runner: Runner, user_id: str, session_id: str):
-        self.agent = agent
-        self.runner = runner
-        self.user_id = user_id
-        self.session_id = session_id
+if ADK_AVAILABLE:
+    class AgentCaller:
+        """A simple wrapper class for interacting with an ADK agent."""
+        def __init__(self, agent: Agent, runner: Runner, user_id: str, session_id: str):
+            self.agent = agent
+            self.runner = runner
+            self.user_id = user_id
+            self.session_id = session_id
 
-    async def call(self, user_message: str, include_reasoning: bool = False) -> dict:
-        content = types.Content(role='user', parts=[types.Part(text=user_message)])
+        async def call(self, user_message: str, include_reasoning: bool = False) -> dict:
+            content = types.Content(role='user', parts=[types.Part(text=user_message)])
 
-        final_response = {
-            'answer': "Agent did not produce a final response.",
-            'status': 'error'
-        }
+            final_response = {
+                'answer': "Agent did not produce a final response.",
+                'status': 'error'
+            }
 
-        reasoning_steps = []
-        tools_used = set()
+            reasoning_steps = []
+            tools_used = set()
 
-        async for event in self.runner.run_async(user_id=self.user_id, session_id=self.session_id, new_message=content):
-            if include_reasoning and event.author != self.agent.name and not event.is_final_response():
-                 # Capture tool calls and observations as reasoning steps
-                 if event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_code'):
-                     tool_call = event.content.parts[0].tool_code
-                     reasoning_steps.append({
-                         'tool': tool_call.name,
-                         'input': str(tool_call.args),
-                         'output': "Pending..."
-                     })
-                     tools_used.add(tool_call.name)
-                 elif event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_result'):
-                     if reasoning_steps:
-                        reasoning_steps[-1]['output'] = str(event.content.parts[0].tool_result.result)
+            async for event in self.runner.run_async(user_id=self.user_id, session_id=self.session_id, new_message=content):
+                if include_reasoning and event.author != self.agent.name and not event.is_final_response():
+                     # Capture tool calls and observations as reasoning steps
+                     if event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_code'):
+                         tool_call = event.content.parts[0].tool_code
+                         reasoning_steps.append({
+                             'tool': tool_call.name,
+                             'input': str(tool_call.args),
+                             'output': "Pending..."
+                         })
+                         tools_used.add(tool_call.name)
+                     elif event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_result'):
+                         if reasoning_steps:
+                            reasoning_steps[-1]['output'] = str(event.content.parts[0].tool_result.result)
 
-            if event.is_final_response() and event.content and event.content.parts:
-                final_response['answer'] = event.content.parts[0].text
-                final_response['status'] = 'success'
-                break
+                if event.is_final_response() and event.content and event.content.parts:
+                    final_response['answer'] = event.content.parts[0].text
+                    final_response['status'] = 'success'
+                    break
 
-        if include_reasoning:
-            final_response['reasoning_steps'] = reasoning_steps
-            final_response['tools_used'] = list(tools_used)
+            if include_reasoning:
+                final_response['reasoning_steps'] = reasoning_steps
+                final_response['tools_used'] = list(tools_used)
 
-        return final_response
+            return final_response
 
-async def make_agent_caller(agent: Agent) -> AgentCaller:
-    """Factory function to create an AgentCaller instance."""
-    app_name = agent.name + "_app"
-    user_id = agent.name + "_user"
-    session_id = agent.name + "_session_01"
+    async def make_agent_caller(agent: Agent) -> AgentCaller:
+        """Factory function to create an AgentCaller instance."""
+        app_name = agent.name + "_app"
+        user_id = agent.name + "_user"
+        session_id = agent.name + "_session_01"
 
-    session_service = InMemorySessionService()
-    await session_service.create_session(
-        app_name=app_name, user_id=user_id, session_id=session_id
-    )
+        session_service = InMemorySessionService()
+        await session_service.create_session(
+            app_name=app_name, user_id=user_id, session_id=session_id
+        )
 
-    runner = Runner(agent=agent, app_name=app_name, session_service=session_service)
-    return AgentCaller(agent, runner, user_id, session_id)
+        runner = Runner(agent=agent, app_name=app_name, session_service=session_service)
+        return AgentCaller(agent, runner, user_id, session_id)
 
 
 # --- FastAPI Application ---
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # On startup, initialize the ADK AgentCaller
-    print("Initializing ADK Agent...")
-    app.state.agent_caller = await make_agent_caller(root_agent)
-    print("Agent is ready.")
+    # On startup, initialize the ADK AgentCaller (if available)
+    if ADK_AVAILABLE:
+        print("Initializing ADK Agent...")
+        app.state.agent_caller = await make_agent_caller(root_agent)
+        print("Agent is ready.")
+    else:
+        print("ADK not available. Agent features disabled.")
+        app.state.agent_caller = None
     yield
     # On shutdown (not essential for this example, but good practice)
     print("Shutting down.")
@@ -266,13 +282,105 @@ async def get_valuation_metrics(ticker: str):
 async def get_market_conditions():
     """Return current market condition indicators."""
     from app.scoring.engine import get_market_conditions
-    
+
     try:
         loop = asyncio.get_event_loop()
         data = await loop.run_in_executor(None, get_market_conditions)
         return {"status": "success", "data": data}
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
+
+@app.get("/api/latest-news/{ticker}")
+async def get_latest_news(ticker: str):
+    """Return the latest news and interpretation for a ticker."""
+    import json
+    from fetch_data import get_latest_news_file, save_news_interpretation
+
+    try:
+        ticker = ticker.upper()
+
+        # Get latest news file
+        news_file = get_latest_news_file(ticker)
+        if not news_file:
+            return {"status": "success", "data": {"ticker": ticker, "articles": [], "interpretation": None}}
+
+        # Load news data
+        with open(news_file, 'r') as f:
+            news_data = json.load(f)
+        # Deduplicate articles by link or title
+        raw_articles = news_data.get('articles', [])
+        seen = set()
+        unique_articles = []
+        for art in raw_articles:
+            # Use link as primary dedupe key, fallback to title
+            key = art.get('link') or art.get('title', '').strip()
+            if not key:
+                # skip if no identifier
+                continue
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_articles.append(art)
+        # Replace with deduplicated list (by link/title)
+        news_articles = unique_articles
+        # Further deduplicate semantically similar articles (e.g., same story phrased differently)
+        try:
+            import difflib
+            sem_seen = []
+            sem_unique = []
+            for art in news_articles:
+                # Normalize title for similarity check
+                title = art.get('title', '').strip().lower()
+                if not title:
+                    sem_unique.append(art)
+                    continue
+                # Check against previously seen titles
+                is_dup = False
+                for prev in sem_seen:
+                    if difflib.SequenceMatcher(None, title, prev).ratio() > 0.85:
+                        is_dup = True
+                        break
+                if not is_dup:
+                    sem_seen.append(title)
+                    sem_unique.append(art)
+            news_articles = sem_unique
+        except Exception:
+            # Fallback: skip semantic dedupe on error
+            pass
+
+        # Get or generate interpretation
+        interpretation_files = sorted([
+            f for f in os.listdir('data/unstructured/news_interpretation')
+            if f.startswith(f"{ticker}_news_interpretation_") and f.endswith('.json')
+        ])
+
+        interpretation_data = None
+        if interpretation_files:
+            # Load latest interpretation
+            latest_interpretation_file = os.path.join('data/unstructured/news_interpretation', interpretation_files[-1])
+            with open(latest_interpretation_file, 'r') as f:
+                interpretation_data = json.load(f)
+        else:
+            # Generate new interpretation
+            loop = asyncio.get_event_loop()
+            interpretation_path = await loop.run_in_executor(None, save_news_interpretation, ticker, news_file)
+            if interpretation_path:
+                with open(interpretation_path, 'r') as f:
+                    interpretation_data = json.load(f)
+
+        return {
+            "status": "success",
+            "data": {
+                "ticker": ticker,
+                "articles": news_articles,
+                "total_articles": len(news_articles),
+                "fetch_timestamp": news_data.get('fetch_timestamp'),
+                "interpretation": interpretation_data.get('interpretation') if interpretation_data else None,
+                "interpretation_timestamp": interpretation_data.get('timestamp') if interpretation_data else None
+            }
+        }
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch news: {exc}"}
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
@@ -288,6 +396,12 @@ async def chat(request: QueryRequest, http_request: Request):
 
     # Access the agent_caller initialized at startup
     agent_caller = http_request.app.state.agent_caller
+
+    if not agent_caller:
+        return {
+            'answer': "Agent features are not available. Please contact support.",
+            'status': 'agent_unavailable'
+        }
 
     # Process the query using the ADK agent
     response = await agent_caller.call(

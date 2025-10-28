@@ -145,10 +145,16 @@
                     <h3 class="text-lg font-semibold text-slate-800 mb-4">Price Performance Comparison</h3>
                     <div class="flex items-center gap-4 mb-4">
                         <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="1m">1 Month</option>
-                            <option value="6m">6 Months</option>
-                            <option value="1y" selected>1 Year</option>
-                            <option value="2y">2 Years</option>
+                            <option value="1d">1 Day</option>
+                            <option value="5d">5 Days</option>
+                            <option value="1w">1 Week</option>
+                            <option value="1mo">1 Month</option>
+                            <option value="3mo">3 Months</option>
+                            <option value="6mo">6 Months</option>
+                            <option value="ytd">Year to Date</option>
+                            <option value="1y">1 Year</option>
+                            <option value="5y">5 Years</option>
+                            <option value="max" selected>Max</option>
                         </select>
                         <button id="refresh-price-comparison" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                             Refresh
@@ -725,12 +731,19 @@
         }
 
         function formatCurrency(value) {
+            // Handle string inputs (e.g., "100B")
+            if (typeof value === 'string') {
+                return value.startsWith('$') ? value : '$' + value;
+            }
+            // Handle numeric inputs
             if (!value || value === 0) return 'N/A';
-            if (value >= 1e12) return '$' + (value / 1e12).toFixed(1) + 'T';
-            if (value >= 1e9) return '$' + (value / 1e9).toFixed(1) + 'B';
-            if (value >= 1e6) return '$' + (value / 1e6).toFixed(1) + 'M';
-            if (value >= 1e3) return '$' + (value / 1e3).toFixed(1) + 'K';
-            return '$' + value.toFixed(0);
+            const numValue = Number(value);
+            if (isNaN(numValue)) return 'N/A';
+            if (numValue >= 1e12) return '$' + (numValue / 1e12).toFixed(1) + 'T';
+            if (numValue >= 1e9) return '$' + (numValue / 1e9).toFixed(1) + 'B';
+            if (numValue >= 1e6) return '$' + (numValue / 1e6).toFixed(1) + 'M';
+            if (numValue >= 1e3) return '$' + (numValue / 1e3).toFixed(1) + 'K';
+            return '$' + numValue.toFixed(0);
         }
 
         function getRecommendationColor(recommendation) {
@@ -828,13 +841,156 @@
             try {
                 const response = await fetch(`/api/valuation-metrics/${ticker}`);
                 const result = await response.json();
-                
+
                 if (result.status === 'success') {
                     const data = result.data;
                     renderValuationCharts(data);
                 }
             } catch (error) {
                 console.error('Error loading valuation metrics:', error);
+            }
+        }
+
+        // Load latest news and interpretation for a ticker
+        async function loadLatestNews(ticker) {
+            try {
+                const newsContent = document.getElementById('news-content');
+                newsContent.innerHTML = `
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    </div>
+                `;
+
+                const response = await fetch(`/api/latest-news/${ticker}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    const data = result.data;
+                    renderNewsSection(data);
+                } else {
+                    newsContent.innerHTML = `
+                        <div class="text-slate-400 text-center py-4">
+                            ${result.message || 'No news available'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading news:', error);
+                document.getElementById('news-content').innerHTML = `
+                    <div class="text-red-400 text-center py-4">
+                        Error loading news. Please try again later.
+                    </div>
+                `;
+            }
+        }
+
+        function renderNewsSection(data) {
+            const newsContent = document.getElementById('news-content');
+
+            if (!data.articles || data.articles.length === 0) {
+                newsContent.innerHTML = `
+                    <div class="text-slate-400 text-center py-4">
+                        No recent news available for ${data.ticker}
+                    </div>
+                `;
+                return;
+            }
+
+            // Parse interpretation for recommendation
+            let recommendation = 'N/A';
+            let recommendationClass = 'bg-slate-100 text-slate-800';
+            let reasoning = '';
+            let interpretationText = 'Analysis not available.';
+
+            if (data.interpretation) {
+                const recMatch = data.interpretation.match(/RECOMMENDATION:\s*(BUY|HOLD|SELL)/);
+                const reasonMatch = data.interpretation.match(/REASONING:\s*(.+?)(?:\n|$)/s);
+
+                if (recMatch) {
+                    recommendation = recMatch[1];
+                    if (recommendation === 'BUY') recommendationClass = 'bg-green-100 text-green-800';
+                    if (recommendation === 'HOLD') recommendationClass = 'bg-blue-100 text-blue-800';
+                    if (recommendation === 'SELL') recommendationClass = 'bg-red-100 text-red-800';
+                }
+                if (reasonMatch) {
+                    reasoning = reasonMatch[1].trim();
+                }
+                interpretationText = data.interpretation.replace(/INTERPRETATION:\s*/i, '').split(/RECOMMENDATION:|REASONING:/)[0].trim();
+            }
+
+            // Render articles with interpretation below
+            const articlesHtml = data.articles.map((article, index) => `
+                <div class="border border-slate-200 rounded-lg p-4 mb-3">
+                    <a href="${article.link}" target="_blank" class="text-slate-800 hover:text-blue-600 font-medium text-base block mb-2">
+                        ${article.title}
+                    </a>
+                    <div class="text-xs text-slate-500 flex items-center gap-2 mb-2">
+                        <span class="font-medium">${article.publisher}</span>
+                        <span>•</span>
+                        <span>${new Date(article.publish_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        ${article.filtered_by_llm ? '<span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">✓ Verified</span>' : ''}
+                    </div>
+                    ${article.summary ? `<p class="text-sm text-slate-600 mb-2">${article.summary}</p>` : ''}
+                </div>
+            `).join('');
+
+            newsContent.innerHTML = `
+                <div class="space-y-3">
+                    <!-- News Articles -->
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-slate-800 text-sm">Latest Headlines (${data.total_articles})</h4>
+                            ${data.fetch_timestamp ? `<span class="text-xs text-slate-400">Updated ${new Date(data.fetch_timestamp).toLocaleString()}</span>` : ''}
+                        </div>
+                        ${articlesHtml}
+                    </div>
+
+                    <!-- Foldable Interpretation Section -->
+                    <div class="border-t border-slate-300 pt-4">
+                        <button
+                            onclick="toggleInterpretation()"
+                            class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                        >
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-slate-800">🤖 AI Investment Analysis</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${recommendationClass}">
+                                    ${recommendation}
+                                </span>
+                            </div>
+                            <svg id="interpretation-arrow" class="w-5 h-5 text-slate-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div id="interpretation-content" class="hidden mt-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
+                            <p class="text-sm text-slate-700 leading-relaxed mb-3">${interpretationText}</p>
+                            ${reasoning ? `
+                                <div class="border-t border-slate-200 pt-3">
+                                    <p class="text-xs font-semibold text-slate-600 mb-1">Key Reasoning:</p>
+                                    <p class="text-xs text-slate-600 italic">${reasoning}</p>
+                                </div>
+                            ` : ''}
+                            ${data.interpretation_timestamp ? `
+                                <div class="mt-3 text-xs text-slate-400">
+                                    Analysis generated ${new Date(data.interpretation_timestamp).toLocaleString()}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleInterpretation() {
+            const content = document.getElementById('interpretation-content');
+            const arrow = document.getElementById('interpretation-arrow');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
             }
         }
 
@@ -845,29 +1001,34 @@
             document.getElementById('pe-benchmark').textContent = `Industry: ${current.benchmark_pe}`;
             document.getElementById('ps-current').textContent = `Current: ${current.ps_ratio || 'N/A'}`;
             document.getElementById('ps-benchmark').textContent = `Industry: ${current.benchmark_ps}`;
-            
+
             // Assessment badges
             const peAssessment = data.analysis.pe_vs_industry;
             const psAssessment = data.analysis.ps_vs_industry;
-            
+
             const peEl = document.getElementById('pe-assessment');
             const psEl = document.getElementById('ps-assessment');
-            
+
             peEl.textContent = peAssessment;
             psEl.textContent = psAssessment;
-            
+
             const getAssessmentClass = (assessment) => {
                 if (assessment === 'Undervalued') return 'bg-green-100 text-green-800';
                 if (assessment === 'Overvalued') return 'bg-red-100 text-red-800';
                 return 'bg-blue-100 text-blue-800';
             };
-            
+
             peEl.className = `px-2 py-0.5 rounded text-xs ${getAssessmentClass(peAssessment)}`;
             psEl.className = `px-2 py-0.5 rounded text-xs ${getAssessmentClass(psAssessment)}`;
-            
+
             // Render P/E chart
             if (peRatioChart) peRatioChart.destroy();
-            const peCtx = document.getElementById('peRatioChart').getContext('2d');
+            const peCanvas = document.getElementById('peRatioChart');
+            if (!peCanvas) {
+                console.warn('P/E chart canvas not found');
+                return;
+            }
+            const peCtx = peCanvas.getContext('2d');
             const peData = data.historical_pe || [];
             
             peRatioChart = new Chart(peCtx, {
@@ -896,7 +1057,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        legend: { position: 'top', labels: { font: { size: 11 }, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8 } },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -911,10 +1072,16 @@
                     }
                 }
             });
-            
+
+
             // Render P/S chart
             if (psRatioChart) psRatioChart.destroy();
-            const psCtx = document.getElementById('psRatioChart').getContext('2d');
+            const psCanvas = document.getElementById('psRatioChart');
+            if (!psCanvas) {
+                console.warn('P/S chart canvas not found');
+                return;
+            }
+            const psCtx = psCanvas.getContext('2d');
             const psData = data.historical_ps || [];
             
             psRatioChart = new Chart(psCtx, {
@@ -943,7 +1110,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        legend: { position: 'top', labels: { font: { size: 11 }, usePointStyle: true, pointStyle: 'circle', boxWidth: 8, boxHeight: 8 } },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -1037,6 +1204,29 @@
             const canvas = document.getElementById('priceChart');
             if (!canvas || !priceHistory || !priceHistory.price_data || priceHistory.price_data.length === 0) {
                 return '';
+            }
+
+            // Update trend summary
+            const trendSummary = document.getElementById('trendSummary');
+            const trend = priceHistory.trend;
+            if (trendSummary && trend) {
+                trendSummary.style.display = 'block';
+
+                // Period Change
+                const changeEl = document.getElementById('trendChange');
+                const changeSign = trend.price_change_pct >= 0 ? '+' : '';
+                const changeColor = trend.price_change_pct >= 0 ? 'text-green-600' : 'text-red-600';
+                changeEl.className = `text-2xl font-bold ${changeColor}`;
+                changeEl.innerHTML = `${changeSign}${trend.price_change_pct}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${trend.price_change}</span>`;
+
+                // Current Price
+                document.getElementById('trendCurrentPrice').textContent = `$${trend.end_price}`;
+
+                // High
+                document.getElementById('trendHigh').textContent = `$${trend.high}`;
+
+                // Low
+                document.getElementById('trendLow').textContent = `$${trend.low}`;
             }
 
             // Destroy existing chart if it exists
@@ -1133,7 +1323,13 @@
                     plugins: {
                         legend: {
                             display: true,
-                            position: 'top'
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                boxHeight: 8
+                            }
                         },
                         tooltip: {
                             enabled: true,
@@ -1250,11 +1446,11 @@
 
         async function refreshPriceChartData(ticker, period) {
             try {
-                const response = await fetch(`/api/scores/${ticker}`);
+                const response = await fetch(`/api/price-history/${ticker}?period=${period}`);
                 const result = await response.json();
-                
-                if (result.status === 'success' && result.data && result.data.price_history && result.data.price_history.price_data && result.data.price_history.price_data.length > 0) {
-                    renderPriceChart(result.data.price_history, ticker);
+
+                if (result.status === 'success' && result.data && result.data.price_data && result.data.price_data.length > 0) {
+                    renderPriceChart(result.data, ticker);
                 } else {
                     console.error('Error refreshing price data:', result.message || 'No data received');
                 }
@@ -1391,12 +1587,36 @@
                         </h3>
                         <!-- Google Finance style time period buttons -->
                         <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
+                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1d">1D</button>
+                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1w">1W</button>
+                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
                             <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
                             <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
                             <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
                         </div>
                     </div>
+                    <!-- Trend Summary -->
+                    <div id="trendSummary" class="mb-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200" style="display: none;">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div>
+                                <div class="text-xs text-slate-500 mb-1">Period Change</div>
+                                <div id="trendChange" class="text-2xl font-bold"></div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 mb-1">Current Price</div>
+                                <div id="trendCurrentPrice" class="text-2xl font-bold text-slate-800"></div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 mb-1">Period High</div>
+                                <div id="trendHigh" class="text-lg font-semibold text-green-600"></div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 mb-1">Period Low</div>
+                                <div id="trendLow" class="text-lg font-semibold text-red-600"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex items-center justify-between mb-4 text-xs">
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center">
@@ -1451,6 +1671,18 @@
                             <span id="ps-benchmark">Industry: --</span>
                             <span id="ps-assessment" class="px-2 py-0.5 rounded"></span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest News & Interpretation Section -->
+            <div id="latest-news-section" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <span class="mr-2">📰</span> Latest News & Investment Analysis
+                </h3>
+                <div id="news-content" class="text-slate-600 text-sm">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
                     </div>
                 </div>
             </div>
@@ -1629,12 +1861,12 @@
                         <!-- Metrics with consistent alignment -->
                         <div class="flex items-center justify-between text-sm mb-4">
                             <div class="flex items-center space-x-3">
-                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score.toFixed(1)}</span>
+                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? comp.company_score.toFixed(1) : 'N/A'}</span>
                                 <span class="text-slate-400">•</span>
-                                <span class="text-slate-600">Industry: ${comp.industry_avg.toFixed(1)}</span>
+                                <span class="text-slate-600">Industry: ${comp.industry_avg ? comp.industry_avg.toFixed(1) : 'N/A'}</span>
                             </div>
-                            <span class="${comp.difference >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
-                                ${comp.difference >= 0 ? '+' : ''}${comp.difference.toFixed(1)}
+                            <span class="${(comp.difference || 0) >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
+                                ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? comp.difference.toFixed(1) : '0.0'}
                             </span>
                         </div>
                         
@@ -1789,6 +2021,8 @@
                     refreshPriceChartData(ticker, activePeriod);
                     // Load valuation metrics
                     loadValuationMetrics(ticker);
+                    // Load latest news and interpretation
+                    loadLatestNews(ticker);
                 } else {
                     scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
@@ -2037,8 +2271,13 @@
         }
 
         function renderOverallScoresChart(tickers) {
-            const ctx = document.getElementById('overallChart').getContext('2d');
-            
+            const canvas = document.getElementById('overallChart');
+            if (!canvas) {
+                console.warn('Overall chart canvas not found');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+
             // Destroy existing chart if it exists
             if (comparisonCharts.overall) {
                 comparisonCharts.overall.destroy();
@@ -2095,8 +2334,13 @@
         }
 
         function renderIndividualScoresChart(tickers) {
-            const ctx = document.getElementById('individualChart').getContext('2d');
-            
+            const canvas = document.getElementById('individualChart');
+            if (!canvas) {
+                console.warn('Individual chart canvas not found');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+
             // Destroy existing chart if it exists
             if (comparisonCharts.individual) {
                 comparisonCharts.individual.destroy();
@@ -2134,6 +2378,12 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                boxHeight: 8
+                            }
                         }
                     },
                     scales: {
@@ -2152,9 +2402,14 @@
         }
 
         async function renderPriceComparisonChart(tickers) {
-            const ctx = document.getElementById('priceChart').getContext('2d');
-            const period = document.getElementById('price-period').value;
-            
+            const canvas = document.getElementById('priceComparisonChart');
+            if (!canvas) {
+                console.warn('Price comparison chart canvas not found');
+                return;
+            }
+            const ctx = canvas.getContext('2d');
+            const period = document.getElementById('price-period')?.value || '1m';
+
             // Destroy existing chart if it exists
             if (comparisonCharts.price) {
                 comparisonCharts.price.destroy();

@@ -28,6 +28,12 @@ import logging
 import atexit
 from neo4j import GraphDatabase, basic_auth
 from functools import wraps
+from datetime import datetime, timezone
+import re
+from dotenv import load_dotenv
+load_dotenv()
+# Model for news factual judgement and interpretation
+NEWS_LLM_MODEL = os.getenv('NEWS_LLM_MODEL', 'claude-3-5-sonnet-20241022')
 
 # Optional imports for Reddit
 try:
@@ -46,6 +52,22 @@ try:
 except ImportError:
     X_AVAILABLE = False
     print("Warning: X/Twitter scraping not available. Install tweepy to enable.")
+
+# Optional imports for Anthropic Claude
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    print("Warning: Anthropic not available. News filtering will be disabled. Install anthropic to enable.")
+
+# Optional imports for Google Gemini
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+    print("Warning: Google Generative AI not available. Install google-generativeai to enable.")
 
 # Load environment variables
 load_dotenv()
@@ -95,6 +117,8 @@ FILINGS_10K_DIR = "data/unstructured/10k"
 CEO_REPORTS_DIR = "data/reports"
 REDDIT_DATA_DIR = "data/unstructured/reddit"
 X_DATA_DIR = "data/unstructured/x"
+NEWS_DATA_DIR = "data/unstructured/news"
+NEWS_INTERPRETATION_DIR = "data/unstructured/news_interpretation"
 EARNINGS_DIR = "data/structured/earnings"
 SECTOR_METRICS_DIR = "data/structured/sector_metrics"
 FALLBACK_REDDIT_POST_FILES = [
@@ -112,11 +136,22 @@ os.makedirs(FILINGS_10K_DIR, exist_ok=True)
 os.makedirs(CEO_REPORTS_DIR, exist_ok=True)
 os.makedirs(REDDIT_DATA_DIR, exist_ok=True)
 os.makedirs(X_DATA_DIR, exist_ok=True)
+os.makedirs(NEWS_DATA_DIR, exist_ok=True)
+os.makedirs(NEWS_INTERPRETATION_DIR, exist_ok=True)
 os.makedirs(EARNINGS_DIR, exist_ok=True)
 os.makedirs(SECTOR_METRICS_DIR, exist_ok=True)
+# Directory for market indices
+MARKET_INDEX_DIR = os.path.join(DATA_DIR, 'market_index')
+os.makedirs(MARKET_INDEX_DIR, exist_ok=True)
 # Ensure per-company CEO profiles directory
 CEO_PROFILE_DIR = os.path.join(DATA_DIR, 'ceo_profiles')
 os.makedirs(CEO_PROFILE_DIR, exist_ok=True)
+
+# Directories for news articles and interpretations
+NEWS_DATA_DIR = os.path.join(DATA_DIR, 'unstructured', 'news')
+os.makedirs(NEWS_DATA_DIR, exist_ok=True)
+NEWS_INTERPRETATION_DIR = os.path.join(DATA_DIR, 'unstructured', 'news_interpretation')
+os.makedirs(NEWS_INTERPRETATION_DIR, exist_ok=True)
 
 # Set up logging
 logging.basicConfig(
@@ -858,11 +893,11 @@ def _upsert_quarterly_earnings(tx, ticker: str, company_name: Optional[str], rec
 
 @retry_on_failure(max_retries=3, delay=2.0, backoff=2.0)
 def fetch_stock_prices(ticker: str):
-    """Fetches the last 5 years of daily stock prices using yfinance."""
+    """Fetches the maximum available daily stock prices using yfinance."""
     logger.info(f"Fetching stock prices for {ticker}...")
     try:
         stock = yf.Ticker(ticker)
-        hist = stock.history(period="5y")
+        hist = stock.history(period="max")
 
         if hist.empty:
             logger.warning(f"No price data found for {ticker}")
@@ -921,6 +956,110 @@ def fetch_10k_filings(ticker: str, cik: str):
                 logger.error(f"    Error downloading filing {doc_url}: {e}")
 
     logger.info(f"✅ Finished fetching filings for {ticker}")
+    
+# --- Market Indices Fetch Functions ---
+@retry_on_failure(max_retries=3, delay=2.0, backoff=2.0)
+def fetch_cboe_put_call_ratio() -> Any:
+    """
+    Fetches the CBOE total put/call ratio using Financial Modeling Prep or FRED API if available.
+    Saves the result to data/market_index/put_call_ratio.json.
+    """
+    logger.info("Fetching CBOE put/call ratio...")
+    # Try Financial Modeling Prep API
+    fmp_key = os.getenv("FMP_API_KEY")
+    if fmp_key:
+        url = f"https://financialmodelingprep.com/api/v3/put-call-ratio?apikey={fmp_key}"
+        try:
+            resp = requests.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            output_path = os.path.join(MARKET_INDEX_DIR, "put_call_ratio.json")
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logger.info(f"✅ Saved put/call ratio to {output_path}")
+            return data
+        except Exception as e:
+            logger.error(f"Error fetching put/call ratio from FMP: {e}")
+    # Try FRED API
+    fred_key = os.getenv("FRED_API_KEY")
+    if fred_key:
+        series_id = "PC1"
+        url = f"https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={fred_key}&file_type=json"
+        try:
+            resp = requests.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            output_path = os.path.join(MARKET_INDEX_DIR, "put_call_ratio.json")
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logger.info(f"✅ Saved put/call ratio to {output_path}")
+            return data
+        except Exception as e:
+            logger.error(f"Error fetching put/call ratio from FRED: {e}")
+    # Fallback: scrape Yahoo Finance HTML for ^PCR quote
+    try:
+        logger.info("Falling back to scraping Yahoo Finance for ^PCR")
+        y_url = "https://finance.yahoo.com/quote/%5EPCR"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        resp = requests.get(y_url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        # Extract raw price
+        match = re.search(r'"regularMarketPrice":\{"raw":([0-9\.]+)', resp.text)
+        if match:
+            price = float(match.group(1))
+            data = {
+                "symbol": "^PCR",
+                "put_call_ratio": price,
+                "fetch_timestamp": datetime.now().isoformat()
+            }
+            output_path = os.path.join(MARKET_INDEX_DIR, "put_call_ratio.json")
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logger.info(f"✅ Saved put/call ratio (scraped) to {output_path}")
+            return data
+        else:
+            logger.error("Could not parse put/call ratio from Yahoo Finance HTML.")
+    except Exception as e:
+        logger.error(f"Error scraping Yahoo Finance for put/call ratio: {e}")
+    # All methods failed
+    logger.error("Unable to fetch put/call ratio via FMP, FRED, or Yahoo Finance.")
+    return None
+
+@retry_on_failure(max_retries=3, delay=2.0, backoff=2.0)
+def fetch_market_indices() -> Dict[str, Any]:
+    """
+    Fetches major market indices (VIX, NASDAQ, Dow Jones, Russell 2000) and CBOE put/call ratio.
+    Saves each dataset as JSON in data/market_index.
+    """
+    indices = {
+        "vix": "^VIX",
+        "nasdaq": "^IXIC",
+        "dowjones": "^DJI",
+        "russell2000": "^RUT",
+    }
+    results: Dict[str, Any] = {}
+    for name, ticker in indices.items():
+        logger.info(f"Fetching market index {name} ({ticker})...")
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="5y")
+            data = []
+            if hist is not None and not hist.empty:
+                df = hist.reset_index()
+                df['Date'] = df['Date'].dt.strftime("%Y-%m-%d")
+                data = df.to_dict(orient="records")
+            output_path = os.path.join(MARKET_INDEX_DIR, f"{name}.json")
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            logger.info(f"✅ Saved {name} data to {output_path}")
+            results[name] = data
+        except Exception as e:
+            logger.error(f"Error fetching {name} ({ticker}): {e}")
+            results[name] = None
+    # Fetch put/call ratio
+    put_call_data = fetch_cboe_put_call_ratio()
+    results["put_call_ratio"] = put_call_data
+    return results
 
 
 # ========== REDDIT SCRAPING FUNCTIONS (PRAW API) ==========
@@ -1977,6 +2116,443 @@ def get_company_news(ticker: str, days: Optional[int] = None) -> List[Dict[str, 
         return []
 
 
+def filter_news_with_llm(ticker: str, articles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Filter news articles using Gemini LLM to keep only factual company-related news.
+    Excludes subjective opinions and articles not directly related to the company.
+
+    Args:
+        ticker: Stock ticker symbol
+        articles: List of news articles to filter
+
+    Returns:
+        Filtered list of news articles
+    """
+    if not GEMINI_AVAILABLE:
+        logger.warning("Google Gemini not available. Returning all articles without filtering.")
+        return articles
+
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        logger.warning("GEMINI_API_KEY not set. Returning all articles without filtering.")
+        return articles
+
+    if not articles:
+        return articles
+
+    try:
+        # Configure Gemini API
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        filtered_articles = []
+
+        for article in articles:
+            title = article.get('title', '')
+            summary = article.get('summary', '')
+            publisher = article.get('publisher', '')
+
+            # Create prompt for Gemini
+            prompt = f"""You are an expert in news analysis. Your job is to identify news that is factual. Skip any articles that express opinions.
+
+Analyze this article about {ticker}:
+
+Article Title: {title}
+Publisher: {publisher}
+Summary: {summary}
+
+STRICT CRITERIA - The article is FACTUAL only if it reports:
+- Concrete company actions (product launches, acquisitions, partnerships, layoffs)
+- Financial results (earnings reports, revenue, guidance)
+- Executive changes (CEO appointments, board changes)
+- Regulatory actions (lawsuits, investigations, regulatory filings)
+- Operational events (factory openings, supply chain disruptions)
+
+IMMEDIATELY REJECT if the article contains:
+- Investment recommendations ("should you buy", "best stock", "top pick")
+- Price predictions ("stock could reach", "target price", "will rally")
+- Subjective assessments ("undervalued", "overvalued", "opportunity")
+- Analyst opinions or ratings changes
+- Comparative analysis ("better than", "vs competitor")
+- Questions in the title (often indicates opinion pieces)
+- Words like "could", "should", "might", "rally", "continue", "opportunity"
+
+Respond with ONLY "YES" if purely factual, or "NO" if it contains any opinions.
+Then on a new line, provide a brief 1-sentence reason."""
+
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=100,
+                    temperature=0.3,
+                )
+            )
+
+            response_text = response.text.strip()
+            lines = response_text.split('\n')
+            decision = lines[0].strip().upper()
+
+            if decision == "YES":
+                # Add filter reason to article metadata
+                reason = lines[1] if len(lines) > 1 else "Meets factual news criteria"
+                article['filter_reason'] = reason
+                article['filtered_by_llm'] = True
+                filtered_articles.append(article)
+                logger.debug(f"✓ Included: {title[:60]}... - {reason}")
+            else:
+                reason = lines[1] if len(lines) > 1 else "Does not meet criteria"
+                logger.debug(f"✗ Excluded: {title[:60]}... - {reason}")
+
+            # Rate limiting
+            time.sleep(0.5)
+
+        logger.info(f"Filtered {len(articles)} articles down to {len(filtered_articles)} for {ticker}")
+        return filtered_articles
+
+    except Exception as e:
+        logger.error(f"Error filtering news with LLM: {e}")
+        logger.warning("Returning all articles without filtering due to error.")
+        return articles
+
+
+def fetch_news_data(ticker: str, days: int = 1, filter_with_llm: bool = True) -> Dict[str, Any]:
+    """
+    Fetch latest news for a ticker and save to file.
+
+    Uses LLM to filter out subjective/opinion articles and keep only factual company news.
+
+    Args:
+        ticker: Stock ticker symbol
+        days: Number of days of news to fetch (default: 1)
+        filter_with_llm: Whether to filter articles using LLM (default: True)
+
+    Returns:
+        Dictionary containing news articles and metadata
+    """
+    logger.info(f"Fetching news for {ticker} (past {days} day(s))...")
+
+    # Fetch news using existing function
+    news_articles = get_company_news(ticker, days=days)
+    total_articles_fetched = len(news_articles)
+
+    # Filter articles using LLM if enabled
+    if filter_with_llm and news_articles:
+        logger.info(f"Filtering {total_articles_fetched} articles using LLM...")
+        news_articles = filter_news_with_llm(ticker, news_articles)
+
+    # Timestamp for file naming
+    now = datetime.now()
+    fetch_timestamp = now.isoformat()
+    date_str = now.strftime('%Y%m%d_%H%M%S')
+
+    total_articles = len(news_articles)
+
+    # Prepare result
+    result = {
+        'ticker': ticker,
+        'articles': news_articles,
+        'total_articles': total_articles,
+        'total_articles_before_filter': total_articles_fetched,
+        'filtered_with_llm': filter_with_llm,
+        'days_range': days,
+        'fetch_timestamp': fetch_timestamp
+    }
+
+    # Save to file
+    news_file = os.path.join(
+        NEWS_DATA_DIR,
+        f"{ticker}_news_{date_str}.json"
+    )
+
+    with open(news_file, 'w') as f:
+        json.dump(result, f, indent=2)
+
+    if filter_with_llm:
+        logger.info(f"✅ Saved {total_articles} filtered news articles for {ticker} (from {total_articles_fetched} total) to {news_file}")
+    else:
+        logger.info(f"✅ Saved {total_articles} news articles for {ticker} to {news_file}")
+
+    return result
+
+
+def fetch_all_news(tickers: List[str] = None, days: int = 1, filter_with_llm: bool = True) -> Dict[str, Any]:
+    """
+    Fetch news for all target tickers.
+
+    Args:
+        tickers: List of ticker symbols (default: TARGET_TICKERS)
+        days: Number of days of news to fetch (default: 1)
+        filter_with_llm: Whether to filter articles using LLM (default: True)
+
+    Returns:
+        Dictionary with results for each ticker
+    """
+    if tickers is None:
+        tickers = TARGET_TICKERS
+
+    logger.info("=" * 60)
+    logger.info(f"FETCHING NEWS FOR {len(tickers)} TICKERS")
+    if filter_with_llm:
+        logger.info("LLM filtering: ENABLED (factual company news only)")
+    else:
+        logger.info("LLM filtering: DISABLED (all articles)")
+    logger.info("=" * 60)
+
+    results = {
+        'tickers_processed': [],
+        'total_articles': 0,
+        'total_articles_before_filter': 0,
+        'errors': []
+    }
+
+    for ticker in tickers:
+        try:
+            result = fetch_news_data(ticker, days=days, filter_with_llm=filter_with_llm)
+            results['tickers_processed'].append(ticker)
+            results['total_articles'] += result['total_articles']
+            results['total_articles_before_filter'] += result.get('total_articles_before_filter', result['total_articles'])
+        except Exception as e:
+            logger.error(f"Error fetching news for {ticker}: {e}")
+            results['errors'].append({'ticker': ticker, 'error': str(e)})
+
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("NEWS FETCH SUMMARY")
+    logger.info("=" * 60)
+    logger.info(f"Tickers processed: {len(results['tickers_processed'])}/{len(tickers)}")
+    if filter_with_llm:
+        logger.info(f"Total articles after filtering: {results['total_articles']}")
+        logger.info(f"Total articles before filtering: {results['total_articles_before_filter']}")
+        logger.info(f"Filter rate: {100 * (1 - results['total_articles'] / max(results['total_articles_before_filter'], 1)):.1f}% excluded")
+    else:
+        logger.info(f"Total articles fetched: {results['total_articles']}")
+    logger.info(f"Errors: {len(results['errors'])}")
+    logger.info("=" * 60)
+
+    return results
+
+
+def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) -> str:
+    """
+    Generate comprehensive news interpretation using Gemini 2.5 Flash LLM.
+
+    Considers sector trends, company fundamentals, market conditions, and provides
+    BUY/HOLD/SELL recommendation.
+
+    Args:
+        ticker: Stock ticker symbol
+        news_articles: List of news articles to interpret
+
+    Returns:
+        Interpretation text for investors
+    """
+    if not GEMINI_AVAILABLE:
+        logger.warning("Google Gemini not available. Cannot generate news interpretation.")
+        return "News interpretation unavailable - Google Generative AI not configured."
+
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        logger.warning("GEMINI_API_KEY not set. Cannot generate news interpretation.")
+        return "News interpretation unavailable - Gemini API key not configured."
+
+    if not news_articles:
+        return f"No recent news available for {ticker}."
+
+    try:
+        # Get company information
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        sector = info.get('sector', 'Unknown')
+        industry = info.get('industry', 'Unknown')
+
+        # Get latest sector metrics if available
+        sector_metrics_files = sorted([f for f in os.listdir(SECTOR_METRICS_DIR) if f.startswith('sector_metrics_')])
+        sector_context = "Sector metrics not available."
+        if sector_metrics_files:
+            latest_sector_file = os.path.join(SECTOR_METRICS_DIR, sector_metrics_files[-1])
+            with open(latest_sector_file, 'r') as f:
+                sector_data = json.load(f)
+                if sector in sector_data.get('sectors', {}):
+                    sector_info = sector_data['sectors'][sector]
+                    sector_context = f"Sector: {sector}, Quality Score: {sector_info.get('quality_score', 'N/A'):.1f}/100, " \
+                                   f"3M Momentum: {sector_info.get('avg_momentum_3m', 'N/A'):.1f}%, " \
+                                   f"ROE: {sector_info.get('avg_roe', 'N/A'):.1f}%"
+
+        # Get latest company metrics
+        company_metrics_files = sorted([f for f in os.listdir(SECTOR_METRICS_DIR) if f.startswith('company_metrics_')])
+        company_context = "Company fundamentals not available."
+        if company_metrics_files:
+            latest_company_file = os.path.join(SECTOR_METRICS_DIR, company_metrics_files[-1])
+            with open(latest_company_file, 'r') as f:
+                company_data = json.load(f)
+                company_metrics = next((c for c in company_data if c['ticker'] == ticker), None)
+                if company_metrics:
+                    company_context = f"P/E: {company_metrics.get('pe_ratio', 'N/A')}, " \
+                                    f"ROE: {company_metrics.get('roe', 'N/A'):.1f}%, " \
+                                    f"3M Return: {company_metrics.get('momentum_3m', 'N/A'):.1f}%, " \
+                                    f"Volatility: {company_metrics.get('volatility', 'N/A'):.1f}%"
+
+        # Get market index data (NASDAQ)
+        try:
+            nasdaq = yf.Ticker("^IXIC")
+            nasdaq_hist = nasdaq.history(period="1mo")
+            nasdaq_change = ((nasdaq_hist['Close'].iloc[-1] / nasdaq_hist['Close'].iloc[0]) - 1) * 100
+            market_context = f"NASDAQ 1-month: {nasdaq_change:+.1f}%"
+        except:
+            market_context = "Market data not available."
+
+        # Compile news summaries
+        news_summaries = []
+        for i, article in enumerate(news_articles[:5], 1):  # Limit to 5 most recent
+            news_summaries.append(f"{i}. {article['title']} ({article['publisher']})")
+            if article.get('summary'):
+                news_summaries.append(f"   Summary: {article['summary'][:150]}...")
+
+        news_text = "\n".join(news_summaries)
+
+        # Create comprehensive prompt for Gemini
+        prompt = f"""You are a financial analyst providing investment guidance. Analyze the following information about {ticker} and provide a comprehensive interpretation for investors.
+
+COMPANY: {ticker}
+SECTOR: {sector}
+INDUSTRY: {industry}
+
+RECENT NEWS:
+{news_text}
+
+SECTOR METRICS:
+{sector_context}
+
+COMPANY FUNDAMENTALS:
+{company_context}
+
+MARKET CONDITIONS:
+{market_context}
+
+TASK:
+Interpret the recent news in the context of:
+1. Sector trends and demand/supply dynamics
+2. How the news impacts company fundamentals
+3. Sector sentiment and positioning
+4. Current NASDAQ index performance
+5. Overall market macro environment
+6. Company's financial health and valuation
+
+Provide:
+- A concise paragraph (150-200 words) for investors summarizing the key implications
+- Clear recommendation: BUY, HOLD, or SELL with brief justification (1-2 sentences)
+
+Format your response as:
+INTERPRETATION:
+[Your paragraph here]
+
+RECOMMENDATION: [BUY/HOLD/SELL]
+REASONING: [Your 1-2 sentence justification]
+"""
+
+        # Configure Gemini API
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+
+        # Generate content
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=800,
+                temperature=0.7,
+            )
+        )
+
+        interpretation = response.text.strip()
+        logger.info(f"Generated news interpretation for {ticker} using Gemini 2.5 Flash")
+        return interpretation
+
+    except Exception as e:
+        logger.error(f"Error generating news interpretation for {ticker}: {e}")
+        return f"Error generating interpretation: {str(e)}"
+
+
+def save_news_interpretation(ticker: str, news_file_path: str) -> Optional[str]:
+    """
+    Generate and save news interpretation for a ticker.
+    Ensures 1:1 mapping with news file by using exact same timestamp.
+
+    Args:
+        ticker: Stock ticker symbol
+        news_file_path: Path to the news JSON file
+
+    Returns:
+        Path to saved interpretation file, or None if failed
+    """
+    try:
+        # Load news data
+        with open(news_file_path, 'r') as f:
+            news_data = json.load(f)
+
+        news_articles = news_data.get('articles', [])
+        if not news_articles:
+            logger.warning(f"No articles found in {news_file_path}")
+            return None
+
+        # Check if interpretation already exists
+        news_filename = os.path.basename(news_file_path)
+        interpretation_filename = news_filename.replace('_news_', '_news_interpretation_')
+        interpretation_path = os.path.join(NEWS_INTERPRETATION_DIR, interpretation_filename)
+
+        if os.path.exists(interpretation_path):
+            logger.info(f"Interpretation already exists: {interpretation_path}")
+            return interpretation_path
+
+        # Generate interpretation
+        logger.info(f"Generating news interpretation for {ticker}...")
+        interpretation_text = interpret_news_with_llm(ticker, news_articles)
+
+        # Save interpretation with 1:1 mapping to news file
+        interpretation_data = {
+            'ticker': ticker,
+            'interpretation': interpretation_text,
+            'news_file': news_filename,
+            'news_timestamp': news_data.get('fetch_timestamp'),
+            'interpretation_timestamp': datetime.now().isoformat(),
+            'num_articles_analyzed': len(news_articles),
+            'articles': news_articles  # Include articles for reference
+        }
+
+        with open(interpretation_path, 'w') as f:
+            json.dump(interpretation_data, f, indent=2)
+
+        logger.info(f"✅ Saved news interpretation to {interpretation_path}")
+        return interpretation_path
+
+    except Exception as e:
+        logger.error(f"Error saving news interpretation for {ticker}: {e}")
+        return None
+
+
+def get_latest_news_file(ticker: str) -> Optional[str]:
+    """
+    Get the latest news file for a ticker.
+
+    Args:
+        ticker: Stock ticker symbol
+
+    Returns:
+        Path to latest news file, or None if not found
+    """
+    try:
+        news_files = sorted([
+            f for f in os.listdir(NEWS_DATA_DIR)
+            if f.startswith(f"{ticker}_news_") and f.endswith('.json')
+        ])
+
+        if news_files:
+            return os.path.join(NEWS_DATA_DIR, news_files[-1])
+        return None
+
+    except Exception as e:
+        logger.error(f"Error finding news file for {ticker}: {e}")
+        return None
+
+
 def aggregate_sector_sentiment() -> Dict[str, Dict[str, Any]]:
     """
     Aggregate sentiment from X/Twitter data by sector.
@@ -2882,6 +3458,13 @@ if __name__ == "__main__":
 
         # Rate limit to be respectful to APIs
         time.sleep(0.5)
+
+    # Step 4: Fetch market indices
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("FETCHING MARKET INDICES")
+    logger.info("=" * 60)
+    fetch_market_indices()
 
     logger.info("")
     logger.info("=" * 60)

@@ -5,6 +5,7 @@ langchain-community
 litellm
 google-cloud-aiplatform
 google-api-python-client
+google-generativeai
 markdown
 scipy
 # scikit-learn  # Temporarily disabled for deployment
