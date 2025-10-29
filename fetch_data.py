@@ -26,7 +26,16 @@ from bs4 import BeautifulSoup
 from typing import Dict, List, Any, Optional, Callable
 import logging
 import atexit
-from neo4j import GraphDatabase, basic_auth
+
+# Optional neo4j import - using JSON files instead
+try:
+    from neo4j import GraphDatabase, basic_auth
+    NEO4J_AVAILABLE = True
+except ImportError:
+    NEO4J_AVAILABLE = False
+    GraphDatabase = None
+    basic_auth = None
+
 from functools import wraps
 from datetime import datetime, timezone
 import re
@@ -170,14 +179,20 @@ NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "bSGrnZh1_1dWDXVz-xEiV6LOHIv5klPln0P2B4kWyN0")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
 
-try:
-    neo4j_driver = GraphDatabase.driver(
-        NEO4J_URI,
-        auth=basic_auth(NEO4J_USERNAME, NEO4J_PASSWORD)
-    )
-except Exception as neo4j_error:
+# Initialize neo4j driver only if library is available
+if NEO4J_AVAILABLE and GraphDatabase is not None:
+    try:
+        neo4j_driver = GraphDatabase.driver(
+            NEO4J_URI,
+            auth=basic_auth(NEO4J_USERNAME, NEO4J_PASSWORD)
+        )
+        logger.info("Neo4j driver initialized successfully")
+    except Exception as neo4j_error:
+        neo4j_driver = None
+        logger.warning(f"Unable to initialize Neo4j driver: {neo4j_error}")
+else:
     neo4j_driver = None
-    logger.warning(f"Unable to initialize Neo4j driver: {neo4j_error}")
+    logger.info("Neo4j is disabled - using JSON files for data storage")
 
 
 def close_neo4j_driver():
