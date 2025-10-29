@@ -129,6 +129,57 @@ def load_ceo_profile(ticker: str) -> Optional[Dict[str, object]]:
     return row.iloc[0].to_dict()
 
 
+@lru_cache(maxsize=1)
+def load_industry_benchmarks() -> Dict[str, Dict[str, float]]:
+    """
+    Load industry benchmark P/E and P/S ratios from JSON file.
+    Falls back to hardcoded defaults if file doesn't exist.
+
+    Returns:
+        Dictionary mapping industry names to benchmark metrics (pe, ps)
+    """
+    benchmark_file = Path("data/structured/industry_benchmarks.json")
+
+    # Hardcoded fallback benchmarks (will be used if file doesn't exist)
+    # Note: No default fallback - if industry not found, returns None
+    fallback_benchmarks = {
+        'Semiconductors': {'pe': 28.5, 'ps': 6.2},
+        'Software': {'pe': 35.2, 'ps': 8.5},
+        'Software - Infrastructure': {'pe': 35.2, 'ps': 8.5},
+        'Hardware': {'pe': 22.1, 'ps': 3.8},
+        'Internet Services': {'pe': 32.5, 'ps': 7.1},
+        'Financial Services': {'pe': 14.2, 'ps': 2.5},
+        'Healthcare': {'pe': 25.3, 'ps': 4.2},
+        'Energy': {'pe': 12.8, 'ps': 1.8},
+        'Consumer': {'pe': 18.5, 'ps': 2.2},
+        'Other Industrial Metals & Mining': {'pe': None, 'ps': 25.0},
+        'Other Precious Metals & Mining': {'pe': None, 'ps': 30.0},
+        'Gold': {'pe': 20.0, 'ps': 8.0},
+        'Copper': {'pe': 15.0, 'ps': 3.5},
+        'Aluminum': {'pe': 12.0, 'ps': 1.2},
+        'Specialty Chemicals': {'pe': 18.5, 'ps': 2.5}
+    }
+
+    if not benchmark_file.exists():
+        logger.warning(f"Industry benchmarks file not found at {benchmark_file}, using fallback values")
+        return fallback_benchmarks
+
+    try:
+        with open(benchmark_file, 'r') as f:
+            data = json.load(f)
+            benchmarks = data.get('benchmarks', {})
+
+        # Log when benchmarks were generated
+        generated_at = data.get('generated_at', 'unknown')
+        logger.info(f"Loaded industry benchmarks generated at {generated_at}")
+
+        return benchmarks
+
+    except Exception as e:
+        logger.error(f"Failed to load industry benchmarks from {benchmark_file}: {e}")
+        return fallback_benchmarks
+
+
 _reddit_sentiment_cache = {}
 _reddit_cache_timestamps = {}
 _twitter_sentiment_cache = {}
@@ -636,8 +687,22 @@ def compute_financial_score(fin_df: pd.DataFrame, info: dict) -> ComponentScore:
     free_cashflow = info.get("freeCashflow")
     total_debt = info.get("totalDebt")
     debt_to_equity = info.get("debtToEquity")
+
+    # Use trailing P/E if available, otherwise use forward P/E
     pe_ratio = info.get("trailingPE")
+    if pe_ratio is None or pe_ratio < 0:
+        forward_pe = info.get("forwardPE")
+        # Only use forward P/E if it's positive and reasonable (< 500)
+        if forward_pe and 0 < forward_pe < 500:
+            pe_ratio = forward_pe
+
+    # Use trailing P/S, with fallback to calculated P/S if available
     ps_ratio = info.get("priceToSalesTrailing12Months")
+    if ps_ratio is None or ps_ratio < 0:
+        market_cap = info.get("marketCap")
+        total_revenue = info.get("totalRevenue")
+        if market_cap and total_revenue and total_revenue > 0:
+            ps_ratio = market_cap / total_revenue
 
     notes: List[str] = []
     component_scores: List[float] = []
@@ -1172,10 +1237,32 @@ def build_event_timeline(news_items: List[dict], max_items: int = 5) -> List[dic
 def generate_business_model_description(ticker: str, info: dict, business_summary: str) -> str:
     """Generate a concise business model description based on company info."""
     try:
-        # Known business models for major companies
+        # Known business models for all target companies
         business_models = {
-            "NVDA": "Leading GPU manufacturer and AI computing platform provider. Sells graphics cards, data center chips, and AI software to gaming, professional, and enterprise markets.",
-            "TSM": "World's largest semiconductor foundry. Provides chip manufacturing services to major tech companies like Apple, NVIDIA, and AMD.",
+            # Semiconductors & AI Infrastructure
+            "NVDA": "Leading GPU manufacturer and AI computing platform provider. Designs and sells graphics cards, data center AI chips (H100, A100), and AI software platforms to gaming, professional visualization, automotive, and enterprise datacenter markets.",
+            "TSM": "World's largest semiconductor foundry and contract chip manufacturer. Provides advanced chip manufacturing services (3nm, 5nm nodes) to fabless semiconductor companies including Apple, NVIDIA, AMD, and Qualcomm.",
+            "AMD": "Semiconductor company designing high-performance CPUs and GPUs. Sells processors for PCs, servers, and datacenters (EPYC, Ryzen), and graphics cards (Radeon) competing with Intel and NVIDIA.",
+            "AVGO": "Diversified semiconductor and infrastructure software company. Designs and sells chips for networking, broadband, wireless, storage, and industrial markets, plus enterprise software solutions.",
+            "ORCL": "Enterprise software and cloud infrastructure company. Provides database management systems, cloud applications (ERP, HCM), and cloud infrastructure services to large enterprises worldwide.",
+
+            # Critical Minerals - Lithium
+            "ALB": "Specialty chemicals company and leading lithium producer. Manufactures lithium compounds for EV batteries, bromine specialties, and catalysts serving energy storage, electronics, and pharmaceutical markets.",
+            "LAC": "Lithium development company focused on domestic U.S. supply. Developing the Thacker Pass lithium project in Nevada (largest lithium resource in North America) to supply battery-grade lithium for EVs.",
+
+            # Critical Minerals - Rare Earth Elements (REE)
+            "MP": "Rare earth mining and processing company. Operates Mountain Pass mine in California, producing rare earth concentrates and separated oxides for magnets, electronics, and defense applications.",
+            "CRML": "Early-stage critical metals exploration company. Exploring for lithium and rare earth deposits in Austria and Greenland to support clean energy and technology supply chains.",
+            "NMG": "Graphite development company focused on battery-grade material. Developing the Matawinie graphite mine in Quebec with integrated processing to supply anode material for lithium-ion EV batteries.",
+
+            # Critical Minerals - Specialty Metals
+            "UAMY": "Antimony and precious metals producer. Operates antimony smelter and zeolite mining, producing antimony products for flame retardants, batteries, and ceramics, plus silver and gold.",
+            "PPTA": "Gold, silver, and antimony development company. Developing the Stibnite Gold Project in Idaho, which will be a significant U.S. source of antimony (critical for defense) and precious metals.",
+            "NAK": "Mineral exploration company focused on Alaska. Developing the Pebble copper-gold-molybdenum project, one of the world's largest undeveloped copper resources, serving global metals demand.",
+            "NB": "Niobium, scandium, and titanium development company. Developing the Elk Creek project in Nebraska to produce critical metals for steel alloys, aluminum aerospace alloys, and advanced materials.",
+            "NVA": "Gold and antimony exploration company. Exploring gold deposits in Alaska (Estelle, Korbel) and antimony projects in Australia to supply precious metals and critical defense materials.",
+
+            # Legacy entries
             "AAPL": "Consumer electronics and services company. Sells iPhones, Macs, iPads, and services like App Store, iCloud, and Apple Music.",
             "MSFT": "Technology company offering cloud computing (Azure), productivity software (Office), gaming (Xbox), and enterprise services.",
             "GOOGL": "Internet services and advertising company. Provides search, YouTube, cloud computing, and Android operating system.",
@@ -1201,6 +1288,15 @@ def generate_business_model_description(ticker: str, info: dict, business_summar
             return "Healthcare company providing medical products, services, or pharmaceutical solutions."
         elif "financial" in business_summary or "bank" in business_summary or "insurance" in business_summary:
             return "Financial services company providing banking, insurance, or investment services."
+        # Mining and metals sector
+        elif any(term in business_summary for term in ["mining", "mine", "gold", "silver", "metal", "antimony", "ore"]):
+            return "Development-stage mining company focused on exploration and development of gold, silver, and antimony deposits in the United States."
+        # Agriculture / Food sector (e.g., poultry, meat producers)
+        elif any(term in business_summary for term in ["poultry", "chicken", "meat", "food"]):
+            return "Poultry producer and distributor specializing in chicken and meat products for retail and foodservice markets."
+        # Agriculture / Food sector (e.g., poultry, meat producers)
+        elif any(term in business_summary for term in ["poultry", "chicken", "meat", "food"]):
+            return "Poultry producer and distributor specializing in chicken and meat products for retail and foodservice markets."
         else:
             return "Technology and business services company serving various market segments."
             
@@ -1243,8 +1339,24 @@ def get_quick_facts(ticker: str, info: dict, fin_df: pd.DataFrame) -> dict:
         
         # Market cap and valuation
         market_cap = info.get("marketCap") or 0
-        forward_pe = info.get("forwardPE") or 0
-        
+
+        # Sector and Industry
+        sector = info.get("sector") or "N/A"
+        industry = info.get("industry") or "N/A"
+
+        # P/E ratio with fallback to forward P/E
+        pe_ratio = info.get("trailingPE")
+        if pe_ratio is None or pe_ratio < 0:
+            forward_pe = info.get("forwardPE")
+            if forward_pe and 0 < forward_pe < 500:
+                pe_ratio = forward_pe
+
+        # P/S ratio with fallback to calculated
+        ps_ratio = info.get("priceToSalesTrailing12Months")
+        if ps_ratio is None or ps_ratio < 0:
+            if market_cap and revenue_ttm > 0:
+                ps_ratio = market_cap / revenue_ttm
+
         return {
             "revenue_ttm": revenue_ttm,
             "revenue_growth_yoy": revenue_growth_yoy * 100,
@@ -1254,7 +1366,10 @@ def get_quick_facts(ticker: str, info: dict, fin_df: pd.DataFrame) -> dict:
             "business_model": business_model,
             "hq_location": hq_location,
             "market_cap": market_cap,
-            "forward_pe": forward_pe,
+            "sector": sector,
+            "industry": industry,
+            "pe_ratio": pe_ratio,
+            "ps_ratio": ps_ratio,
             "employees": info.get("fullTimeEmployees"),
             "founded": info.get("foundedYear")
         }
@@ -2006,22 +2121,15 @@ def get_valuation_metrics(ticker: str) -> dict:
         # Get industry/sector info for benchmarks
         sector = info.get('sector', 'Technology')
         industry = info.get('industry', 'Semiconductors')
-        
-        # Industry benchmark P/E and P/S ratios (approximate averages)
-        industry_benchmarks = {
-            'Semiconductors': {'pe': 28.5, 'ps': 6.2},
-            'Software': {'pe': 35.2, 'ps': 8.5},
-            'Hardware': {'pe': 22.1, 'ps': 3.8},
-            'Internet Services': {'pe': 32.5, 'ps': 7.1},
-            'Financial Services': {'pe': 14.2, 'ps': 2.5},
-            'Healthcare': {'pe': 25.3, 'ps': 4.2},
-            'Energy': {'pe': 12.8, 'ps': 1.8},
-            'Consumer': {'pe': 18.5, 'ps': 2.2},
-            'default': {'pe': 22.0, 'ps': 4.0}
-        }
-        
-        # Get industry benchmark or default
-        benchmark = industry_benchmarks.get(industry, industry_benchmarks['default'])
+
+        # Load industry benchmarks from file (or fallback to hardcoded)
+        industry_benchmarks = load_industry_benchmarks()
+
+        # Get industry benchmark (returns None if not found)
+        benchmark = industry_benchmarks.get(industry, None)
+        if benchmark is None:
+            logger.warning(f"No benchmark available for industry: {industry}")
+            benchmark = {'pe': None, 'ps': None}
 
         # Get historical data (2 years)
         end_date = datetime.now()
@@ -2060,8 +2168,10 @@ def get_valuation_metrics(ticker: str) -> dict:
                     # Adjust benchmark proportionally to S&P 500 price changes
                     # This approximates how market-wide valuations changed
                     spy_price_ratio = spy_price_at_date / spy_current_price
-                    historical_benchmark_pe = benchmark['pe'] * spy_price_ratio
-                    historical_benchmark_ps = benchmark['ps'] * spy_price_ratio
+
+                    # Only calculate if benchmark exists
+                    historical_benchmark_pe = benchmark['pe'] * spy_price_ratio if benchmark['pe'] is not None else None
+                    historical_benchmark_ps = benchmark['ps'] * spy_price_ratio if benchmark['ps'] is not None else None
                 else:
                     # Fallback to static benchmark
                     historical_benchmark_pe = benchmark['pe']
@@ -2082,13 +2192,13 @@ def get_valuation_metrics(ticker: str) -> dict:
                     pe_data.append({
                         'date': date.strftime('%Y-%m-%d'),
                         'pe_ratio': round(estimated_pe, 2) if estimated_pe else None,
-                        'benchmark_pe': round(historical_benchmark_pe, 2)
+                        'benchmark_pe': round(historical_benchmark_pe, 2) if historical_benchmark_pe is not None else None
                     })
 
                     ps_data.append({
                         'date': date.strftime('%Y-%m-%d'),
                         'ps_ratio': round(estimated_ps, 2) if estimated_ps else None,
-                        'benchmark_ps': round(historical_benchmark_ps, 2)
+                        'benchmark_ps': round(historical_benchmark_ps, 2) if historical_benchmark_ps is not None else None
                     })
         except Exception as e:
             logger.warning(f"Could not calculate historical P/E and P/S for {ticker}: {e}")
@@ -2112,8 +2222,18 @@ def get_valuation_metrics(ticker: str) -> dict:
             'historical_pe': pe_data[-24:],  # Last 2 years monthly
             'historical_ps': ps_data[-24:],
             'analysis': {
-                'pe_vs_industry': 'Overvalued' if current_pe and current_pe > benchmark['pe'] * 1.2 else 'Fair' if current_pe and current_pe > benchmark['pe'] * 0.8 else 'Undervalued',
-                'ps_vs_industry': 'Overvalued' if current_ps and current_ps > benchmark['ps'] * 1.2 else 'Fair' if current_ps and current_ps > benchmark['ps'] * 0.8 else 'Undervalued'
+                'pe_vs_industry': (
+                    'Overvalued' if current_pe and benchmark['pe'] and current_pe > benchmark['pe'] * 1.2
+                    else 'Fair' if current_pe and benchmark['pe'] and current_pe > benchmark['pe'] * 0.8
+                    else 'Undervalued' if benchmark['pe']
+                    else 'N/A'
+                ),
+                'ps_vs_industry': (
+                    'Overvalued' if current_ps and benchmark['ps'] and current_ps > benchmark['ps'] * 1.2
+                    else 'Fair' if current_ps and benchmark['ps'] and current_ps > benchmark['ps'] * 0.8
+                    else 'Undervalued' if benchmark['ps']
+                    else 'N/A'
+                )
             }
         }
         

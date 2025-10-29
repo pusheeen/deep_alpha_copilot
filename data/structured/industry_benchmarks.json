@@ -1,0 +1,96 @@
+{
+  "generated_at": "2025-10-29T12:38:59.358901",
+  "benchmarks": {
+    "Semiconductors": {
+      "pe": 30.202898,
+      "ps": 8.339377500000001,
+      "sample_size_pe": 9,
+      "sample_size_ps": 10
+    },
+    "Software - Infrastructure": {
+      "pe": 110.2742925,
+      "ps": 15.934345500000001,
+      "sample_size_pe": 10,
+      "sample_size_ps": 10
+    },
+    "Software": {
+      "pe": 54.7689585,
+      "ps": 11.4222265,
+      "sample_size_pe": 6,
+      "sample_size_ps": 6
+    },
+    "Hardware": {
+      "pe": 30.267318,
+      "ps": 4.285538799999999,
+      "sample_size_pe": 6,
+      "sample_size_ps": 6
+    },
+    "Internet Services": {
+      "pe": 32.058344,
+      "ps": 9.707703500000001,
+      "sample_size_pe": 4,
+      "sample_size_ps": 4
+    },
+    "Financial Services": {
+      "pe": 15.591351499999998,
+      "ps": 4.03848695,
+      "sample_size_pe": 8,
+      "sample_size_ps": 8
+    },
+    "Healthcare": {
+      "pe": 18.272545,
+      "ps": 4.8845849,
+      "sample_size_pe": 8,
+      "sample_size_ps": 8
+    },
+    "Energy": {
+      "pe": 16.579687,
+      "ps": 1.5603822,
+      "sample_size_pe": 7,
+      "sample_size_ps": 7
+    },
+    "Consumer": {
+      "pe": 26.103743,
+      "ps": 2.106055,
+      "sample_size_pe": 7,
+      "sample_size_ps": 7
+    },
+    "Other Industrial Metals & Mining": {
+      "pe": 21.750994,
+      "ps": 1.359926,
+      "sample_size_pe": 5,
+      "sample_size_ps": 5
+    },
+    "Other Precious Metals & Mining": {
+      "pe": 22.534948,
+      "ps": 6.46384675,
+      "sample_size_pe": 6,
+      "sample_size_ps": 6
+    },
+    "Gold": {
+      "pe": 26.511297,
+      "ps": 8.651893000000001,
+      "sample_size_pe": 8,
+      "sample_size_ps": 8
+    },
+    "Copper": {
+      "pe": 31.101653,
+      "ps": 6.07287575,
+      "sample_size_pe": 2,
+      "sample_size_ps": 2
+    },
+    "Aluminum": {
+      "pe": 16.817591,
+      "ps": 0.9734323300000001,
+      "sample_size_pe": 2,
+      "sample_size_ps": 2
+    },
+    "Specialty Chemicals": {
+      "pe": 28.625002,
+      "ps": 0.9000431,
+      "sample_size_pe": 9,
+      "sample_size_ps": 9
+    }
+  },
+  "note": "Industry benchmark P/E and P/S ratios computed from median values of representative companies"
+}

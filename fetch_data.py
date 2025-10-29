@@ -3523,6 +3523,116 @@ def calculate_sector_metrics() -> Dict[str, Any]:
     return sector_summary
 
 
+def calculate_industry_benchmarks() -> Dict[str, Dict[str, float]]:
+    """
+    Calculate industry benchmark P/E and P/S ratios by fetching data from representative companies.
+    Uses a broader sample of companies per industry to compute median benchmarks.
+
+    Returns:
+        Dictionary mapping industry names to benchmark metrics (pe, ps)
+    """
+    logger.info("Calculating industry benchmarks from market data...")
+
+    # Define representative companies for each industry
+    # These are well-known, established companies used to calculate benchmarks
+    industry_representatives = {
+        'Semiconductors': ['NVDA', 'AMD', 'INTC', 'TXN', 'QCOM', 'MU', 'ADI', 'MCHP', 'NXPI', 'MRVL'],
+        'Software - Infrastructure': ['ORCL', 'CRM', 'NOW', 'TEAM', 'SNOW', 'DDOG', 'NET', 'MDB', 'ZS', 'PANW'],
+        'Software': ['MSFT', 'ADBE', 'INTU', 'WDAY', 'ANSS', 'CDNS', 'SNPS'],
+        'Hardware': ['AAPL', 'HPE', 'HPQ', 'NTAP', 'STX', 'WDC'],
+        'Internet Services': ['GOOGL', 'META', 'AMZN', 'NFLX'],
+        'Financial Services': ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'BLK', 'SCHW'],
+        'Healthcare': ['UNH', 'JNJ', 'PFE', 'ABBV', 'TMO', 'ABT', 'MRK', 'LLY'],
+        'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX'],
+        'Consumer': ['WMT', 'HD', 'MCD', 'NKE', 'SBUX', 'TGT', 'LOW'],
+
+        # Mining & Materials industries
+        'Other Industrial Metals & Mining': ['FCX', 'NEM', 'AA', 'X', 'CLF', 'STLD'],
+        'Other Precious Metals & Mining': ['NEM', 'GOLD', 'AEM', 'KGC', 'AU', 'RGLD', 'WPM'],
+        'Gold': ['NEM', 'GOLD', 'AEM', 'KGC', 'AU', 'FNV', 'RGLD', 'WPM', 'AGI'],
+        'Copper': ['FCX', 'SCCO', 'TRQ'],
+        'Aluminum': ['AA', 'CENX'],
+        'Specialty Chemicals': ['ALB', 'DD', 'DOW', 'LYB', 'APD', 'EMN', 'FMC', 'CE', 'PPG']
+    }
+
+    benchmarks = {}
+
+    for industry, tickers in industry_representatives.items():
+        logger.info(f"Processing {industry}...")
+
+        pe_values = []
+        ps_values = []
+
+        for ticker in tickers:
+            try:
+                stock = yf.Ticker(ticker)
+                info = stock.info
+
+                # Get P/E ratio (prefer trailing, fallback to forward)
+                pe = info.get('trailingPE')
+                if pe is None or pe < 0:
+                    pe = info.get('forwardPE')
+
+                # Get P/S ratio
+                ps = info.get('priceToSalesTrailing12Months')
+                if ps is None or ps < 0:
+                    market_cap = info.get('marketCap')
+                    revenue = info.get('totalRevenue')
+                    if market_cap and revenue and revenue > 0:
+                        ps = market_cap / revenue
+
+                # Only include valid positive values
+                if pe and 0 < pe < 500:  # Filter out extreme outliers
+                    pe_values.append(pe)
+                if ps and 0 < ps < 100:  # Filter out extreme outliers
+                    ps_values.append(ps)
+
+                time.sleep(0.1)  # Rate limiting
+
+            except Exception as e:
+                logger.warning(f"Failed to fetch data for {ticker}: {e}")
+                continue
+
+        # Calculate median (more robust than mean for financial ratios)
+        if pe_values:
+            median_pe = float(np.median(pe_values))
+        else:
+            median_pe = None
+
+        if ps_values:
+            median_ps = float(np.median(ps_values))
+        else:
+            median_ps = None
+
+        benchmarks[industry] = {
+            'pe': median_pe,
+            'ps': median_ps,
+            'sample_size_pe': len(pe_values),
+            'sample_size_ps': len(ps_values)
+        }
+
+        pe_str = f"{median_pe:.1f}" if median_pe else "N/A"
+        ps_str = f"{median_ps:.1f}" if median_ps else "N/A"
+        logger.info(f"  {industry}: P/E={pe_str}, P/S={ps_str} (samples: {len(pe_values)}/{len(ps_values)})")
+
+    # Save to file
+    output_dir = Path("data/structured")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    output_file = output_dir / "industry_benchmarks.json"
+
+    with open(output_file, 'w') as f:
+        json.dump({
+            'generated_at': datetime.now().isoformat(),
+            'benchmarks': benchmarks,
+            'note': 'Industry benchmark P/E and P/S ratios computed from median values of representative companies'
+        }, f, indent=2)
+
+    logger.info(f"✅ Industry benchmarks saved to {output_file}")
+
+    return benchmarks
+
+
 if __name__ == "__main__":
     logger.info("=" * 60)
     logger.info("FINANCIAL DATA FETCH PIPELINE STARTED")
@@ -3609,11 +3719,26 @@ if __name__ == "__main__":
 
     logger.info("")
     logger.info("=" * 60)
+    logger.info("CALCULATING INDUSTRY BENCHMARKS")
+    logger.info("=" * 60)
+
+    # Step 7: Calculate industry benchmarks
+    try:
+        calculate_industry_benchmarks()
+        logger.info("✅ Industry benchmarks calculation completed")
+    except Exception as e:
+        logger.error(f"Failed to calculate industry benchmarks: {e}")
+        import traceback
+        traceback.print_exc()
+
+    logger.info("")
+    logger.info("=" * 60)
     logger.info("DATA FETCHING PIPELINE COMPLETED")
     logger.info("=" * 60)
     logger.info("Check the 'data' directory for all fetched data.")
     logger.info("  - Financials: data/structured/financials")
     logger.info("  - Sector Metrics: data/structured/sector_metrics")
+    logger.info("  - Industry Benchmarks: data/structured/industry_benchmarks.json")
 
 
 def fetch_x_data_only():
