@@ -2468,22 +2468,45 @@ REASONING: [Your 1-2 sentence justification]
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
-        # Generate content
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                max_output_tokens=800,
-                temperature=0.7,
-            )
-        )
+        # Retry logic with exponential backoff
+        max_retries = 3
+        retry_delay = 2  # seconds
 
-        interpretation = response.text.strip()
-        logger.info(f"Generated news interpretation for {ticker} using Gemini 2.5 Flash")
-        return interpretation
+        for attempt in range(max_retries):
+            try:
+                # Generate content
+                response = model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=800,
+                        temperature=0.7,
+                    )
+                )
+
+                interpretation = response.text.strip()
+
+                # Validate that we got a meaningful response
+                if len(interpretation) < 50:
+                    raise ValueError(f"Response too short ({len(interpretation)} chars), likely incomplete")
+
+                logger.info(f"✅ Generated news interpretation for {ticker} using Gemini 2.5 Flash (attempt {attempt + 1})")
+                return interpretation
+
+            except Exception as api_error:
+                logger.warning(f"Attempt {attempt + 1}/{max_retries} failed for {ticker}: {api_error}")
+
+                if attempt < max_retries - 1:
+                    import time
+                    wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                    logger.info(f"Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    # Final attempt failed
+                    raise
 
     except Exception as e:
-        logger.error(f"Error generating news interpretation for {ticker}: {e}")
-        return f"Error generating interpretation: {str(e)}"
+        logger.error(f"❌ All {max_retries} attempts failed for {ticker}: {e}")
+        return f"Error generating interpretation after {max_retries} attempts: {str(e)}"
 
 
 def save_news_interpretation(ticker: str, news_file_path: str) -> Optional[str]:
@@ -2566,6 +2589,79 @@ def get_latest_news_file(ticker: str) -> Optional[str]:
     except Exception as e:
         logger.error(f"Error finding news file for {ticker}: {e}")
         return None
+
+
+def ensure_news_interpretations_exist() -> Dict[str, int]:
+    """
+    Check all news files and ensure interpretations exist for files with articles.
+    Regenerates missing interpretations with retry logic.
+
+    Returns:
+        Dictionary with stats: {'checked': N, 'generated': M, 'failed': K}
+    """
+    stats = {'checked': 0, 'generated': 0, 'failed': 0, 'skipped_no_articles': 0}
+
+    try:
+        # Get all news files
+        news_files = [f for f in os.listdir(NEWS_DATA_DIR) if '_news_' in f and f.endswith('.json')]
+
+        for news_file in news_files:
+            stats['checked'] += 1
+            news_path = os.path.join(NEWS_DATA_DIR, news_file)
+
+            # Check if interpretation exists
+            interpretation_filename = news_file.replace('_news_', '_news_interpretation_')
+            interpretation_path = os.path.join(NEWS_INTERPRETATION_DIR, interpretation_filename)
+
+            if os.path.exists(interpretation_path):
+                continue  # Interpretation already exists
+
+            # Check if news file has articles
+            try:
+                with open(news_path, 'r') as f:
+                    news_data = json.load(f)
+
+                articles = news_data.get('articles', [])
+                if not articles or len(articles) == 0:
+                    stats['skipped_no_articles'] += 1
+                    continue  # No articles, skip
+
+                # Extract ticker from filename
+                ticker = news_file.split('_news_')[0]
+
+                # Generate interpretation
+                logger.info(f"📰 Generating missing interpretation for {ticker} ({news_file})...")
+                result = save_news_interpretation(ticker, news_path)
+
+                if result:
+                    stats['generated'] += 1
+                    logger.info(f"✅ Successfully generated interpretation for {ticker}")
+                else:
+                    stats['failed'] += 1
+                    logger.warning(f"❌ Failed to generate interpretation for {ticker}")
+
+                # Rate limit to avoid API throttling
+                import time
+                time.sleep(1)
+
+            except Exception as e:
+                stats['failed'] += 1
+                logger.error(f"Error processing {news_file}: {e}")
+
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("INTERPRETATION CHECK COMPLETE")
+        logger.info("=" * 60)
+        logger.info(f"Files checked: {stats['checked']}")
+        logger.info(f"Interpretations generated: {stats['generated']}")
+        logger.info(f"Files skipped (no articles): {stats['skipped_no_articles']}")
+        logger.info(f"Failed: {stats['failed']}")
+
+        return stats
+
+    except Exception as e:
+        logger.error(f"Error ensuring interpretations exist: {e}")
+        return stats
 
 
 def aggregate_sector_sentiment() -> Dict[str, Dict[str, Any]]:
