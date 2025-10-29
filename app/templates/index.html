@@ -997,10 +997,20 @@
         function renderValuationCharts(data) {
             // Update current metrics
             const current = data.current_metrics;
+            const benchmarkInfo = data.benchmark_info || {};
+            const isPlaceholder = benchmarkInfo.source === 'static' || data.benchmark_info?.note?.includes('Placeholder');
+            
+            // Update P/E display with placeholder indicator if needed
+            const peBenchmarkText = isPlaceholder ? 
+                `${current.benchmark_pe} (Placeholder)` : 
+                current.benchmark_pe;
             document.getElementById('pe-current').textContent = `Current: ${current.pe_ratio || 'N/A'}`;
-            document.getElementById('pe-benchmark').textContent = `Industry: ${current.benchmark_pe}`;
+            document.getElementById('pe-benchmark').innerHTML = `Industry: ${peBenchmarkText}${isPlaceholder ? ' <span class="text-xs text-amber-600">(est.)</span>' : ''}`;
+            
+            // Update P/S display with placeholder indicator (P/S is always placeholder currently)
+            const psBenchmarkText = `${current.benchmark_ps} (Placeholder)`;
             document.getElementById('ps-current').textContent = `Current: ${current.ps_ratio || 'N/A'}`;
-            document.getElementById('ps-benchmark').textContent = `Industry: ${current.benchmark_ps}`;
+            document.getElementById('ps-benchmark').innerHTML = `Industry: ${psBenchmarkText} <span class="text-xs text-amber-600">(est.)</span>`;
 
             // Assessment badges
             const peAssessment = data.analysis.pe_vs_industry;
@@ -1044,13 +1054,14 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark',
-                        data: peData.map(d => d.benchmark_pe),
+                        label: 'Sector Benchmark',
+                        data: peData.map(d => d.benchmark_pe !== undefined ? d.benchmark_pe : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
-                        tension: 0
+                        tension: 0,
+                        spanGaps: true  // Connect line even if some points are missing
                     }]
                 },
                 options: {
@@ -1097,13 +1108,14 @@
                         fill: true,
                         tension: 0.1
                     }, {
-                        label: 'Industry Benchmark',
-                        data: psData.map(d => d.benchmark_ps),
+                        label: 'Sector Benchmark',
+                        data: psData.map(d => d.benchmark_ps !== undefined ? d.benchmark_ps : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         fill: false,
-                        tension: 0
+                        tension: 0,
+                        spanGaps: true  // Connect line even if some points are missing
                     }]
                 },
                 options: {
