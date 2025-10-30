@@ -471,43 +471,43 @@
                     <div><strong>Data Sources:</strong> Yahoo Finance financials, SEC filings</div>
                     <div><strong>Time Period:</strong> Last 4 quarters for CAGR, latest quarter for margins</div>
                     <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Gross Margin (65%+ = 10pts), R&D Intensity (20%+ = 10pts), Industry Score (6-10pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 financial: `
                     <div><strong>Data Sources:</strong> Yahoo Finance fundamentals, company financials</div>
                     <div><strong>Time Period:</strong> Last 4 quarters for trends, latest values for ratios</div>
                     <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Net Margin (20%+ = 8.5pts), FCF/Debt (2x+ = 10pts), D/E (50- = 9.5pts), P/E (15- = 9.5pts), P/S (2- = 9pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 sentiment: `
                     <div><strong>Data Sources:</strong> Yahoo Finance news, Reddit API</div>
                     <div><strong>Time Period:</strong> Last 30 days (weighted by recency)</div>
                     <div><strong>Calculation:</strong> News sentiment via VADER analysis (0.45+ = 9.5pts), Reddit bullish ratio (0.4+ = 9.5pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 critical: `
                     <div><strong>Data Sources:</strong> Internal assessment framework</div>
                     <div><strong>Time Period:</strong> Static mapping based on strategic importance</div>
                     <div><strong>Calculation:</strong> Pre-defined criticality scores (5-10pts) based on industry and strategic positioning</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 leadership: `
                     <div><strong>Data Sources:</strong> Yahoo Finance officers, CEO profile reports</div>
                     <div><strong>Time Period:</strong> Current leadership data</div>
                     <div><strong>Calculation:</strong> CEO tenure (15+ yrs = 9.5pts), compensation (>$10M = 9.5pts), officer count (5+ = 7.5pts), reputation bonus</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 earnings: `
                     <div><strong>Data Sources:</strong> Quarterly earnings data, Yahoo Finance</div>
                     <div><strong>Time Period:</strong> Quarterly earnings history</div>
                     <div><strong>Calculation:</strong> EPS trend (30%+ = 10pts), Revenue trend (30%+ = 10pts), Consistency score (25+ = 10pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 technical: `
                     <div><strong>Data Sources:</strong> Yahoo Finance price data</div>
                     <div><strong>Time Period:</strong> Latest trading data</div>
                     <div><strong>Calculation:</strong> RSI (30-70 = neutral), MACD crossover (±2pts), Moving average alignment (±3pts), Base score 5.0</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `
             };
             return methodologies[scoreType] || '<div>Methodology not available</div>';
@@ -720,11 +720,11 @@
             if (!value || value === 0) return 'N/A';
             const numValue = Number(value);
             if (isNaN(numValue)) return 'N/A';
-            if (numValue >= 1e12) return '$' + (numValue / 1e12).toFixed(2) + 'T';
-            if (numValue >= 1e9) return '$' + (numValue / 1e9).toFixed(2) + 'B';
-            if (numValue >= 1e6) return '$' + (numValue / 1e6).toFixed(2) + 'M';
-            if (numValue >= 1e3) return '$' + (numValue / 1e3).toFixed(2) + 'K';
-            return '$' + numValue.toFixed(2);
+            if (numValue >= 1e12) return '$' + (numValue / 1e12).toFixed(1) + 'T';
+            if (numValue >= 1e9) return '$' + (numValue / 1e9).toFixed(1) + 'B';
+            if (numValue >= 1e6) return '$' + (numValue / 1e6).toFixed(1) + 'M';
+            if (numValue >= 1e3) return '$' + (numValue / 1e3).toFixed(1) + 'K';
+            return '$' + numValue.toFixed(1);
         }
 
         function getRecommendationColor(recommendation) {
@@ -784,7 +784,7 @@
                     // Update Fear & Greed
                     const fgScore = data.fear_greed_index.score;
                     const fgLevel = data.fear_greed_index.level;
-                    document.getElementById('fear-greed-score').textContent = fgScore.toFixed(2);
+                    document.getElementById('fear-greed-score').textContent = fgScore.toFixed(1);
                     document.getElementById('fear-greed-level').textContent = fgLevel;
                     
                     // Color code the level
@@ -800,11 +800,11 @@
                     }
                     
                     // Update VIX
-                    document.getElementById('vix-current').textContent = data.vix.current ? data.vix.current.toFixed(2) : 'N/A';
+                    document.getElementById('vix-current').textContent = data.vix.current ? data.vix.current.toFixed(1) : 'N/A';
                     
                     // Update Put/Call
                     const pcRatio = data.put_call_ratio.current;
-                    document.getElementById('put-call-ratio').textContent = pcRatio.toFixed(2);
+                    document.getElementById('put-call-ratio').textContent = pcRatio.toFixed(1);
                     
                     // Update market phase
                     document.getElementById('market-phase').textContent = data.market_phase.phase;
@@ -1035,7 +1035,7 @@
                     labels: peData.map(d => d.date),
                     datasets: [{
                         label: `${data.ticker} P/E`,
-                        data: peData.map(d => (d.pe_ratio !== null && d.pe_ratio !== undefined) ? Number(Number(d.pe_ratio).toFixed(2)) : null),
+                        data: peData.map(d => (d.pe_ratio !== null && d.pe_ratio !== undefined) ? Number(Number(d.pe_ratio).toFixed(1)) : null),
                         borderColor: '#3B82F6',
                         backgroundColor: '#3B82F620',
                         borderWidth: 2,
@@ -1043,7 +1043,7 @@
                         tension: 0.1
                     }, {
                         label: 'Sector Benchmark',
-                        data: peData.map(d => (d.benchmark_pe !== null && d.benchmark_pe !== undefined) ? Number(Number(d.benchmark_pe).toFixed(2)) : null),
+                        data: peData.map(d => (d.benchmark_pe !== null && d.benchmark_pe !== undefined) ? Number(Number(d.benchmark_pe).toFixed(1)) : null),
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -1060,7 +1060,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(2) : 'N/A');
+                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(1) : 'N/A');
                                 }
                             }
                         }
@@ -1089,7 +1089,7 @@
                     labels: psData.map(d => d.date),
                     datasets: [{
                         label: `${data.ticker} P/S`,
-                        data: psData.map(d => (d.ps_ratio !== null && d.ps_ratio !== undefined) ? Number(Number(d.ps_ratio).toFixed(2)) : null),
+                        data: psData.map(d => (d.ps_ratio !== null && d.ps_ratio !== undefined) ? Number(Number(d.ps_ratio).toFixed(1)) : null),
                         borderColor: '#10B981',
                         backgroundColor: '#10B98120',
                         borderWidth: 2,
@@ -1097,7 +1097,7 @@
                         tension: 0.1
                     }, {
                         label: 'Sector Benchmark',
-                        data: psData.map(d => (d.benchmark_ps !== null && d.benchmark_ps !== undefined) ? Number(Number(d.benchmark_ps).toFixed(2)) : null), // Use historical if available
+                        data: psData.map(d => (d.benchmark_ps !== null && d.benchmark_ps !== undefined) ? Number(Number(d.benchmark_ps).toFixed(1)) : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -1114,7 +1114,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(2) : 'N/A');
+                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(1) : 'N/A');
                                 }
                             }
                         }
@@ -1153,7 +1153,7 @@
                     <div class="flex items-center justify-between">
                         <h4 class="font-bold text-lg">${chartEvent.title}</h4>
                         <span class="text-xs px-2 py-1 rounded ${chartEvent.price_change >= 0 ? 'bg-green-600' : 'bg-red-600'}">
-                            ${chartEvent.price_change >= 0 ? '+' : ''}${Number(chartEvent.price_change).toFixed(2)}%
+                            ${chartEvent.price_change >= 0 ? '+' : ''}${Number(chartEvent.price_change).toFixed(1)}%
                         </span>
                     </div>
                     
@@ -1166,7 +1166,7 @@
                     <div class="grid grid-cols-2 gap-2 text-sm">
                     <div>
                             <span class="text-gray-400">Price:</span>
-                            <span class="font-mono">$${chartEvent.price.toFixed(2)}</span>
+                            <span class="font-mono">$${chartEvent.price.toFixed(1)}</span>
                     </div>
                     <div>
                             <span class="text-gray-400">Sentiment:</span>
@@ -1217,16 +1217,16 @@
                 const changeSign = trend.price_change_pct >= 0 ? '+' : '';
                 const changeColor = trend.price_change_pct >= 0 ? 'text-green-600' : 'text-red-600';
                 changeEl.className = `text-2xl font-bold ${changeColor}`;
-                changeEl.innerHTML = `${changeSign}${Number(trend.price_change_pct).toFixed(2)}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${Number(trend.price_change).toFixed(2)}</span>`;
+                changeEl.innerHTML = `${changeSign}${Number(trend.price_change_pct).toFixed(1)}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${Number(trend.price_change).toFixed(1)}</span>`;
 
                 // Current Price
-                document.getElementById('trendCurrentPrice').textContent = `$${Number(trend.end_price).toFixed(2)}`;
+                document.getElementById('trendCurrentPrice').textContent = `$${Number(trend.end_price).toFixed(1)}`;
 
                 // High
-                document.getElementById('trendHigh').textContent = `$${Number(trend.high).toFixed(2)}`;
+                document.getElementById('trendHigh').textContent = `$${Number(trend.high).toFixed(1)}`;
 
                 // Low
-                document.getElementById('trendLow').textContent = `$${Number(trend.low).toFixed(2)}`;
+                document.getElementById('trendLow').textContent = `$${Number(trend.low).toFixed(1)}`;
             }
 
             // Destroy existing chart if it exists
@@ -1240,7 +1240,7 @@
 
             // Prepare data for the chart
             const labels = priceData.map(d => d.date);
-            const closes = priceData.map(d => Number(Number(d.close).toFixed(2)));
+            const closes = priceData.map(d => Number(Number(d.close).toFixed(1)));
 
             // Create event annotations - only for significant daily movements (2%+ or $2+)
             const eventAnnotations = events.filter(event => Math.abs(event.price_change) >= 2).map(event => {
@@ -1361,12 +1361,12 @@
                                 },
                                 label: function(context) {
                                     const date = context.label;
-                                    const price = context.parsed.y.toFixed(2);
+                                    const price = context.parsed.y.toFixed(1);
                                     const event = events.find(e => e.date === date && Math.abs(e.price_change) >= 10);
                                     
                                     let labels = [`Price: $${price}`];
                                     if (event) {
-                                        labels.push(`Change: ${event.price_change >= 0 ? '+' : ''}${event.price_change.toFixed(2)}%`);
+                                        labels.push(`Change: ${event.price_change >= 0 ? '+' : ''}${event.price_change.toFixed(1)}%`);
                                         labels.push(`Event: ${event.title}`);
                                         if (event.link) {
                                             labels.push(`Source: ${event.source || 'Market Data'}`);
@@ -1496,13 +1496,13 @@
                                     ${(quickFacts.profit_margin || quickFacts.profit_margin === 0) ? `
                                         <div class="flex justify-between">
                                             <span class="text-sm">Profit Margin:</span>
-                                            <span>${Number(quickFacts.profit_margin).toFixed(2)}%</span>
+                                            <span>${Number(quickFacts.profit_margin).toFixed(1)}%</span>
                                         </div>
                                     ` : ''}
                                     ${(quickFacts.forward_pe || quickFacts.forward_pe === 0) ? `
                                         <div class="flex justify-between">
                                             <span class="text-sm">Forward P/E:</span>
-                                            <span>${Number(quickFacts.forward_pe).toFixed(2)}x</span>
+                                            <span>${Number(quickFacts.forward_pe).toFixed(1)}x</span>
                                         </div>
                                     ` : ''}
                                     <div class="pt-2">
@@ -1554,7 +1554,7 @@
                             <div class="lg:col-span-1">
                                     <div class="text-center">
                                         <div class="mb-4">
-                                        <div class="text-4xl font-bold mb-2">${Number(overall.score || 0).toFixed(2)}</div>
+                                        <div class="text-4xl font-bold mb-2">${Number(overall.score || 0).toFixed(1)}</div>
                                         <div class="text-sm text-blue-100 uppercase tracking-wide">Overall Score</div>
                                     </div>
                                     <div class="mb-4">
@@ -1821,7 +1821,7 @@
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center space-x-3 flex-1">
                                 <h4 class="text-lg font-semibold text-slate-800">${label}</h4>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${Number(comp.company_score || 0).toFixed(2)}/10</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${Number(comp.company_score || 0).toFixed(1)}/10</span>
                                 <div class="group relative">
                                     <svg class="w-4 h-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
@@ -1861,12 +1861,12 @@
                         <!-- Metrics with consistent alignment -->
                         <div class="flex items-center justify-between text-sm mb-4">
                             <div class="flex items-center space-x-3">
-                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? Number(comp.company_score).toFixed(2) : 'N/A'}</span>
+                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? Number(comp.company_score).toFixed(1) : 'N/A'}</span>
                                 <span class="text-slate-400">•</span>
-                                <span class="text-slate-600">Industry: ${comp.industry_avg ? Number(comp.industry_avg).toFixed(2) : 'N/A'}</span>
+                                <span class="text-slate-600">Industry: ${comp.industry_avg ? Number(comp.industry_avg).toFixed(1) : 'N/A'}</span>
                             </div>
                             <span class="${(comp.difference || 0) >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
-                                ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? Number(comp.difference).toFixed(2) : '0.00'}
+                                ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? Number(comp.difference).toFixed(1) : '0.00'}
                             </span>
                         </div>
                         
@@ -2076,7 +2076,7 @@
                             tickerCard.innerHTML = `
                                 <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
                                 <div class="text-xs text-slate-500 mt-1 truncate">${companyMetadata[ticker]?.name || ticker}</div>
-                                <div class="text-xs font-semibold mt-1 ${scoreColor(overall.score)}">${Number(overall.score || 0).toFixed(2)}</div>
+                                <div class="text-xs font-semibold mt-1 ${scoreColor(overall.score)}">${Number(overall.score || 0).toFixed(1)}</div>
                                 <div class="text-xs text-slate-600">${overall.recommendation}</div>
                             `;
                             tickerCard.classList.remove('opacity-50');
@@ -2103,7 +2103,7 @@
                             </td>
                             <td class="px-4 py-2 text-sm text-slate-700">${metadata.name}</td>
                             <td class="px-4 py-2 text-sm text-slate-600">${metadata.industry}</td>
-                                    <td class="px-4 py-2 text-sm ${row.score !== null ? 'text-slate-700' : 'text-slate-400'}">${row.score !== null ? row.score.toFixed(2) : '—'}</td>
+                                    <td class="px-4 py-2 text-sm ${row.score !== null ? 'text-slate-700' : 'text-slate-400'}">${row.score !== null ? row.score.toFixed(1) : '—'}</td>
                                     <td class="px-4 py-2 text-sm text-slate-700">${row.recommendation}</td>
                                     <td class="px-4 py-2 text-sm text-slate-500">${row.confidence !== null ? row.confidence + '%' : '—'}</td>
                                 </tr>
@@ -2324,7 +2324,7 @@
                             max: 10,
                             ticks: {
                                 callback: function(value) {
-                                    return value.toFixed(2);
+                                    return value.toFixed(1);
                                 }
                             }
                         }
@@ -2395,12 +2395,12 @@
                                 backdropColor: 'transparent',
                                 showLabelBackdrop: false,
                                 callback: function(value) {
-                                    return value.toFixed(2);
+                                    return value.toFixed(1);
                                 }
                             },
                             ticks: {
                                 callback: function(value) {
-                                    return value.toFixed(2);
+                                    return value.toFixed(1);
                                 }
                             }
                         }
@@ -2439,7 +2439,7 @@
                             const closeValue = item.close_price || item.close;
                             return {
                                 x: parsedDate,
-                                y: typeof closeValue === 'number' ? Number(closeValue.toFixed(2)) : closeValue
+                                y: typeof closeValue === 'number' ? Number(closeValue.toFixed(1)) : closeValue
                             };
                         });
                         
@@ -2490,7 +2490,7 @@
                                 beginAtZero: false,
                                 ticks: {
                                     callback: function(value) {
-                                        return '$' + value.toFixed(2);
+                                        return '$' + value.toFixed(1);
                                     }
                                 }
                             }

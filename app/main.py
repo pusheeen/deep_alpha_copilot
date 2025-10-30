@@ -5,7 +5,7 @@ Main FastAPI application file, adapted to use the Google ADK agent system.
 """
 import asyncio
 import csv
-import glob
+import logging
 import json
 import math
 import os
@@ -114,9 +114,13 @@ SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
 RUNTIME_DIR = DATA_ROOT / "runtime"
 PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
 REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
+COMPANY_STATIC_DIR = DATA_ROOT / "company"
+COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
 
-for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR]:
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_TICKERS_CACHE: List[str] = []
 SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
@@ -145,23 +149,26 @@ def load_supported_tickers() -> List[str]:
     ):
         return SUPPORTED_TICKERS_CACHE
 
+    try:
+        from target_tickers import TARGET_TICKERS
+        base_tickers = [ticker.upper() for ticker in TARGET_TICKERS]
+    except Exception:
+        base_tickers = []
+
     metrics_file = _latest_company_metrics_file()
-    tickers: List[str] = []
+    tickers: List[str] = base_tickers[:]
     if metrics_file and metrics_file.exists():
         try:
             with metrics_file.open("r") as fh:
                 data = json.load(fh)
-            tickers = sorted({entry["ticker"] for entry in data if "ticker" in entry})
+            metric_tickers = [entry["ticker"].upper() for entry in data if entry.get("ticker")]
+            extras = [ticker for ticker in metric_tickers if ticker not in tickers]
+            tickers.extend(extras)
         except Exception:
-            tickers = []
+            pass
 
     if not tickers:
-        try:
-            from target_tickers import TARGET_TICKERS
-
-            tickers = TARGET_TICKERS
-        except Exception:
-            tickers = []
+        tickers = base_tickers
 
     SUPPORTED_TICKERS_CACHE = tickers
     SUPPORTED_TICKERS_CACHE_TIME = now
@@ -184,6 +191,7 @@ def load_company_metadata() -> Dict[str, Dict[str, str]]:
     }
 
     metrics_file = _latest_company_metrics_file()
+    metrics_lookup: Dict[str, Dict[str, Any]] = {}
     if metrics_file and metrics_file.exists():
         try:
             with metrics_file.open("r") as fh:
@@ -192,6 +200,7 @@ def load_company_metadata() -> Dict[str, Dict[str, str]]:
                 ticker = entry.get("ticker")
                 if ticker and ticker in metadata:
                     metadata[ticker]["industry"] = entry.get("industry") or metadata[ticker]["industry"]
+                    metrics_lookup[ticker] = entry
         except Exception:
             pass
 
@@ -206,6 +215,26 @@ def load_company_metadata() -> Dict[str, Dict[str, str]]:
                         metadata[ticker]["name"] = name
         except Exception:
             pass
+
+    # Persist static company snapshot
+    for ticker in metadata:
+        static_payload = {
+            "ticker": ticker,
+            "name": metadata[ticker]["name"],
+            "industry": metadata[ticker]["industry"],
+            "sources": {
+                "metrics_file": metrics_file.name if metrics_file else None,
+                "companies_csv": str(COMPANIES_FILE.name) if COMPANIES_FILE.exists() else None,
+            },
+            "metrics": metrics_lookup.get(ticker),
+            "updated_at": now.isoformat(),
+        }
+        static_path = COMPANY_STATIC_DIR / f"{ticker}.json"
+        try:
+            with static_path.open("w") as fh:
+                json.dump(static_payload, fh, indent=2)
+        except Exception as exc:
+            logger.warning("Failed to write static profile for %s: %s", ticker, exc)
 
     COMPANY_METADATA_CACHE = metadata
     COMPANY_METADATA_CACHE_TIME = now
@@ -236,6 +265,7 @@ def _save_cached_news(ticker: str, payload: dict) -> None:
         path = _news_cache_path(ticker)
         with path.open("w") as fh:
             json.dump(payload, fh, indent=2)
+        _update_company_runtime(ticker, "news", payload)
     except Exception:
         pass
 
@@ -251,6 +281,24 @@ def _compute_article_sentiment(title: str, snippet: str) -> Dict[str, Any]:
     else:
         label = "Neutral"
     return {"score": round(score, 3), "label": label}
+
+
+def _update_company_runtime(ticker: str, section: str, payload: dict) -> None:
+    ticker = ticker.upper()
+    runtime_path = COMPANY_RUNTIME_DIR / f"{ticker}.json"
+    try:
+        if runtime_path.exists():
+            with runtime_path.open("r") as fh:
+                existing = json.load(fh)
+        else:
+            existing = {"ticker": ticker}
+        existing.setdefault("runtime", {})
+        existing["runtime"][section] = payload
+        existing["updated_at"] = datetime.now(timezone.utc).isoformat()
+        with runtime_path.open("w") as fh:
+            json.dump(existing, fh, indent=2)
+    except Exception as exc:
+        logger.warning("Failed to update runtime cache for %s: %s", ticker, exc)
 
 
 def _load_offline_news_summary(ticker: str) -> Optional[dict]:
@@ -325,6 +373,8 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
         },
         "articles": articles,
     }
+    _update_company_runtime(ticker, "news", payload)
+    return payload
 
 
 def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 8) -> dict:
@@ -349,6 +399,25 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
 
     query = f"{ticker} stock"
     response = search_latest_news(query=query, max_results=max_results)
+    if isinstance(response, dict) and response.get("error"):
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
+        return {
+            "ticker": ticker.upper(),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "Unable to retrieve live headlines",
+                "key_points": [],
+                "rationale": response.get("error"),
+                "conclusion": "Retry later or verify Google Custom Search credentials.",
+            },
+            "articles": [],
+        }
+
     items = response.get("results", []) if isinstance(response, dict) else []
 
     seen_links = set()
@@ -397,6 +466,9 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
     articles = articles[:max_results]
 
     if not articles:
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
         return {
             "ticker": ticker.upper(),
             "fetched_at": datetime.now(timezone.utc).isoformat(),

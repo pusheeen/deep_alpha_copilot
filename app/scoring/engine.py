@@ -64,10 +64,11 @@ SECTOR_METRICS_DIR = DATA_ROOT / "structured" / "sector_metrics"
 RUNTIME_DIR = DATA_ROOT / "runtime"
 PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
 REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
+COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
 REPORTS_DIR = DATA_ROOT / "reports"
 REDDIT_DIR = DATA_ROOT / "unstructured" / "reddit"
 
-for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR]:
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_RUNTIME_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 CRITICAL_PATH_MAP: Dict[str, float] = {
@@ -107,13 +108,32 @@ SECTOR_GROWTH_BONUS = {
 sentiment_analyzer = SentimentIntensityAnalyzer()
 
 
-def _round_two(value: Optional[float]) -> Optional[float]:
+def _round(value: Optional[float], decimals: int = 1) -> Optional[float]:
     if value is None:
         return None
     try:
-        return round(float(value), 2)
+        factor = 10 ** decimals
+        return round(float(value) * factor) / factor
     except Exception:
         return None
+
+
+def _update_runtime_cache(ticker: str, section: str, payload: dict) -> None:
+    ticker = ticker.upper()
+    path = COMPANY_RUNTIME_DIR / f"{ticker}.json"
+    try:
+        if path.exists():
+            with path.open("r") as fh:
+                existing = json.load(fh)
+        else:
+            existing = {"ticker": ticker}
+        existing.setdefault("runtime", {})
+        existing["runtime"][section] = payload
+        existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
+        with path.open("w") as fh:
+            json.dump(existing, fh, indent=2)
+    except Exception as exc:
+        logger.warning("Unable to update runtime cache for %s: %s", ticker, exc)
 
 
 def extract_year_from_summary(summary: Optional[str]) -> Optional[int]:
@@ -1758,10 +1778,10 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                     last_row = intraday.iloc[-1]
                     latest_snapshot = {
                         "timestamp": timestamp.isoformat() if hasattr(timestamp, "isoformat") else str(timestamp),
-                        "open": _round_two(last_row.get("Open")),
-                        "high": _round_two(last_row.get("High")),
-                        "low": _round_two(last_row.get("Low")),
-                        "close": _round_two(last_row.get("Close")),
+                        "open": _round(last_row.get("Open")),
+                        "high": _round(last_row.get("High")),
+                        "low": _round(last_row.get("Low")),
+                        "close": _round(last_row.get("Close")),
                         "volume": int(last_row.get("Volume") or 0),
                     }
             except Exception as exc:
@@ -1771,12 +1791,12 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
         significant_moves: List[Dict[str, Any]] = []
 
         for date, row in hist.iterrows():
-            open_price = _round_two(row["Open"])
-            close_price = _round_two(row["Close"])
-            high_price = _round_two(row["High"])
-            low_price = _round_two(row["Low"])
+            open_price = _round(row["Open"])
+            close_price = _round(row["Close"])
+            high_price = _round(row["High"])
+            low_price = _round(row["Low"])
             if row["Open"] and row["Open"] != 0:
-                daily_change = _round_two(((row["Close"] - row["Open"]) / row["Open"]) * 100)
+                daily_change = _round(((row["Close"] - row["Open"]) / row["Open"]) * 100)
             else:
                 daily_change = 0.0
             price_data.append(
@@ -1805,7 +1825,7 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
             open_px = latest_snapshot["open"]
             close_px = latest_snapshot["close"]
             if open_px and open_px != 0 and close_px is not None:
-                snapshot_change = _round_two(((close_px - open_px) / open_px) * 100)
+                snapshot_change = _round(((close_px - open_px) / open_px) * 100)
             else:
                 snapshot_change = 0.0
             snapshot_entry = {
@@ -1877,8 +1897,8 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                         "title": news_item["title"],
                         "source": news_item["source"],
                         "link": news_item["link"],
-                        "price": _round_two(move["close"]),
-                        "price_change": _round_two(move["change"]),
+                        "price": _round(move["close"]),
+                        "price_change": _round(move["change"]),
                         "sentiment": news_item["sentiment"],
                         "has_news": True,
                     }
@@ -1892,8 +1912,8 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                             "title": search_result["title"],
                             "source": search_result["source"],
                             "link": search_result["link"],
-                            "price": _round_two(move["close"]),
-                            "price_change": _round_two(move["change"]),
+                            "price": _round(move["close"]),
+                            "price_change": _round(move["change"]),
                             "sentiment": search_result["sentiment"],
                             "has_news": True,
                         }
@@ -1906,8 +1926,8 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                             "title": f"Significant price {direction} ({abs(move['change']):.1f}%)",
                             "source": "Yahoo Finance",
                             "link": f"https://finance.yahoo.com/quote/{ticker}/history?period1={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp())}&period2={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp()) + 86400}&interval=1d",
-                            "price": _round_two(move["close"]),
-                            "price_change": _round_two(move["change"]),
+                            "price": _round(move["close"]),
+                            "price_change": _round(move["change"]),
                             "sentiment": 0.5 if move["change"] > 0 else -0.5,
                             "has_news": False,
                         }
@@ -1925,8 +1945,8 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                             "title": news_item["title"],
                             "source": news_item["source"],
                             "link": news_item["link"],
-                            "price": _round_two(matching_price["close"]),
-                            "price_change": _round_two(matching_price["daily_change"]),
+                            "price": _round(matching_price["close"]),
+                            "price_change": _round(matching_price["daily_change"]),
                             "sentiment": news_item["sentiment"],
                             "has_news": True,
                         }
@@ -1944,13 +1964,13 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
             trend = {
                 "start_date": price_data[0]["date"],
                 "end_date": price_data[-1]["date"],
-                "start_price": _round_two(start_price),
-                "end_price": _round_two(end_price),
-                "price_change": _round_two(price_change),
-                "price_change_pct": _round_two(price_change_pct),
+                "start_price": _round(start_price),
+                "end_price": _round(end_price),
+                "price_change": _round(price_change),
+                "price_change_pct": _round(price_change_pct),
                 "direction": "up" if price_change >= 0 else "down",
-                "high": _round_two(max(p["high"] for p in price_data if p["high"] is not None)),
-                "low": _round_two(min(p["low"] for p in price_data if p["low"] is not None)),
+                "high": _round(max(p["high"] for p in price_data if p["high"] is not None)),
+                "low": _round(min(p["low"] for p in price_data if p["low"] is not None)),
                 "avg_volume": int(sum(p["volume"] for p in price_data) / len(price_data)),
             }
 
@@ -1966,6 +1986,7 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                 snapshot_path = PRICE_SNAPSHOT_DIR / f"{ticker.upper()}.json"
                 with snapshot_path.open("w") as fh:
                     json.dump(snapshot_payload, fh, indent=2)
+                _update_runtime_cache(ticker, f'price_{period}', snapshot_payload)
         except Exception as exc:
             logger.warning("Failed to persist price snapshot for %s: %s", ticker, exc)
 

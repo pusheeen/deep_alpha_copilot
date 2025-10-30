@@ -123,6 +123,20 @@ deep_alpha_copilot/
 - `data/unstructured/`
   - `news/` and `news_interpretation/`: historical article dumps plus AI summaries generated during ingestion.
   - `reddit/`, `x/`: sentiment snapshots captured from social channels.
+- `data/company/{TICKER}.json`: static profile composed from the latest sector metrics and `companies.csv`. Example:
+  ```json
+  {
+    "ticker": "NVDA",
+    "name": "NVIDIA Corp",
+    "industry": "Semiconductors",
+    "sources": {
+      "metrics_file": "company_metrics_20251026_223134.json",
+      "companies_csv": "companies.csv"
+    },
+    "metrics": { "...": "..." },
+    "updated_at": "2025-10-30T04:15:05.312Z"
+  }
+  ```
 - `data/runtime/`
   - `price_snapshots/{TICKER}.json`: most recent price pull served to the UI. Schema:
     ```json
@@ -180,6 +194,7 @@ deep_alpha_copilot/
       "legacy_analysis": "Full-text interpretation from the nightly batch (optional)."
     }
     ```
+  - `company/{TICKER}.json`: consolidated runtime cache that combines the latest price snapshot and news summary for quick reuse by the UI.
   Runtime artifacts are refreshed automatically by the API. Cached files expire after 30 minutes.
 
 ## Quick Start
