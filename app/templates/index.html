@@ -293,29 +293,10 @@
 
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
-        const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
+        const supportedTickers = {{ supported_tickers_json | safe }};
         
         // Company metadata for enhanced display
-        const companyMetadata = {
-            "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
-            "MU": { name: "Micron Technology Inc", industry: "Semiconductors" },
-            "AVGO": { name: "Broadcom Inc", industry: "Semiconductors" },
-            "TSM": { name: "Taiwan Semiconductor Manufacturing Co Ltd", industry: "Semiconductors" },
-            "VRT": { name: "Vertiv Holdings Co", industry: "Industrial Equipment" },
-            "SMCI": { name: "Super Micro Computer Inc", industry: "Computer Hardware" },
-            "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
-            "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
-            "IREN": { name: "Iren Ltd", industry: "Utilities" },
-            "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
-            "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
-            "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
-            "SMR": { name: "NuScale Power Corp", industry: "Nuclear Energy" },
-            "CCJ": { name: "Cameco Corp", industry: "Uranium Mining" },
-            "VST": { name: "Vistra Corp", industry: "Utilities" },
-            "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
-            "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
-            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
-        };
+        const companyMetadata = {{ company_metadata_json | safe }};
 
         async function fetchWithNewsContext(question) {
             try {
@@ -739,11 +720,11 @@
             if (!value || value === 0) return 'N/A';
             const numValue = Number(value);
             if (isNaN(numValue)) return 'N/A';
-            if (numValue >= 1e12) return '$' + (numValue / 1e12).toFixed(1) + 'T';
-            if (numValue >= 1e9) return '$' + (numValue / 1e9).toFixed(1) + 'B';
-            if (numValue >= 1e6) return '$' + (numValue / 1e6).toFixed(1) + 'M';
-            if (numValue >= 1e3) return '$' + (numValue / 1e3).toFixed(1) + 'K';
-            return '$' + numValue.toFixed(0);
+            if (numValue >= 1e12) return '$' + (numValue / 1e12).toFixed(2) + 'T';
+            if (numValue >= 1e9) return '$' + (numValue / 1e9).toFixed(2) + 'B';
+            if (numValue >= 1e6) return '$' + (numValue / 1e6).toFixed(2) + 'M';
+            if (numValue >= 1e3) return '$' + (numValue / 1e3).toFixed(2) + 'K';
+            return '$' + numValue.toFixed(2);
         }
 
         function getRecommendationColor(recommendation) {
@@ -803,7 +784,7 @@
                     // Update Fear & Greed
                     const fgScore = data.fear_greed_index.score;
                     const fgLevel = data.fear_greed_index.level;
-                    document.getElementById('fear-greed-score').textContent = fgScore.toFixed(0);
+                    document.getElementById('fear-greed-score').textContent = fgScore.toFixed(2);
                     document.getElementById('fear-greed-level').textContent = fgLevel;
                     
                     // Color code the level
@@ -886,8 +867,11 @@
 
         function renderNewsSection(data) {
             const newsContent = document.getElementById('news-content');
+            const summary = data.summary || {};
+            const articles = Array.isArray(data.articles) ? data.articles : [];
+            const fetchedAt = data.fetched_at ? new Date(data.fetched_at) : null;
 
-            if (!data.articles || data.articles.length === 0) {
+            if (articles.length === 0) {
                 newsContent.innerHTML = `
                     <div class="text-slate-400 text-center py-4">
                         No recent news available for ${data.ticker}
@@ -896,102 +880,106 @@
                 return;
             }
 
-            // Parse interpretation for recommendation
-            let recommendation = 'N/A';
-            let recommendationClass = 'bg-slate-100 text-slate-800';
-            let reasoning = '';
-            let interpretationText = 'Analysis not available.';
+            const sentimentBadgeClasses = {
+                "Positive": "bg-emerald-100 text-emerald-700",
+                "Negative": "bg-rose-100 text-rose-700",
+                "Neutral": "bg-slate-200 text-slate-700"
+            };
 
-            if (data.interpretation) {
-                const recMatch = data.interpretation.match(/RECOMMENDATION:\s*(BUY|HOLD|SELL)/);
-                const reasonMatch = data.interpretation.match(/REASONING:\s*(.+?)(?:\n|$)/s);
+            const sentimentBadge = sentimentBadgeClasses[summary.sentiment] || "bg-slate-200 text-slate-700";
 
-                if (recMatch) {
-                    recommendation = recMatch[1];
-                    if (recommendation === 'BUY') recommendationClass = 'bg-green-100 text-green-800';
-                    if (recommendation === 'HOLD') recommendationClass = 'bg-blue-100 text-blue-800';
-                    if (recommendation === 'SELL') recommendationClass = 'bg-red-100 text-red-800';
-                }
-                if (reasonMatch) {
-                    reasoning = reasonMatch[1].trim();
-                }
-                interpretationText = data.interpretation.replace(/INTERPRETATION:\s*/i, '').split(/RECOMMENDATION:|REASONING:/)[0].trim();
-            }
-
-            // Render articles with interpretation below
-            const articlesHtml = data.articles.map((article, index) => `
-                <div class="border border-slate-200 rounded-lg p-4 mb-3">
-                    <a href="${article.link}" target="_blank" class="text-slate-800 hover:text-blue-600 font-medium text-base block mb-2">
-                        ${article.title}
-                    </a>
-                    <div class="text-xs text-slate-500 flex items-center gap-2 mb-2">
-                        <span class="font-medium">${article.publisher}</span>
-                        <span>•</span>
-                        <span>${new Date(article.publish_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        ${article.filtered_by_llm ? '<span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">✓ Verified</span>' : ''}
-                    </div>
-                    ${article.summary ? `<p class="text-sm text-slate-600 mb-2">${article.summary}</p>` : ''}
-                </div>
+            const keyPointsHtml = (summary.key_points || []).map(point => `
+                <li class="flex items-start gap-2">
+                    <span class="mt-[3px] text-slate-400">•</span>
+                    <span class="text-sm text-slate-700">${point}</span>
+                </li>
             `).join('');
 
-            newsContent.innerHTML = `
-                <div class="space-y-3">
-                    <!-- News Articles -->
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-semibold text-slate-800 text-sm">Latest Headlines (${data.total_articles})</h4>
-                            ${data.fetch_timestamp ? `<span class="text-xs text-slate-400">Updated ${new Date(data.fetch_timestamp).toLocaleString()}</span>` : ''}
+            const articlesHtml = articles.map(article => {
+                const published = article.published ? new Date(article.published) : null;
+                const sentiment = article.sentiment || {};
+                const badgeClass = sentimentBadgeClasses[sentiment.label] || sentimentBadgeClasses.Neutral;
+                return `
+                    <div class="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${badgeClass}">
+                                ${sentiment.label || 'Neutral'}
+                            </span>
+                            ${published ? `<span class="text-xs text-slate-400">${published.toLocaleString()}</span>` : ''}
                         </div>
-                        ${articlesHtml}
+                        <a href="${article.link}" target="_blank" class="block text-base font-semibold text-slate-800 hover:text-blue-600 mt-2">
+                            ${article.title}
+                        </a>
+                        <p class="text-xs text-slate-500 mt-1">${article.source || 'Unknown source'}</p>
+                        ${article.snippet ? `<p class="text-sm text-slate-600 mt-2">${article.snippet}</p>` : ''}
                     </div>
+                `;
+            }).join('');
 
-                    <!-- Foldable Interpretation Section -->
-                    <div class="border-t border-slate-300 pt-4">
-                        <button
-                            onclick="toggleInterpretation()"
-                            class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
-                        >
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold text-slate-800">🤖 AI Investment Analysis</span>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${recommendationClass}">
-                                    ${recommendation}
+            newsContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs uppercase tracking-widest text-slate-400">Sentiment Snapshot</p>
+                                    <h4 class="text-xl font-semibold mt-1">${summary.headline || 'Latest sentiment overview'}</h4>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-sm font-semibold ${sentimentBadge}">
+                                    ${summary.sentiment || 'Neutral'}
                                 </span>
                             </div>
-                            <svg id="interpretation-arrow" class="w-5 h-5 text-slate-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
+                            <div class="grid md:grid-cols-3 gap-3 mt-4">
+                                <div class="bg-slate-800/60 rounded-lg p-4 border border-slate-700">
+                                    <p class="text-xs text-slate-400 uppercase tracking-widest">Rating</p>
+                                    <p class="text-lg font-semibold mt-1">${summary.rating || 'Hold'}</p>
+                                </div>
+                                <div class="bg-slate-800/60 rounded-lg p-4 border border-slate-700">
+                                    <p class="text-xs text-slate-400 uppercase tracking-widest">Confidence</p>
+                                    <p class="text-lg font-semibold mt-1">${summary.confidence || 'Low'}</p>
+                                </div>
+                                <div class="bg-slate-800/60 rounded-lg p-4 border border-slate-700">
+                                    <p class="text-xs text-slate-400 uppercase tracking-widest">Last Updated</p>
+                                    <p class="text-lg font-semibold mt-1">${fetchedAt ? fetchedAt.toLocaleString() : 'N/A'}</p>
+                                </div>
+                            </div>
+                            ${keyPointsHtml ? `
+                                <div class="mt-5">
+                                    <p class="text-sm font-medium text-slate-200 mb-2">Key Takeaways</p>
+                                    <ul class="space-y-1">${keyPointsHtml}</ul>
+                                </div>
+                            ` : ''}
+                            ${summary.rationale ? `
+                                <p class="text-sm text-slate-300 mt-4">
+                                    <span class="font-semibold text-slate-200">Rationale:</span> ${summary.rationale}
+                                </p>
+                            ` : ''}
+                            ${summary.conclusion ? `
+                                <div class="mt-4 bg-slate-800/80 border border-slate-700 rounded-lg p-3">
+                                    <p class="text-xs uppercase text-slate-400 tracking-widest mb-1">Conclusion</p>
+                                    <p class="text-sm text-slate-100">${summary.conclusion}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                            <h5 class="text-sm font-semibold text-slate-800 mb-2">Deep Dive</h5>
+                            <p class="text-xs text-slate-500 mb-2">Latest AI interpretation</p>
+                            <div class="text-sm text-slate-600 leading-relaxed">
+                                ${data.legacy_analysis ? data.legacy_analysis.replace(/\n/g, '<br />') : 'No archived interpretation available.'}
+                            </div>
+                        </div>
+                    </div>
 
-                        <div id="interpretation-content" class="hidden mt-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
-                            <p class="text-sm text-slate-700 leading-relaxed mb-3">${interpretationText}</p>
-                            ${reasoning ? `
-                                <div class="border-t border-slate-200 pt-3">
-                                    <p class="text-xs font-semibold text-slate-600 mb-1">Key Reasoning:</p>
-                                    <p class="text-xs text-slate-600 italic">${reasoning}</p>
-                                </div>
-                            ` : ''}
-                            ${data.interpretation_timestamp ? `
-                                <div class="mt-3 text-xs text-slate-400">
-                                    Analysis generated ${new Date(data.interpretation_timestamp).toLocaleString()}
-                                </div>
-                            ` : ''}
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-slate-800">Latest Headlines (${articles.length})</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            ${articlesHtml}
                         </div>
                     </div>
                 </div>
             `;
-        }
-
-        function toggleInterpretation() {
-            const content = document.getElementById('interpretation-content');
-            const arrow = document.getElementById('interpretation-arrow');
-
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-            } else {
-                content.classList.add('hidden');
-                arrow.style.transform = 'rotate(0deg)';
-            }
         }
 
         function renderValuationCharts(data) {
@@ -1047,7 +1035,7 @@
                     labels: peData.map(d => d.date),
                     datasets: [{
                         label: `${data.ticker} P/E`,
-                        data: peData.map(d => d.pe_ratio),
+                        data: peData.map(d => (d.pe_ratio !== null && d.pe_ratio !== undefined) ? Number(Number(d.pe_ratio).toFixed(2)) : null),
                         borderColor: '#3B82F6',
                         backgroundColor: '#3B82F620',
                         borderWidth: 2,
@@ -1055,7 +1043,7 @@
                         tension: 0.1
                     }, {
                         label: 'Sector Benchmark',
-                        data: peData.map(d => d.benchmark_pe !== undefined ? d.benchmark_pe : null), // Use historical if available
+                        data: peData.map(d => (d.benchmark_pe !== null && d.benchmark_pe !== undefined) ? Number(Number(d.benchmark_pe).toFixed(2)) : null),
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -1072,7 +1060,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + (context.parsed.y ? context.parsed.y.toFixed(2) : 'N/A');
+                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(2) : 'N/A');
                                 }
                             }
                         }
@@ -1101,7 +1089,7 @@
                     labels: psData.map(d => d.date),
                     datasets: [{
                         label: `${data.ticker} P/S`,
-                        data: psData.map(d => d.ps_ratio),
+                        data: psData.map(d => (d.ps_ratio !== null && d.ps_ratio !== undefined) ? Number(Number(d.ps_ratio).toFixed(2)) : null),
                         borderColor: '#10B981',
                         backgroundColor: '#10B98120',
                         borderWidth: 2,
@@ -1109,7 +1097,7 @@
                         tension: 0.1
                     }, {
                         label: 'Sector Benchmark',
-                        data: psData.map(d => d.benchmark_ps !== undefined ? d.benchmark_ps : null), // Use historical if available
+                        data: psData.map(d => (d.benchmark_ps !== null && d.benchmark_ps !== undefined) ? Number(Number(d.benchmark_ps).toFixed(2)) : null), // Use historical if available
                         borderColor: '#94A3B8',
                         borderWidth: 2,
                         borderDash: [5, 5],
@@ -1126,7 +1114,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': ' + (context.parsed.y ? context.parsed.y.toFixed(2) : 'N/A');
+                                    return context.dataset.label + ': ' + (context.parsed.y ? Number(context.parsed.y).toFixed(2) : 'N/A');
                                 }
                             }
                         }
@@ -1165,7 +1153,7 @@
                     <div class="flex items-center justify-between">
                         <h4 class="font-bold text-lg">${chartEvent.title}</h4>
                         <span class="text-xs px-2 py-1 rounded ${chartEvent.price_change >= 0 ? 'bg-green-600' : 'bg-red-600'}">
-                            ${chartEvent.price_change >= 0 ? '+' : ''}${chartEvent.price_change.toFixed(1)}%
+                            ${chartEvent.price_change >= 0 ? '+' : ''}${Number(chartEvent.price_change).toFixed(2)}%
                         </span>
                     </div>
                     
@@ -1229,16 +1217,16 @@
                 const changeSign = trend.price_change_pct >= 0 ? '+' : '';
                 const changeColor = trend.price_change_pct >= 0 ? 'text-green-600' : 'text-red-600';
                 changeEl.className = `text-2xl font-bold ${changeColor}`;
-                changeEl.innerHTML = `${changeSign}${trend.price_change_pct}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${trend.price_change}</span>`;
+                changeEl.innerHTML = `${changeSign}${Number(trend.price_change_pct).toFixed(2)}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${Number(trend.price_change).toFixed(2)}</span>`;
 
                 // Current Price
-                document.getElementById('trendCurrentPrice').textContent = `$${trend.end_price}`;
+                document.getElementById('trendCurrentPrice').textContent = `$${Number(trend.end_price).toFixed(2)}`;
 
                 // High
-                document.getElementById('trendHigh').textContent = `$${trend.high}`;
+                document.getElementById('trendHigh').textContent = `$${Number(trend.high).toFixed(2)}`;
 
                 // Low
-                document.getElementById('trendLow').textContent = `$${trend.low}`;
+                document.getElementById('trendLow').textContent = `$${Number(trend.low).toFixed(2)}`;
             }
 
             // Destroy existing chart if it exists
@@ -1252,7 +1240,7 @@
 
             // Prepare data for the chart
             const labels = priceData.map(d => d.date);
-            const closes = priceData.map(d => d.close);
+            const closes = priceData.map(d => Number(Number(d.close).toFixed(2)));
 
             // Create event annotations - only for significant daily movements (2%+ or $2+)
             const eventAnnotations = events.filter(event => Math.abs(event.price_change) >= 2).map(event => {
@@ -1505,16 +1493,16 @@
                                             <span>${formatCurrency(quickFacts.revenue_ttm)}</span>
                                         </div>
                                     ` : ''}
-                                    ${quickFacts.profit_margin ? `
+                                    ${(quickFacts.profit_margin || quickFacts.profit_margin === 0) ? `
                                         <div class="flex justify-between">
                                             <span class="text-sm">Profit Margin:</span>
-                                            <span>${quickFacts.profit_margin.toFixed(1)}%</span>
+                                            <span>${Number(quickFacts.profit_margin).toFixed(2)}%</span>
                                         </div>
                                     ` : ''}
-                                    ${quickFacts.forward_pe ? `
+                                    ${(quickFacts.forward_pe || quickFacts.forward_pe === 0) ? `
                                         <div class="flex justify-between">
                                             <span class="text-sm">Forward P/E:</span>
-                                            <span>${quickFacts.forward_pe.toFixed(1)}x</span>
+                                            <span>${Number(quickFacts.forward_pe).toFixed(2)}x</span>
                                         </div>
                                     ` : ''}
                                     <div class="pt-2">
@@ -1564,9 +1552,9 @@
 
                             <!-- Recommendation -->
                             <div class="lg:col-span-1">
-                                <div class="text-center">
-                                    <div class="mb-4">
-                                        <div class="text-4xl font-bold mb-2">${overall.score.toFixed(1)}</div>
+                                    <div class="text-center">
+                                        <div class="mb-4">
+                                        <div class="text-4xl font-bold mb-2">${Number(overall.score || 0).toFixed(2)}</div>
                                         <div class="text-sm text-blue-100 uppercase tracking-wide">Overall Score</div>
                                     </div>
                                     <div class="mb-4">
@@ -1833,7 +1821,7 @@
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center space-x-3 flex-1">
                                 <h4 class="text-lg font-semibold text-slate-800">${label}</h4>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${comp.company_score.toFixed(1)}/10</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${Number(comp.company_score || 0).toFixed(2)}/10</span>
                                 <div class="group relative">
                                     <svg class="w-4 h-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
@@ -1873,12 +1861,12 @@
                         <!-- Metrics with consistent alignment -->
                         <div class="flex items-center justify-between text-sm mb-4">
                             <div class="flex items-center space-x-3">
-                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? comp.company_score.toFixed(1) : 'N/A'}</span>
+                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? Number(comp.company_score).toFixed(2) : 'N/A'}</span>
                                 <span class="text-slate-400">•</span>
-                                <span class="text-slate-600">Industry: ${comp.industry_avg ? comp.industry_avg.toFixed(1) : 'N/A'}</span>
+                                <span class="text-slate-600">Industry: ${comp.industry_avg ? Number(comp.industry_avg).toFixed(2) : 'N/A'}</span>
                             </div>
                             <span class="${(comp.difference || 0) >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
-                                ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? comp.difference.toFixed(1) : '0.0'}
+                                ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? Number(comp.difference).toFixed(2) : '0.00'}
                             </span>
                         </div>
                         
@@ -2088,7 +2076,7 @@
                             tickerCard.innerHTML = `
                                 <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
                                 <div class="text-xs text-slate-500 mt-1 truncate">${companyMetadata[ticker]?.name || ticker}</div>
-                                <div class="text-xs font-semibold mt-1 ${scoreColor(overall.score)}">${overall.score.toFixed(1)}</div>
+                                <div class="text-xs font-semibold mt-1 ${scoreColor(overall.score)}">${Number(overall.score || 0).toFixed(2)}</div>
                                 <div class="text-xs text-slate-600">${overall.recommendation}</div>
                             `;
                             tickerCard.classList.remove('opacity-50');
@@ -2336,7 +2324,7 @@
                             max: 10,
                             ticks: {
                                 callback: function(value) {
-                                    return value.toFixed(1);
+                                    return value.toFixed(2);
                                 }
                             }
                         }
@@ -2371,15 +2359,15 @@
                     label: ticker,
                     data: data,
                     borderColor: colors[index],
-                    backgroundColor: colors[index] + '20',
+                    backgroundColor: colors[index] + '33',
                     borderWidth: 2,
-                    fill: false,
-                    tension: 0.1
+                    fill: true,
+                    pointRadius: 3
                 };
             });
 
             comparisonCharts.individual = new Chart(ctx, {
-                type: 'line',
+                type: 'radar',
                 data: {
                     labels: scoreTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
                     datasets: datasets
@@ -2399,12 +2387,20 @@
                         }
                     },
                     scales: {
-                        y: {
+                        r: {
                             beginAtZero: true,
                             max: 10,
                             ticks: {
+                                stepSize: 2,
+                                backdropColor: 'transparent',
+                                showLabelBackdrop: false,
                                 callback: function(value) {
-                                    return value.toFixed(1);
+                                    return value.toFixed(2);
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(2);
                                 }
                             }
                         }
@@ -2437,10 +2433,15 @@
                 const datasets = tickers.map((ticker, index) => {
                     const data = priceData[index];
                     if (data.status === 'success' && data.data.price_data) {
-                        const prices = data.data.price_data.map(item => ({
-                            x: item.trading_date || item.date,
-                            y: item.close_price || item.close
-                        }));
+                        const prices = data.data.price_data.map(item => {
+                            const dateValue = item.trading_date || item.date;
+                            const parsedDate = dateValue ? new Date(dateValue) : null;
+                            const closeValue = item.close_price || item.close;
+                            return {
+                                x: parsedDate,
+                                y: typeof closeValue === 'number' ? Number(closeValue.toFixed(2)) : closeValue
+                            };
+                        });
                         
                         return {
                             label: ticker,
@@ -2449,7 +2450,8 @@
                             backgroundColor: colors[index] + '20',
                             borderWidth: 2,
                             fill: false,
-                            tension: 0.1
+                            tension: 0.1,
+                            parsing: false
                         };
                     }
                     return {
@@ -2459,7 +2461,8 @@
                         backgroundColor: colors[index] + '20',
                         borderWidth: 2,
                         fill: false,
-                        tension: 0.1
+                        tension: 0.1,
+                        parsing: false
                     };
                 });
 

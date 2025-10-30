@@ -4,14 +4,30 @@
 Main FastAPI application file, adapted to use the Google ADK agent system.
 """
 import asyncio
+import csv
+import glob
+import json
+import math
+import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from starlette.responses import FileResponse
-from pydantic import BaseModel
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Dict, List, Optional, Any
+
+import databases
+import sqlalchemy
+import stripe
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import FileResponse
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # --- ADK Imports (Optional) ---
-from typing import Optional, Dict, Any
 try:
     from google.adk.agents import Agent
     from google.adk.runners import Runner
@@ -21,18 +37,6 @@ try:
 except ImportError:
     ADK_AVAILABLE = False
     print("Warning: Google ADK not available. Agent features will be disabled.")
-
-# Add this import
-from fastapi.middleware.cors import CORSMiddleware 
-import os
-import stripe
-import databases
-import sqlalchemy
-from passlib.context import CryptContext
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-from fastapi import Form, Depends, HTTPException
 
 app = FastAPI()
 
@@ -45,6 +49,7 @@ app.add_middleware(
     allow_methods=["*"], # Allows all methods
     allow_headers=["*"], # Allows all headers
 )
+
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
 if ADK_AVAILABLE:
@@ -55,7 +60,6 @@ if ADK_AVAILABLE:
         print("Warning: Could not import agents. Agent features will be disabled.")
 from app.scoring import compute_company_scores, ScoreComputationError
 load_dotenv()
-import math
 
 # Utility function to sanitize data for JSON serialization
 def sanitize_for_json(obj):
@@ -103,6 +107,360 @@ engine = sqlalchemy.create_engine(
 metadata.create_all(engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+STRUCTURED_DIR = DATA_ROOT / "structured"
+SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
+RUNTIME_DIR = DATA_ROOT / "runtime"
+PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
+REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
+
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
+
+SUPPORTED_TICKERS_CACHE: List[str] = []
+SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
+SUPPORTED_TICKERS_TTL = timedelta(minutes=30)
+REALTIME_NEWS_TTL = timedelta(minutes=30)
+COMPANIES_FILE = DATA_ROOT / "companies.csv"
+COMPANY_METADATA_CACHE: Dict[str, Dict[str, str]] = {}
+COMPANY_METADATA_CACHE_TIME: Optional[datetime] = None
+COMPANY_METADATA_TTL = timedelta(minutes=30)
+
+sentiment_analyzer = SentimentIntensityAnalyzer()
+
+
+def _latest_company_metrics_file() -> Optional[Path]:
+    files = sorted(SECTOR_METRICS_DIR.glob("company_metrics_*.json"))
+    return files[-1] if files else None
+
+
+def load_supported_tickers() -> List[str]:
+    global SUPPORTED_TICKERS_CACHE, SUPPORTED_TICKERS_CACHE_TIME
+    now = datetime.now(timezone.utc)
+    if (
+        SUPPORTED_TICKERS_CACHE
+        and SUPPORTED_TICKERS_CACHE_TIME
+        and now - SUPPORTED_TICKERS_CACHE_TIME < SUPPORTED_TICKERS_TTL
+    ):
+        return SUPPORTED_TICKERS_CACHE
+
+    metrics_file = _latest_company_metrics_file()
+    tickers: List[str] = []
+    if metrics_file and metrics_file.exists():
+        try:
+            with metrics_file.open("r") as fh:
+                data = json.load(fh)
+            tickers = sorted({entry["ticker"] for entry in data if "ticker" in entry})
+        except Exception:
+            tickers = []
+
+    if not tickers:
+        try:
+            from target_tickers import TARGET_TICKERS
+
+            tickers = TARGET_TICKERS
+        except Exception:
+            tickers = []
+
+    SUPPORTED_TICKERS_CACHE = tickers
+    SUPPORTED_TICKERS_CACHE_TIME = now
+    return tickers
+
+
+def load_company_metadata() -> Dict[str, Dict[str, str]]:
+    global COMPANY_METADATA_CACHE, COMPANY_METADATA_CACHE_TIME
+    now = datetime.now(timezone.utc)
+    if (
+        COMPANY_METADATA_CACHE
+        and COMPANY_METADATA_CACHE_TIME
+        and now - COMPANY_METADATA_CACHE_TIME < COMPANY_METADATA_TTL
+    ):
+        return COMPANY_METADATA_CACHE
+
+    tickers = load_supported_tickers()
+    metadata: Dict[str, Dict[str, str]] = {
+        ticker: {"name": ticker, "industry": "Unknown"} for ticker in tickers
+    }
+
+    metrics_file = _latest_company_metrics_file()
+    if metrics_file and metrics_file.exists():
+        try:
+            with metrics_file.open("r") as fh:
+                metrics_data = json.load(fh)
+            for entry in metrics_data:
+                ticker = entry.get("ticker")
+                if ticker and ticker in metadata:
+                    metadata[ticker]["industry"] = entry.get("industry") or metadata[ticker]["industry"]
+        except Exception:
+            pass
+
+    if COMPANIES_FILE.exists():
+        try:
+            with COMPANIES_FILE.open("r") as fh:
+                reader = csv.DictReader(fh)
+                for row in reader:
+                    ticker = row.get("ticker")
+                    name = row.get("company_name") or row.get("name")
+                    if ticker and ticker in metadata and name:
+                        metadata[ticker]["name"] = name
+        except Exception:
+            pass
+
+    COMPANY_METADATA_CACHE = metadata
+    COMPANY_METADATA_CACHE_TIME = now
+    return metadata
+
+
+def _news_cache_path(ticker: str) -> Path:
+    return REALTIME_NEWS_DIR / f"{ticker.upper()}_realtime_news.json"
+
+
+def _load_cached_news(ticker: str) -> Optional[dict]:
+    path = _news_cache_path(ticker)
+    if not path.exists():
+        return None
+    try:
+        with path.open("r") as fh:
+            data = json.load(fh)
+        fetched_at = datetime.fromisoformat(data.get("fetched_at"))
+        if datetime.now(timezone.utc) - fetched_at.replace(tzinfo=timezone.utc) > REALTIME_NEWS_TTL:
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def _save_cached_news(ticker: str, payload: dict) -> None:
+    try:
+        path = _news_cache_path(ticker)
+        with path.open("w") as fh:
+            json.dump(payload, fh, indent=2)
+    except Exception:
+        pass
+
+
+def _compute_article_sentiment(title: str, snippet: str) -> Dict[str, Any]:
+    text = " ".join(filter(None, [title, snippet]))
+    sentiment = sentiment_analyzer.polarity_scores(text)
+    score = sentiment["compound"]
+    if score >= 0.25:
+        label = "Positive"
+    elif score <= -0.25:
+        label = "Negative"
+    else:
+        label = "Neutral"
+    return {"score": round(score, 3), "label": label}
+
+
+def _load_offline_news_summary(ticker: str) -> Optional[dict]:
+    try:
+        from fetch_data import get_latest_news_file
+    except Exception:
+        return None
+
+    news_file = get_latest_news_file(ticker)
+    if not news_file:
+        return None
+
+    try:
+        with open(news_file, "r") as fh:
+            news_data = json.load(fh)
+    except Exception:
+        return None
+
+    articles = []
+    seen_links = set()
+    for article in news_data.get("articles", []):
+        link = article.get("link") or article.get("url")
+        title = article.get("title")
+        if not title:
+            continue
+        key = link or title
+        if key in seen_links:
+            continue
+        seen_links.add(key)
+        sentiment_info = _compute_article_sentiment(title, article.get("summary", ""))
+        articles.append(
+            {
+                "title": title,
+                "source": article.get("publisher") or article.get("source"),
+                "link": link,
+                "published": article.get("publish_time"),
+                "snippet": article.get("summary") or "",
+                "sentiment": sentiment_info,
+            }
+        )
+
+    if not articles:
+        return None
+
+    avg_score = sum(a["sentiment"]["score"] for a in articles) / len(articles)
+    if avg_score >= 0.2:
+        sentiment = "Positive"
+        rating = "Buy"
+    elif avg_score <= -0.2:
+        sentiment = "Negative"
+        rating = "Sell"
+    else:
+        sentiment = "Neutral"
+        rating = "Hold"
+
+    key_points = []
+    for entry in sorted(articles, key=lambda x: abs(x["sentiment"]["score"]), reverse=True)[:3]:
+        prefix = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}.get(entry["sentiment"]["label"], "ℹ️")
+        key_points.append(f"{prefix} {entry['title']}")
+
+    return {
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "headline": "Latest coverage snapshot",
+            "sentiment": sentiment,
+            "rating": rating,
+            "confidence": "Low",
+            "key_points": key_points,
+            "rationale": "Derived from cached news files.",
+            "conclusion": "Supplement with live data for the freshest read.",
+        },
+        "articles": articles,
+    }
+
+
+def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 8) -> dict:
+    if not ADK_AVAILABLE or "search_latest_news" not in globals():
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
+        return {
+            "ticker": ticker.upper(),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "Live news service unavailable",
+                "key_points": [],
+                "rationale": "Real-time news search is disabled. Showing placeholder guidance.",
+                "conclusion": "Enable Google Custom Search credentials to receive live coverage.",
+            },
+            "articles": [],
+        }
+
+    query = f"{ticker} stock"
+    response = search_latest_news(query=query, max_results=max_results)
+    items = response.get("results", []) if isinstance(response, dict) else []
+
+    seen_links = set()
+    articles: List[dict] = []
+
+    for item in items:
+        link = item.get("link")
+        if not link or link in seen_links:
+            continue
+        seen_links.add(link)
+
+        title = (item.get("title") or "").strip()
+        snippet = (item.get("snippet") or "").strip()
+        published = item.get("published")
+        try:
+            published_dt = (
+                datetime.fromisoformat(published.replace("Z", "+00:00")) if published else None
+            )
+        except Exception:
+            published_dt = None
+
+        sentiment_info = _compute_article_sentiment(title, snippet)
+
+        articles.append(
+            {
+                "title": title,
+                "source": item.get("source"),
+                "link": link,
+                "published": published_dt.isoformat() if published_dt else None,
+                "snippet": snippet,
+                "sentiment": sentiment_info,
+            }
+        )
+
+    if window_hours and articles:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=window_hours)
+        filtered = [
+            art
+            for art in articles
+            if not art["published"]
+            or datetime.fromisoformat(art["published"]).replace(tzinfo=timezone.utc) >= cutoff
+        ]
+        if filtered:
+            articles = filtered
+
+    articles = articles[:max_results]
+
+    if not articles:
+        return {
+            "ticker": ticker.upper(),
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "No recent coverage available",
+                "key_points": [],
+                "rationale": "We could not locate reliable coverage within the selected lookback window.",
+                "conclusion": "Monitor upcoming catalysts before taking action.",
+            },
+            "articles": [],
+        }
+
+    avg_score = sum(art["sentiment"]["score"] for art in articles) / len(articles)
+    if avg_score >= 0.2:
+        overall_sentiment = "Positive"
+        rating = "Buy"
+    elif avg_score <= -0.2:
+        overall_sentiment = "Negative"
+        rating = "Sell"
+    else:
+        overall_sentiment = "Neutral"
+        rating = "Hold"
+
+    sorted_articles = sorted(articles, key=lambda x: abs(x["sentiment"]["score"]), reverse=True)
+    icon_by_label = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}
+    key_points = [
+        f"{icon_by_label.get(art['sentiment']['label'], 'ℹ️')} {art['title']}"
+        for art in sorted_articles[:3]
+    ]
+
+    positive = [a for a in articles if a["sentiment"]["label"] == "Positive"]
+    negative = [a for a in articles if a["sentiment"]["label"] == "Negative"]
+    rationale_parts = []
+    if positive:
+        rationale_parts.append(f"{len(positive)} source(s) highlight supportive catalysts.")
+    if negative:
+        rationale_parts.append(f"{len(negative)} source(s) flag emerging risks.")
+    if not rationale_parts:
+        rationale_parts.append("Coverage is balanced without a dominant directional signal.")
+
+    payload = {
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "sentiment": overall_sentiment,
+            "rating": rating,
+            "confidence": "Medium" if len(articles) >= 3 else "Low",
+            "headline": f"Latest coverage skews {overall_sentiment.lower()}",
+            "key_points": key_points,
+            "rationale": " ".join(rationale_parts),
+            "conclusion": (
+                "Momentum favors accumulation on strength."
+                if rating == "Buy"
+                else "Maintain exposure and reassess frequently."
+                if rating == "Hold"
+                else "Consider trimming positions or tightening stops."
+            ),
+        },
+        "articles": articles,
+    }
+    return payload
 
 @app.on_event("startup")
 async def startup():
@@ -243,7 +601,18 @@ async def get_index(request: Request):
     user_id = request.session.get("user")
     if user_id:
         user = await get_user_by_id(user_id)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user})
+    supported_tickers = load_supported_tickers()
+    company_metadata = load_company_metadata()
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "user": user,
+            "supported_tickers": supported_tickers,
+            "supported_tickers_json": json.dumps(supported_tickers),
+            "company_metadata_json": json.dumps(company_metadata),
+        },
+    )
 
 
 @app.get("/api/scores/{ticker}")
@@ -311,94 +680,35 @@ async def get_market_conditions():
 @app.get("/api/latest-news/{ticker}")
 async def get_latest_news(ticker: str):
     """Return the latest news and interpretation for a ticker."""
-    import json
-    from fetch_data import get_latest_news_file, save_news_interpretation
-
     try:
         ticker = ticker.upper()
 
-        # Get latest news file
-        news_file = get_latest_news_file(ticker)
-        if not news_file:
-            return {"status": "success", "data": {"ticker": ticker, "articles": [], "interpretation": None}}
+        payload = _load_cached_news(ticker)
+        if not payload:
+            payload = fetch_realtime_news(ticker)
+            _save_cached_news(ticker, payload)
 
-        # Load news data
-        with open(news_file, 'r') as f:
-            news_data = json.load(f)
-        # Deduplicate articles by link or title
-        raw_articles = news_data.get('articles', [])
-        seen = set()
-        unique_articles = []
-        for art in raw_articles:
-            # Use link as primary dedupe key, fallback to title
-            key = art.get('link') or art.get('title', '').strip()
-            if not key:
-                # skip if no identifier
-                continue
-            if key in seen:
-                continue
-            seen.add(key)
-            unique_articles.append(art)
-        # Replace with deduplicated list (by link/title)
-        news_articles = unique_articles
-        # Further deduplicate semantically similar articles (e.g., same story phrased differently)
-        try:
-            import difflib
-            sem_seen = []
-            sem_unique = []
-            for art in news_articles:
-                # Normalize title for similarity check
-                title = art.get('title', '').strip().lower()
-                if not title:
-                    sem_unique.append(art)
-                    continue
-                # Check against previously seen titles
-                is_dup = False
-                for prev in sem_seen:
-                    if difflib.SequenceMatcher(None, title, prev).ratio() > 0.85:
-                        is_dup = True
-                        break
-                if not is_dup:
-                    sem_seen.append(title)
-                    sem_unique.append(art)
-            news_articles = sem_unique
-        except Exception:
-            # Fallback: skip semantic dedupe on error
-            pass
-
-        # Get or generate interpretation
-        interpretation_files = sorted([
-            f for f in os.listdir('data/unstructured/news_interpretation')
-            if f.startswith(f"{ticker}_news_interpretation_") and f.endswith('.json')
-        ])
-
-        interpretation_data = None
+        # Attach legacy interpretation for deeper dive if available
+        interpretation_summary = None
+        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
+        interpretation_files = sorted(
+            [
+                file_path
+                for file_path in interpretation_dir.glob(f"{ticker}_news_interpretation_*.json")
+            ]
+        )
         if interpretation_files:
-            # Load latest interpretation
-            latest_interpretation_file = os.path.join('data/unstructured/news_interpretation', interpretation_files[-1])
-            with open(latest_interpretation_file, 'r') as f:
-                interpretation_data = json.load(f)
-        else:
-            # Generate new interpretation
-            loop = asyncio.get_event_loop()
-            interpretation_path = await loop.run_in_executor(None, save_news_interpretation, ticker, news_file)
-            if interpretation_path:
-                with open(interpretation_path, 'r') as f:
-                    interpretation_data = json.load(f)
+            try:
+                with interpretation_files[-1].open("r") as fh:
+                    interpretation_summary = json.load(fh).get("analysis")
+            except Exception:
+                interpretation_summary = None
 
-        return {
-            "status": "success",
-            "data": {
-                "ticker": ticker,
-                "articles": news_articles,
-                "total_articles": len(news_articles),
-                "fetch_timestamp": news_data.get('fetch_timestamp'),
-                "interpretation": interpretation_data.get('interpretation') if interpretation_data else None,
-                "interpretation_timestamp": interpretation_data.get('timestamp') if interpretation_data else None
-            }
-        }
+        payload["legacy_analysis"] = interpretation_summary
+
+        return {"status": "success", "data": payload}
     except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch news: {exc}"}
+        return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
