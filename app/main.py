@@ -9,10 +9,15 @@ import logging
 import json
 import math
 import os
+import re
+import ssl
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 import databases
 import sqlalchemy
@@ -132,6 +137,20 @@ COMPANY_METADATA_CACHE_TIME: Optional[datetime] = None
 COMPANY_METADATA_TTL = timedelta(minutes=30)
 
 sentiment_analyzer = SentimentIntensityAnalyzer()
+ARTICLE_HTML_SNIFF_BYTES = 65536
+ARTICLE_TIMESTAMP_CACHE: Dict[str, Optional[str]] = {}
+META_TIMESTAMP_PATTERNS = [
+    re.compile(r'property=["\']article:published_time["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'property=["\']og:updated_time["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'name=["\']pubdate["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'name=["\']date["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+]
+JSONLD_TIMESTAMP_PATTERNS = [
+    re.compile(r'"datePublished"\s*:\s*"([^"]+)"'),
+    re.compile(r'"dateCreated"\s*:\s*"([^"]+)"'),
+    re.compile(r'"dateModified"\s*:\s*"([^"]+)"'),
+]
+SSL_CONTEXT = ssl.create_default_context()
 
 
 def _latest_company_metrics_file() -> Optional[Path]:
@@ -301,48 +320,239 @@ def _update_company_runtime(ticker: str, section: str, payload: dict) -> None:
         logger.warning("Failed to update runtime cache for %s: %s", ticker, exc)
 
 
-def _load_offline_news_summary(ticker: str) -> Optional[dict]:
+def _normalize_link(link: Optional[str]) -> Optional[str]:
+    if not link:
+        return None
+    cleaned = link.split("#", 1)[0].rstrip("/")
+    return cleaned.lower() if cleaned else None
+
+
+def _normalize_title(title: Optional[str]) -> Optional[str]:
+    if not title:
+        return None
+    normalized = re.sub(r"\s+", " ", title).strip().lower()
+    return normalized or None
+
+
+def _article_identity(link: Optional[str], title: Optional[str]) -> Optional[str]:
+    return _normalize_link(link) or _normalize_title(title)
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+    return parsed
+
+
+def _coerce_timestamp(raw_value: Optional[str]) -> Optional[str]:
+    if not raw_value:
+        return None
+
+    candidate = raw_value.strip()
+    if not candidate:
+        return None
+
+    try:
+        if candidate.endswith("Z"):
+            parsed = datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+        else:
+            parsed = datetime.fromisoformat(candidate)
+        return parsed.astimezone(timezone.utc).isoformat()
+    except ValueError:
+        try:
+            parsed = parsedate_to_datetime(candidate)
+        except (TypeError, ValueError):
+            parsed = None
+
+        if parsed:
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            else:
+                parsed = parsed.astimezone(timezone.utc)
+            return parsed.isoformat()
+    except Exception:
+        return None
+    return None
+
+
+def _extract_timestamp_from_html(html: str) -> Optional[str]:
+    for pattern in META_TIMESTAMP_PATTERNS:
+        match = pattern.search(html)
+        if match:
+            coerced = _coerce_timestamp(match.group(1))
+            if coerced:
+                return coerced
+
+    for pattern in JSONLD_TIMESTAMP_PATTERNS:
+        match = pattern.search(html)
+        if match:
+            coerced = _coerce_timestamp(match.group(1))
+            if coerced:
+                return coerced
+
+    return None
+
+
+def _fetch_article_timestamp(url: str) -> Optional[str]:
+    cached = ARTICLE_TIMESTAMP_CACHE.get(url)
+    if cached is not None:
+        return cached
+
+    timestamp: Optional[str] = None
+    snippet = b""
+    last_modified: Optional[str] = None
+
+    try:
+        request = Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; deep-alpha/1.0)"},
+        )
+        with urlopen(request, timeout=5, context=SSL_CONTEXT) as response:
+            last_modified = response.headers.get("Last-Modified")
+            snippet = response.read(ARTICLE_HTML_SNIFF_BYTES)
+    except (HTTPError, URLError, TimeoutError, ValueError):
+        snippet = b""
+    except Exception:
+        snippet = b""
+
+    if snippet:
+        try:
+            html = snippet.decode("utf-8", errors="ignore")
+        except Exception:
+            html = ""
+        if html:
+            timestamp = _extract_timestamp_from_html(html)
+
+    if not timestamp and last_modified:
+        timestamp = _coerce_timestamp(last_modified)
+
+    ARTICLE_TIMESTAMP_CACHE[url] = timestamp
+    return timestamp
+
+
+def _build_article_lookup(articles: List[dict]) -> Dict[str, Dict[str, dict]]:
+    by_link: Dict[str, dict] = {}
+    by_title: Dict[str, dict] = {}
+    for article in articles:
+        link_norm = _normalize_link(article.get("link"))
+        if link_norm and link_norm not in by_link:
+            by_link[link_norm] = article
+        title_norm = _normalize_title(article.get("title"))
+        if title_norm and title_norm not in by_title:
+            by_title[title_norm] = article
+    return {"by_link": by_link, "by_title": by_title}
+
+
+def _load_offline_articles(ticker: str) -> List[dict]:
     try:
         from fetch_data import get_latest_news_file
     except Exception:
-        return None
+        return []
 
     news_file = get_latest_news_file(ticker)
     if not news_file:
-        return None
+        return []
 
     try:
         with open(news_file, "r") as fh:
             news_data = json.load(fh)
     except Exception:
-        return None
+        return []
 
-    articles = []
-    seen_links = set()
+    articles: List[dict] = []
+    seen: set = set()
+
     for article in news_data.get("articles", []):
-        link = article.get("link") or article.get("url")
         title = article.get("title")
+        link = article.get("link") or article.get("url")
         if not title:
             continue
-        key = link or title
-        if key in seen_links:
+
+        identity = _article_identity(link, title)
+        if identity and identity in seen:
             continue
-        seen_links.add(key)
-        sentiment_info = _compute_article_sentiment(title, article.get("summary", ""))
+        if identity:
+            seen.add(identity)
+
+        snippet = article.get("summary") or article.get("snippet") or ""
+        sentiment_info = _compute_article_sentiment(title, snippet)
         articles.append(
             {
                 "title": title,
                 "source": article.get("publisher") or article.get("source"),
                 "link": link,
-                "published": article.get("publish_time"),
-                "snippet": article.get("summary") or "",
+                "published": _coerce_timestamp(article.get("publish_time") or article.get("published")),
+                "snippet": snippet,
                 "sentiment": sentiment_info,
+                "origin": "cached",
             }
         )
 
+    return articles
+
+
+def _merge_article_fields(primary: dict, fallback: Optional[dict]) -> dict:
+    if not fallback:
+        return primary
+
+    for field in ("source", "snippet", "published"):
+        if not primary.get(field) and fallback.get(field):
+            primary[field] = fallback[field]
+
+    if not primary.get("sentiment") and fallback.get("sentiment"):
+        primary["sentiment"] = fallback["sentiment"]
+
+    return primary
+
+
+def _enrich_article_metadata(
+    article: dict,
+    lookup: Dict[str, Dict[str, dict]],
+) -> dict:
+    link = article.get("link")
+    title = article.get("title")
+    match = None
+
+    link_norm = _normalize_link(link)
+    if link_norm and link_norm in lookup["by_link"]:
+        match = lookup["by_link"][link_norm]
+    else:
+        title_norm = _normalize_title(title)
+        if title_norm and title_norm in lookup["by_title"]:
+            match = lookup["by_title"][title_norm]
+
+    article = _merge_article_fields(article, match)
+
+    if not article.get("published") and link:
+        article["published"] = _fetch_article_timestamp(link)
+
+    return article
+
+
+def _sort_articles_descending(articles: List[dict]) -> List[dict]:
+    def sort_key(entry: dict) -> datetime:
+        published_dt = _parse_iso_datetime(entry.get("published"))
+        if published_dt:
+            return published_dt
+        return datetime.fromtimestamp(0, tz=timezone.utc)
+
+    return sorted(articles, key=sort_key, reverse=True)
+
+
+def _load_offline_news_summary(ticker: str) -> Optional[dict]:
+    articles = _load_offline_articles(ticker)
     if not articles:
         return None
 
+    articles = _sort_articles_descending(articles)
     avg_score = sum(a["sentiment"]["score"] for a in articles) / len(articles)
     if avg_score >= 0.2:
         sentiment = "Positive"
@@ -359,7 +569,7 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
         prefix = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}.get(entry["sentiment"]["label"], "ℹ️")
         key_points.append(f"{prefix} {entry['title']}")
 
-    return {
+    payload = {
         "ticker": ticker.upper(),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "summary": {
@@ -378,12 +588,16 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
 
 
 def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 8) -> dict:
+    ticker = ticker.upper()
+    offline_articles = _load_offline_articles(ticker)
+    offline_lookup = _build_article_lookup(offline_articles) if offline_articles else {"by_link": {}, "by_title": {}}
+
     if not ADK_AVAILABLE or "search_latest_news" not in globals():
         fallback = _load_offline_news_summary(ticker)
         if fallback:
             return fallback
         return {
-            "ticker": ticker.upper(),
+            "ticker": ticker,
             "fetched_at": datetime.now(timezone.utc).isoformat(),
             "summary": {
                 "sentiment": "Neutral",
@@ -404,7 +618,7 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
         if fallback:
             return fallback
         return {
-            "ticker": ticker.upper(),
+            "ticker": ticker,
             "fetched_at": datetime.now(timezone.utc).isoformat(),
             "summary": {
                 "sentiment": "Neutral",
@@ -420,57 +634,73 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
 
     items = response.get("results", []) if isinstance(response, dict) else []
 
-    seen_links = set()
+    seen_keys = set()
     articles: List[dict] = []
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=window_hours) if window_hours else None
 
     for item in items:
         link = item.get("link")
-        if not link or link in seen_links:
-            continue
-        seen_links.add(link)
-
         title = (item.get("title") or "").strip()
-        snippet = (item.get("snippet") or "").strip()
-        published = item.get("published")
-        try:
-            published_dt = (
-                datetime.fromisoformat(published.replace("Z", "+00:00")) if published else None
-            )
-        except Exception:
-            published_dt = None
+        identity = _article_identity(link, title)
+        if not title or (identity and identity in seen_keys):
+            continue
+        if identity:
+            seen_keys.add(identity)
 
+        snippet = (item.get("snippet") or "").strip()
         sentiment_info = _compute_article_sentiment(title, snippet)
 
-        articles.append(
-            {
-                "title": title,
-                "source": item.get("source"),
-                "link": link,
-                "published": published_dt.isoformat() if published_dt else None,
-                "snippet": snippet,
-                "sentiment": sentiment_info,
-            }
-        )
+        article = {
+            "title": title,
+            "source": item.get("source"),
+            "link": link,
+            "published": _coerce_timestamp(item.get("published")),
+            "snippet": snippet,
+            "sentiment": sentiment_info,
+            "origin": "live",
+        }
+
+        article = _enrich_article_metadata(article, offline_lookup)
+
+        if cutoff and article.get("published"):
+            published_dt = _parse_iso_datetime(article.get("published"))
+            if published_dt and published_dt < cutoff:
+                continue
+
+        articles.append(article)
 
     if window_hours and articles:
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=window_hours)
-        filtered = [
-            art
-            for art in articles
-            if not art["published"]
-            or datetime.fromisoformat(art["published"]).replace(tzinfo=timezone.utc) >= cutoff
-        ]
+        filtered: List[dict] = []
+        for art in articles:
+            published_dt = _parse_iso_datetime(art.get("published"))
+            if not published_dt or published_dt >= cutoff:
+                filtered.append(art)
         if filtered:
             articles = filtered
 
-    articles = articles[:max_results]
+    if len(articles) < max_results and offline_articles:
+        for offline_article in offline_articles:
+            identity = _article_identity(offline_article.get("link"), offline_article.get("title"))
+            if identity and identity in seen_keys:
+                continue
+            if cutoff and offline_article.get("published"):
+                offline_dt = _parse_iso_datetime(offline_article.get("published"))
+                if offline_dt and offline_dt < cutoff:
+                    continue
+            articles.append(offline_article)
+            if identity:
+                seen_keys.add(identity)
+            if len(articles) >= max_results:
+                break
+
+    articles = _sort_articles_descending(articles)[:max_results]
 
     if not articles:
         fallback = _load_offline_news_summary(ticker)
         if fallback:
             return fallback
         return {
-            "ticker": ticker.upper(),
+            "ticker": ticker,
             "fetched_at": datetime.now(timezone.utc).isoformat(),
             "summary": {
                 "sentiment": "Neutral",
@@ -511,9 +741,13 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
         rationale_parts.append(f"{len(negative)} source(s) flag emerging risks.")
     if not rationale_parts:
         rationale_parts.append("Coverage is balanced without a dominant directional signal.")
+    if offline_articles:
+        rationale_parts.append("Live feed supplemented with cached Yahoo Finance coverage for continuity.")
+    else:
+        rationale_parts.append("Live headlines sourced within the last 72 hours.")
 
     payload = {
-        "ticker": ticker.upper(),
+        "ticker": ticker,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "summary": {
             "sentiment": overall_sentiment,
@@ -532,6 +766,7 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
         },
         "articles": articles,
     }
+    _update_company_runtime(ticker, "news", payload)
     return payload
 
 @app.on_event("startup")

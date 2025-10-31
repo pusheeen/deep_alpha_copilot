@@ -167,7 +167,8 @@ deep_alpha_copilot/
       }
     }
     ```
-  - `news/{TICKER}_realtime_news.json`: live news cache used by the UI. Schema:
+  - `news/{TICKER}_realtime_news.json`: live news cache used by the UI. Each refresh merges Google Custom Search headlines with the latest Yahoo Finance dump and de-duplicates by link/title. Articles carry an `origin` of `live` or `cached`, and the `published` field is enriched from the API, structured HTML metadata, or the cached file so timestamps rarely come back `null`.
+    Schema:
     ```json
     {
       "ticker": "NVDA",
@@ -188,7 +189,8 @@ deep_alpha_copilot/
           "link": "https://...",
           "published": "2025-10-29T21:05:00Z",
           "snippet": "...",
-          "sentiment": { "label": "Positive", "score": 0.52 }
+          "sentiment": { "label": "Positive", "score": 0.52 },
+          "origin": "live"
         }
       ],
       "legacy_analysis": "Full-text interpretation from the nightly batch (optional)."
