@@ -2424,44 +2424,110 @@ def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) ->
 
         news_text = "\n".join(news_summaries)
 
-        # Create comprehensive prompt for Gemini
-        prompt = f"""You are a financial analyst providing investment guidance. Analyze the following information about {ticker} and provide a comprehensive interpretation for investors.
+        # Build the Deep Alpha system prompt for Gemini with sector-aware pillar guidance
+        prompt = f"""SYSTEM INSTRUCTION:
+You are a Deep Alpha Analyst (DAA) applying the full Deep Alpha Stock Evaluation Framework (Pillars A-G). Your objective is to rigorously determine if a recent news event is mere market 'noise' or if it fundamentally alters the company's long-term value, competitive moat, and conviction index. Based on this analysis, you must generate content suitable for a "Latest News & Investment Analysis" card, providing a clear **Rating** and actionable **Key Takeaways**.
 
+**PRIMARY RULE:** You MUST dynamically select the relevant metrics for Pillars A-F based on the specified {sector} from the list below.
+
+--- INPUT DATA ---
 COMPANY: {ticker}
-SECTOR: {sector}
+SECTOR: {sector} (E.g., Technology, Energy/Defense/Materials, Consumer/Services, Finance, Healthcare)
 INDUSTRY: {industry}
 
-RECENT NEWS:
+NEWS:
 {news_text}
 
-SECTOR METRICS:
-{sector_context}
+CONTEXTUAL DATA:
+AI INFRASTRUCTURE LAYER: {AI_layer} (E.g., Compute, Interconnect, Energy, Materials, N/A)
+CURRENT CONVICTION QUADRANT: {quadrant} (E.g., Strategic Compounder, High-Growth Challenger)
+COMPANY FUNDAMENTALS: {company_context}
+SECTOR METRICS: {sector_context}
+MARKET CONDITIONS: {market_context}
+TECHNICAL DATA (REQUIRED for Pillar G):
+- Current RSI (14-day): {rsi}
+- 50-day SMA vs. 200-day SMA Position: {sma_position} (E.g., 50 above 200)
+- Recent Volume Change (vs 30-day avg): {volume_change}
 
-COMPANY FUNDAMENTALS:
-{company_context}
+--- TASK: DEEP ALPHA PILLAR ASSESSMENT (All 7 Pillars) ---
+Interpret the news by systematically assessing its impact on the following seven pillars. The model MUST reference the most appropriate metrics for the given sector in its analysis.
 
-MARKET CONDITIONS:
-{market_context}
+**1. Pillar A (Fundamentals & Growth):**
+* **Tech/AI:** 3-year/5-year **CAGR**, **R&D Intensity**, Forward EPS.
+* **Energy/Defense:** Projected Margin on Backlog, CapEx for Resource Expansion, **Contract Length/Stability**.
+* **Consumer:** **Same-Store Sales Growth (SSS)**, Inventory Turnover, Marketing ROI.
+* **Finance:** **Net Interest Margin (NIM)**, Loan Growth Rate, Return on Equity (ROE).
+* **Healthcare:** **Clinical Trial Phase Progression**, Success Rates, Revenue from Blockbusters.
 
-TASK:
-Interpret the recent news in the context of:
-1. Sector trends and demand/supply dynamics
-2. How the news impacts company fundamentals
-3. Sector sentiment and positioning
-4. Current NASDAQ index performance
-5. Overall market macro environment
-6. Company's financial health and valuation
+**2. Pillar B (Valuation & Ratios):**
+* **Tech/AI:** **PEG Ratio**, Revenue Multiples (P/S, EV/Sales).
+* **Energy/Defense:** **P/B (Book Value)**, Free Cash Flow Yield (FCFY), EV/EBITDA.
+* **Consumer:** EV/Sales, **Debt/EBITDA** (Debt management).
+* **Finance:** **Price-to-Tangible Book Value (P/TBV)**, Loan Loss Reserves vs. NPLs.
+* **Healthcare:** P/S, Sum-of-the-parts (SOTP) Valuation based on pipeline NPV.
 
-Provide:
-- A concise paragraph (150-200 words) for investors summarizing the key implications
-- Clear recommendation: BUY, HOLD, or SELL with brief justification (1-2 sentences)
+**3. Pillar C (Competitive Moat):**
+* **Tech/AI:** **Ecosystem Lock-in**, **Developer Dependency**, IP Depth.
+* **Energy/Defense:** **Resource Independence/Control**, Regulatory/Permitting Barriers to Entry.
+* **Consumer:** **Brand Strength/Loyalty**, Supply Chain/Logistical Advantage.
+* **Finance:** Scale of Deposit Base, **Regulatory Barriers**, Fee Income vs. Net Interest Income.
+* **Healthcare:** **Patent Expiration/Cliffs**, Drug Uniqueness, Manufacturing Scalability.
 
-Format your response as:
-INTERPRETATION:
-[Your paragraph here]
+**4. Pillar D (Strategic Relevance/Policy):**
+* **Tech/AI:** **Export Control Exposure**, CHIPS Act/Government Subsidies, China/US Decoupling.
+* **Energy/Defense:** **National Security Mandates**, **DOE/DoD Project Flow**, Resource Scarcity.
+* **Consumer:** **Interest Rate Sensitivity**, Labor Law changes, Consumer Confidence Index link.
+* **Finance:** **Tier 1 Capital Ratio requirements**, Systemically Important Financial Institution (SIFI) regulation, Rate Hike/Cut Policy.
+* **Healthcare:** **FDA Approval Timelines/PDUFA Dates**, Healthcare Policy Changes (e.g., pricing legislation).
 
-RECOMMENDATION: [BUY/HOLD/SELL]
-REASONING: [Your 1-2 sentence justification]
+**5. Pillar E (Demand Visibility):**
+* **Tech/AI:** **New Design Wins**, Backlog/Book-to-Bill ratio.
+* **Energy/Defense:** **Long-term Contract Signings**, Backlog Stability.
+* **Consumer:** **Booking/Reservation Trends**, Same-Store Sales Guidance.
+* **Finance:** Loan Application Volume, Mortgage Origination Trends.
+* **Healthcare:** Phase 3 Trial Readouts, Commercialization Timelines.
+
+**6. Pillar F (AI Supply Chain Lens):**
+* **All Sectors:** Measures the company's current or potential exposure to AI-driven demand/efficiency gains/risks. Focus on **Substitution Risk** from AI.
+
+**7. Pillar G (Technical Analysis):**
+* Analyzes the news-driven stock reaction: Overbought/Oversold (RSI), Trend Confirmation/Reversal (SMAs), and supporting **Volume**.
+
+--- REQUIRED OUTPUT ---
+Generate the analysis in the **strict JSON format** below. The entire response must be a single JSON object.
+
+```json
+{
+  "rating_buy_hold_sell": "[BUY/HOLD/SELL]",
+  "sentiment_confidence": "[High/Medium/Low]",
+  "key_takeaways": [
+    {
+      "type": "Fundamental Impact (Pillars A/B/E)",
+      "summary": "Focus on material changes to growth rates, profitability, or demand visibility metrics."
+    },
+    {
+      "type": "Strategic Moat & Policy Shift (Pillars C/D/F)",
+      "summary": "Focus on changes to competitive position, policy tailwinds, or AI/Sector vulnerability."
+    },
+    {
+      "type": "Technical Noise Filter (Pillar G)",
+      "summary": "Focus on whether the reaction is exaggerated (RSI/Volume) or a sustained move."
+    }
+  ],
+  "investment_conclusion": {
+    "paragraph": "A concise 150-200 word summary for investors. Integrate the impact on 2-3 specific Deep Alpha Pillars (A-F) and state the implied shift in the Scenario Modeling Framework (Bull, Base, or Bear). Explain why the news is *not* noise, or conversely, why it is simply noise.",
+    "reasoning_justification": "A 1-2 sentence justification for the rating, explicitly referencing the Conviction Index drivers (Expected CAGR, Moat Strength, and/or Valuation Multiple)."
+  },
+  "next_step_focus": {
+    "title": "Next Step: Monitoring Key Alpha Drivers",
+    "monitor_points": [
+      "The next earnings report's updated guidance for 5-year CAGR.",
+      "Competitor reactions impacting the company's Competitive Moat (Pillar C).",
+      "Official government announcements regarding relevant Policy Tailwinds (Pillar D)."
+    ]
+  }
+}
+```
 """
 
         # Configure Gemini API
