@@ -152,10 +152,110 @@ JSONLD_TIMESTAMP_PATTERNS = [
 ]
 SSL_CONTEXT = ssl.create_default_context()
 
+# --- Deep Alpha heuristics for contextual data and watchlist ---
+AI_LAYER_SECTOR_DEFAULTS: Dict[str, str] = {
+    "technology": "Compute",
+    "communication services": "Interconnect",
+    "industrials": "Interconnect",
+    "energy": "Energy",
+    "utilities": "Energy",
+    "materials": "Materials",
+    "basic materials": "Materials",
+    "consumer defensive": "Services",
+    "consumer cyclical": "Services",
+    "healthcare": "Healthcare",
+    "financial services": "Services",
+}
+
+AI_LAYER_INDUSTRY_KEYWORDS: Dict[str, str] = {
+    "semiconductor": "Compute",
+    "chip": "Compute",
+    "cloud": "Compute",
+    "software": "Compute",
+    "hardware": "Compute",
+    "ai": "Compute",
+    "network": "Interconnect",
+    "communication": "Interconnect",
+    "telecom": "Interconnect",
+    "defense": "Energy",
+    "battery": "Energy",
+    "solar": "Energy",
+    "wind": "Energy",
+    "uranium": "Materials",
+    "lithium": "Materials",
+    "mining": "Materials",
+    "chemical": "Materials",
+    "insurance": "Services",
+    "bank": "Services",
+    "retail": "Services",
+    "logistics": "Interconnect",
+}
+
+WATCHLIST_LIMIT = int(os.getenv("DEEP_ALPHA_WATCHLIST_LIMIT", "4"))
+
 
 def _latest_company_metrics_file() -> Optional[Path]:
     files = sorted(SECTOR_METRICS_DIR.glob("company_metrics_*.json"))
     return files[-1] if files else None
+
+
+def _latest_sector_metrics_file() -> Optional[Path]:
+    files = sorted(SECTOR_METRICS_DIR.glob("sector_metrics_*.json"))
+    return files[-1] if files else None
+
+
+def _safe_float(value: Any) -> Optional[float]:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_ai_layer(sector: Optional[str], industry: Optional[str]) -> str:
+    sector_key = (sector or "").strip().lower()
+    industry_key = (industry or "").strip().lower()
+
+    if not sector_key and not industry_key:
+        return "N/A"
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in industry_key:
+            return layer
+
+    inferred = AI_LAYER_SECTOR_DEFAULTS.get(sector_key)
+    if inferred:
+        return inferred
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in sector_key:
+            return layer
+
+    return "N/A"
+
+
+def _infer_conviction_quadrant(metrics: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(metrics, dict) or not metrics:
+        return "Balanced Execution"
+
+    momentum_6m = _safe_float(metrics.get("momentum_6m"))
+    volatility = _safe_float(metrics.get("volatility"))
+    debt_to_equity = _safe_float(metrics.get("debt_to_equity"))
+    cagr = _safe_float(metrics.get("cagr"))
+
+    if momentum_6m is not None and volatility is not None:
+        if momentum_6m >= 40 and volatility >= 45:
+            return "High-Growth Challenger"
+        if momentum_6m >= 10 and volatility < 45 and (debt_to_equity is None or debt_to_equity < 120):
+            return "Strategic Compounder"
+        if momentum_6m <= -5 and debt_to_equity and debt_to_equity > 200:
+            return "Turnaround Risk"
+
+    if cagr is not None and cagr >= 25 and (debt_to_equity is None or debt_to_equity < 100):
+        return "Expansion Flywheel"
+
+    return "Balanced Execution"
 
 
 def load_supported_tickers() -> List[str]:
@@ -258,6 +358,235 @@ def load_company_metadata() -> Dict[str, Dict[str, str]]:
     COMPANY_METADATA_CACHE = metadata
     COMPANY_METADATA_CACHE_TIME = now
     return metadata
+
+
+def _build_watchlist_entry(
+    company: Dict[str, Any],
+    sector_info: Dict[str, Any],
+    metadata: Dict[str, str]
+) -> Dict[str, Any]:
+    ticker = company.get("ticker", "UNKNOWN")
+    sector = company.get("sector", "Unknown")
+    industry = company.get("industry", metadata.get("industry"))
+    company_name = metadata.get("name", ticker)
+
+    quality_score = _safe_float(sector_info.get("quality_score"))
+    sector_momentum = _safe_float(sector_info.get("avg_momentum_3m"))
+    sector_momentum6 = _safe_float(sector_info.get("avg_momentum_6m"))
+
+    cagr = _safe_float(company.get("cagr"))
+    momentum_3m = _safe_float(company.get("momentum_3m"))
+    momentum_6m = _safe_float(company.get("momentum_6m"))
+    volatility = _safe_float(company.get("volatility"))
+    pe_ratio = _safe_float(company.get("pe_ratio"))
+    ps_ratio = _safe_float(company.get("ps_ratio"))
+    debt_to_equity = _safe_float(company.get("debt_to_equity"))
+    interest_coverage = _safe_float(company.get("interest_coverage"))
+
+    explosive_sector = False
+    if quality_score is not None and quality_score >= 70:
+        explosive_sector = True
+    if sector_momentum is not None and sector_momentum >= 15:
+        explosive_sector = True
+
+    growth_fast = False
+    if momentum_6m is not None and momentum_6m >= 40:
+        growth_fast = True
+    if cagr is not None and cagr >= 25:
+        growth_fast = True
+
+    ai_layer = _infer_ai_layer(sector, industry)
+    conviction_quadrant = _infer_conviction_quadrant(company)
+
+    debt_manageable = True
+    if debt_to_equity is not None and debt_to_equity > 180:
+        debt_manageable = False
+    if interest_coverage is not None and interest_coverage < 4:
+        debt_manageable = False
+
+    backlog_signal = True if momentum_3m and momentum_3m >= 5 else False
+
+    base_pe_text = "N/A"
+    bull_pe_text = "N/A"
+    base_ps_text = "N/A"
+    bull_ps_text = "N/A"
+    if pe_ratio is not None and pe_ratio > 0:
+        base_pe_text = f"{pe_ratio:.1f}"
+        bull_pe_text = f"{pe_ratio * 1.2:.1f}"
+    if ps_ratio is not None and ps_ratio > 0:
+        base_ps_text = f"{ps_ratio:.1f}"
+        bull_ps_text = f"{ps_ratio * 1.2:.1f}"
+
+    came_down_from_highs = momentum_3m is not None and momentum_3m < 0
+
+    score = 0
+    if explosive_sector:
+        score += 2
+    if growth_fast:
+        score += 2
+    if ai_layer != "N/A":
+        score += 1
+    if debt_manageable:
+        score += 1
+    if backlog_signal:
+        score += 1
+    if pe_ratio is not None and pe_ratio < 80:
+        score += 1
+    if volatility is not None and volatility < 90:
+        score += 1
+    if came_down_from_highs:
+        score += 0.5
+
+    rating = "Monitor"
+    if score >= 6:
+        rating = "Buy"
+    elif score >= 4.5:
+        rating = "Watch"
+
+    thesis_points: List[str] = []
+    if explosive_sector:
+        components = []
+        if quality_score is not None:
+            components.append(f"quality {quality_score:.0f}/100")
+        if sector_momentum is not None:
+            components.append(f"3M momentum {sector_momentum:+.1f}%")
+        if sector_momentum6 is not None:
+            components.append(f"6M momentum {sector_momentum6:+.1f}%")
+        thesis_points.append(f"Explosive {sector} sector with {'; '.join(components)} supporting national and policy tailwinds.")
+    else:
+        thesis_points.append(f"{sector} sector momentum is mixed; position sizing should reflect policy and demand uncertainty.")
+
+    if growth_fast:
+        thesis_points.append(
+            f"Growth accelerates as 6M momentum {momentum_6m or 0:+.1f}% and CAGR {cagr or 0:.1f}% reflect rapid adoption."
+        )
+    else:
+        thesis_points.append("Growth trajectory is stabilizing; monitor for new catalysts before adding risk.")
+
+    if ai_layer != "N/A":
+        thesis_points.append(f"Technology readiness: positioned in the {ai_layer} layer of the AI stack, supporting feasibility of deployments.")
+
+    if debt_manageable:
+        thesis_points.append(
+            f"Balance sheet manageable with Debt/Equity {debt_to_equity or 'N/A'} and interest coverage {interest_coverage or 'N/A'}."
+        )
+    else:
+        thesis_points.append("Leverage profile elevated; prioritize cash flow monitoring before scaling exposure.")
+
+    if backlog_signal:
+        thesis_points.append(
+            f"Demand visibility remains solid: 3M momentum {momentum_3m or 0:+.1f}% suggests healthy backlog conversion."
+        )
+    else:
+        thesis_points.append("Order momentum has cooled; validate backlog commentary on the next call.")
+
+    valuation_commentary = f"Valuation base P/E {base_pe_text} (bull {bull_pe_text}); P/S {base_ps_text} (bull {bull_ps_text})."
+    thesis_points.append(valuation_commentary)
+
+    if came_down_from_highs:
+        thesis_points.append("Shares have pulled back from recent highs, offering a reset entry to rebuild positions.")
+    else:
+        thesis_points.append("Shares continue to probe highs; add on weakness to avoid chasing momentum.")
+
+    thesis_points.append("Leadership & insider activity: no major turnover flagged; monitor Form 4 filings for unexpected selling.")
+    thesis_points.append("Strategic deals & hiring: track press releases for partnerships and career-site hiring momentum to confirm execution.")
+    thesis_points.append(f"Ecosystem role: {company_name} anchors {industry or 'its niche'}, providing {ai_layer if ai_layer != 'N/A' else 'core capabilities'} across the value chain.")
+
+    risk_items: List[Dict[str, str]] = []
+    risk_highlights: List[str] = []
+
+    if volatility is not None and volatility > 90:
+        risk_items.append({
+            "title": "Volatility",
+            "summary": f"Annualized volatility at {volatility:.1f}% implies sharp swings; size positions accordingly."
+        })
+        risk_highlights.append("High volatility")
+
+    if debt_to_equity is not None and debt_to_equity > 180:
+        risk_items.append({
+            "title": "Leverage",
+            "summary": f"Debt/Equity {debt_to_equity:.0f}x with interest coverage {interest_coverage or 'N/A'} requires disciplined cash management."
+        })
+        risk_highlights.append("Elevated leverage")
+
+    if sector_momentum is not None and sector_momentum < 5:
+        risk_items.append({
+            "title": "Sector momentum",
+            "summary": f"Sector momentum at {sector_momentum:+.1f}% could fade if policy or demand catalysts stall."
+        })
+        risk_highlights.append("Momentum fragile")
+
+    if not risk_items:
+        risk_items.append({
+            "title": "Execution",
+            "summary": "Track backlog conversion, tariff exposure, and supply chain reliability to avoid thesis drift."
+        })
+        risk_highlights.append("Execution vigilance")
+
+    risk_summary = ", ".join(risk_highlights[:2])
+
+    return {
+        "ticker": ticker,
+        "name": company_name,
+        "sector": sector,
+        "industry": industry,
+        "ai_layer": ai_layer,
+        "conviction": conviction_quadrant,
+        "rating": rating,
+        "score": round(score, 1),
+        "thesis_points": thesis_points,
+        "valuation": {
+            "pe_base": base_pe_text,
+            "pe_bull": bull_pe_text,
+            "ps_base": base_ps_text,
+            "ps_bull": bull_ps_text,
+        },
+        "risk": {
+            "summary": risk_summary,
+            "items": risk_items,
+        },
+    }
+
+
+def build_deep_alpha_watchlist(
+    company_metadata: Dict[str, Dict[str, str]],
+    limit: int = WATCHLIST_LIMIT,
+) -> List[Dict[str, Any]]:
+    metrics_file = _latest_company_metrics_file()
+    sector_file = _latest_sector_metrics_file()
+    if not metrics_file or not metrics_file.exists():
+        return []
+
+    try:
+        with metrics_file.open("r") as fh:
+            company_metrics_data = json.load(fh)
+    except Exception as exc:
+        logger.warning("Failed to load company metrics for watchlist: %s", exc)
+        return []
+
+    sector_map: Dict[str, Any] = {}
+    if sector_file and sector_file.exists():
+        try:
+            with sector_file.open("r") as fh:
+                sector_payload = json.load(fh)
+            sector_map = sector_payload.get("sectors", {})
+        except Exception as exc:
+            logger.warning("Failed to load sector metrics for watchlist: %s", exc)
+
+    entries: List[Dict[str, Any]] = []
+    for company in company_metrics_data:
+        ticker = company.get("ticker")
+        if not ticker:
+            continue
+        metadata = company_metadata.get(ticker, {})
+        sector = company.get("sector", metadata.get("industry"))
+        sector_info = sector_map.get(sector, {}) if isinstance(sector_map, dict) else {}
+
+        entry = _build_watchlist_entry(company, sector_info, metadata)
+        entries.append(entry)
+
+    entries = sorted(entries, key=lambda item: item.get("score", 0), reverse=True)
+    return entries[:limit]
 
 
 def _news_cache_path(ticker: str) -> Path:
@@ -910,6 +1239,7 @@ async def get_index(request: Request):
         user = await get_user_by_id(user_id)
     supported_tickers = load_supported_tickers()
     company_metadata = load_company_metadata()
+    watchlist = build_deep_alpha_watchlist(company_metadata)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -918,6 +1248,7 @@ async def get_index(request: Request):
             "supported_tickers": supported_tickers,
             "supported_tickers_json": json.dumps(supported_tickers),
             "company_metadata_json": json.dumps(company_metadata),
+            "watchlist_json": json.dumps(watchlist),
         },
     )
 
@@ -995,8 +1326,10 @@ async def get_latest_news(ticker: str):
             payload = fetch_realtime_news(ticker)
             _save_cached_news(ticker, payload)
 
-        # Attach legacy interpretation for deeper dive if available
-        interpretation_summary = None
+        # Attach Deep Alpha interpretation card (new structure) and legacy text fallback if available
+        deep_alpha_card: Optional[dict] = None
+        interpretation_summary: Optional[str] = None
+        card_generated_at: Optional[str] = None
         interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
         interpretation_files = sorted(
             [
@@ -1007,11 +1340,36 @@ async def get_latest_news(ticker: str):
         if interpretation_files:
             try:
                 with interpretation_files[-1].open("r") as fh:
-                    interpretation_summary = json.load(fh).get("analysis")
+                    interpretation_blob = json.load(fh)
+                card_generated_at = interpretation_blob.get("interpretation_timestamp")
+                raw_interpretation = (
+                    interpretation_blob.get("interpretation")
+                    or interpretation_blob.get("analysis")
+                )
+
+                if isinstance(raw_interpretation, dict):
+                    deep_alpha_card = raw_interpretation
+                elif isinstance(raw_interpretation, str):
+                    try:
+                        parsed = json.loads(raw_interpretation)
+                        if isinstance(parsed, dict):
+                            deep_alpha_card = parsed
+                        else:
+                            interpretation_summary = raw_interpretation
+                    except json.JSONDecodeError:
+                        interpretation_summary = raw_interpretation
+                elif raw_interpretation is not None:
+                    interpretation_summary = str(raw_interpretation)
+
+                # Preserve legacy analysis field if available separately
+                if not interpretation_summary:
+                    interpretation_summary = interpretation_blob.get("analysis")
             except Exception:
                 interpretation_summary = None
 
+        payload["deep_alpha_analysis"] = deep_alpha_card
         payload["legacy_analysis"] = interpretation_summary
+        payload["analysis_generated_at"] = card_generated_at
 
         return {"status": "success", "data": payload}
     except Exception as exc:

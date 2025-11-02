@@ -2345,7 +2345,6 @@ def fetch_all_news(tickers: List[str] = None, days: int = 1, filter_with_llm: bo
 
     return results
 
-
 def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) -> str:
     """
     Generate comprehensive news interpretation using Gemini 2.5 Flash LLM.
@@ -2439,18 +2438,30 @@ NEWS:
 {news_text}
 
 CONTEXTUAL DATA:
-AI INFRASTRUCTURE LAYER: {AI_layer} (E.g., Compute, Interconnect, Energy, Materials, N/A)
-CURRENT CONVICTION QUADRANT: {quadrant} (E.g., Strategic Compounder, High-Growth Challenger)
+AI INFRASTRUCTURE LAYER: {ai_layer} (E.g., Compute, Interconnect, Energy, Materials, N/A)
+CURRENT CONVICTION QUADRANT: {conviction_quadrant} (E.g., Strategic Compounder, High-Growth Challenger)
 COMPANY FUNDAMENTALS: {company_context}
 SECTOR METRICS: {sector_context}
 MARKET CONDITIONS: {market_context}
 TECHNICAL DATA (REQUIRED for Pillar G):
-- Current RSI (14-day): {rsi}
+- Current RSI (14-day): {rsi_value}
 - 50-day SMA vs. 200-day SMA Position: {sma_position} (E.g., 50 above 200)
 - Recent Volume Change (vs 30-day avg): {volume_change}
 
 --- TASK: DEEP ALPHA PILLAR ASSESSMENT (All 7 Pillars) ---
 Interpret the news by systematically assessing its impact on the following seven pillars. The model MUST reference the most appropriate metrics for the given sector in its analysis.
+
+ALWAYS weave in the following investigative checks when relevant, citing concrete data where possible:
+- Explain why sector growth is accelerating (government policy, national strategy, secular demand) when the industry is in an explosive phase.
+- Comment on technological feasibility or pace of innovation driving the thesis.
+- Evaluate leverage and liquidity to confirm debt remains manageable under the updated outlook.
+- Highlight backlog or committed revenue visibility and whether it is expanding.
+- Discuss valuation (P/E, P/S, EV/Sales) across bull/base/bear framing and whether the stock has recently come down from all-time highs.
+- Assess leadership credibility, including recent executive commentary or insider selling activity.
+- Surface material deals/partnerships/M&A announced alongside the news.
+- Note hiring momentum and whether talent deployment matches stated strategy.
+- Briefly situate the company inside the ecosystem (what it builds, whom it serves) using company disclosures or website positioning.
+- Call out risks (operational, regulatory/tariff, execution) that could derail the scenario.
 
 **1. Pillar A (Fundamentals & Growth):**
 * **Tech/AI:** 3-year/5-year **CAGR**, **R&D Intensity**, Forward EPS.
@@ -2528,6 +2539,7 @@ Generate the analysis in the **strict JSON format** below. The entire response m
   }
 }
 ```
+
 """
 
         # Configure Gemini API
