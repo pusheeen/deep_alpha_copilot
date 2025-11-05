@@ -187,15 +187,9 @@
             
             <!-- Ticker Grid -->
             <div id="ticker-grid" class="grid grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-3 mb-6">
-                ${supportedTickers.map(ticker => {
-                    const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
-                    return `
-                        <div class="ticker-card bg-slate-50 hover:bg-slate-100 rounded-lg p-3 text-center transition-colors cursor-pointer border border-slate-200 hover:border-blue-300" data-ticker="${ticker}">
-                            <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
-                            <div class="text-xs text-slate-500 mt-1 truncate" title="${metadata.name}">${metadata.name}</div>
-                        </div>
-                    `;
-                }).join('')}
+                <div class="col-span-full text-center text-sm text-slate-500 py-4">
+                    Loading ticker coverage…
+                </div>
             </div>
             
             <!-- Full Table (Hidden by default) -->
