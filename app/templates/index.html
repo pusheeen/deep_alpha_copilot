@@ -970,8 +970,7 @@
                 ? (() => {
                     let legacyText = '';
                     if (Array.isArray(legacyAnalysis)) {
-                        legacyText = legacyAnalysis.join('
-');
+                        legacyText = legacyAnalysis.join('\\n');
                     } else if (typeof legacyAnalysis === 'object') {
                         legacyText = JSON.stringify(legacyAnalysis, null, 2);
                     } else {
