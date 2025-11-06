@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 from tqdm import tqdm
 import yfinance as yf
 from bs4 import BeautifulSoup
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional, Callable, Tuple
 import logging
 import atexit
 
@@ -155,6 +155,174 @@ os.makedirs(MARKET_INDEX_DIR, exist_ok=True)
 # Ensure per-company CEO profiles directory
 CEO_PROFILE_DIR = os.path.join(DATA_DIR, 'ceo_profiles')
 os.makedirs(CEO_PROFILE_DIR, exist_ok=True)
+
+# --- Heuristics shared with runtime app ---
+AI_LAYER_SECTOR_DEFAULTS: Dict[str, str] = {
+    "technology": "Compute",
+    "communication services": "Interconnect",
+    "industrials": "Interconnect",
+    "energy": "Energy",
+    "utilities": "Energy",
+    "materials": "Materials",
+    "basic materials": "Materials",
+    "consumer defensive": "Services",
+    "consumer cyclical": "Services",
+    "healthcare": "Healthcare",
+    "financial services": "Services",
+}
+
+AI_LAYER_INDUSTRY_KEYWORDS: Dict[str, str] = {
+    "semiconductor": "Compute",
+    "chip": "Compute",
+    "cloud": "Compute",
+    "software": "Compute",
+    "hardware": "Compute",
+    "ai": "Compute",
+    "network": "Interconnect",
+    "communication": "Interconnect",
+    "telecom": "Interconnect",
+    "defense": "Energy",
+    "battery": "Energy",
+    "solar": "Energy",
+    "wind": "Energy",
+    "uranium": "Materials",
+    "lithium": "Materials",
+    "mining": "Materials",
+    "chemical": "Materials",
+    "insurance": "Services",
+    "bank": "Services",
+    "retail": "Services",
+    "logistics": "Interconnect",
+}
+
+
+def _safe_float(value: Any) -> Optional[float]:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def infer_ai_layer(sector: Optional[str], industry: Optional[str]) -> str:
+    sector_key = (sector or "").strip().lower()
+    industry_key = (industry or "").strip().lower()
+
+    if not sector_key and not industry_key:
+        return "N/A"
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in industry_key:
+            return layer
+
+    inferred = AI_LAYER_SECTOR_DEFAULTS.get(sector_key)
+    if inferred:
+        return inferred
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in sector_key:
+            return layer
+
+    return "N/A"
+
+
+def infer_conviction_quadrant(metrics: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(metrics, dict) or not metrics:
+        return "Balanced Execution"
+
+    momentum_6m = _safe_float(metrics.get("momentum_6m"))
+    volatility = _safe_float(metrics.get("volatility"))
+    debt_to_equity = _safe_float(metrics.get("debt_to_equity"))
+    cagr = _safe_float(metrics.get("cagr"))
+
+    if momentum_6m is not None and volatility is not None:
+        if momentum_6m >= 40 and volatility >= 45:
+            return "High-Growth Challenger"
+        if momentum_6m >= 10 and volatility < 45 and (debt_to_equity is None or debt_to_equity < 120):
+            return "Strategic Compounder"
+        if momentum_6m <= -5 and debt_to_equity and debt_to_equity > 200:
+            return "Turnaround Risk"
+
+    if cagr is not None and cagr >= 25 and (debt_to_equity is None or debt_to_equity < 100):
+        return "Expansion Flywheel"
+
+    return "Balanced Execution"
+
+
+def compute_technical_snapshot(ticker: str) -> Tuple[str, str, str]:
+    """
+    Compute lightweight technical indicators used in the Gemini prompt.
+    Returns (rsi_value, sma_position, volume_change) as formatted strings.
+    """
+    try:
+        history = yf.Ticker(ticker).history(period="6mo", interval="1d")
+        if history.empty:
+            return ("N/A", "Insufficient data", "N/A")
+
+        closes = history["Close"].dropna()
+        volumes = history["Volume"].dropna()
+
+        # RSI (14-day)
+        if len(closes) >= 15:
+            delta = closes.diff()
+            gain = delta.clip(lower=0)
+            loss = -delta.clip(upper=0)
+            avg_gain = gain.rolling(window=14, min_periods=14).mean()
+            avg_loss = loss.rolling(window=14, min_periods=14).mean()
+            rs = avg_gain / avg_loss.replace({0: np.nan})
+            rsi_series = 100 - (100 / (1 + rs))
+            rsi_value = rsi_series.iloc[-1]
+            rsi_text = f"{rsi_value:.1f}"
+        else:
+            rsi_text = "N/A"
+
+        # Simple moving averages
+        sma_50 = closes.rolling(window=50, min_periods=20).mean().iloc[-1] if len(closes) >= 20 else None
+        sma_200 = closes.rolling(window=200, min_periods=60).mean().iloc[-1] if len(closes) >= 60 else None
+        if sma_50 is not None and sma_200 is not None:
+            if sma_50 > sma_200:
+                sma_position = "50 above 200"
+            elif sma_50 < sma_200:
+                sma_position = "50 below 200"
+            else:
+                sma_position = "50 equals 200"
+        else:
+            sma_position = "Insufficient data"
+
+        # Volume change vs 30-day average
+        if len(volumes) >= 30:
+            recent_volume = volumes.iloc[-1]
+            avg_volume = volumes.tail(30).mean()
+            if avg_volume:
+                volume_pct = ((recent_volume - avg_volume) / avg_volume) * 100
+                volume_change = f"{volume_pct:+.1f}%"
+            else:
+                volume_change = "N/A"
+        else:
+            volume_change = "N/A"
+
+        return (rsi_text, sma_position, volume_change)
+
+    except Exception as exc:
+        logger.warning("Unable to compute technical snapshot for %s: %s", ticker, exc)
+        return ("N/A", "Insufficient data", "N/A")
+
+
+def strip_code_fence(text: str) -> str:
+    """Remove Markdown-style code fences from a string."""
+    cleaned = (text or "").strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+        newline_index = cleaned.find("\n")
+        if newline_index != -1:
+            cleaned = cleaned[newline_index + 1 :]
+        else:
+            cleaned = ""
+    cleaned = cleaned.rstrip()
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3].rstrip()
+    return cleaned
 
 # Directories for news articles and interpretations
 NEWS_DATA_DIR = os.path.join(DATA_DIR, 'unstructured', 'news')
@@ -2371,6 +2539,10 @@ def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) ->
     if not news_articles:
         return f"No recent news available for {ticker}."
 
+    # Retry logic with exponential backoff
+    max_retries = 3
+    retry_delay = 2  # seconds
+
     try:
         # Get company information
         stock = yf.Ticker(ticker)
@@ -2387,23 +2559,45 @@ def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) ->
                 sector_data = json.load(f)
                 if sector in sector_data.get('sectors', {}):
                     sector_info = sector_data['sectors'][sector]
-                    sector_context = f"Sector: {sector}, Quality Score: {sector_info.get('quality_score', 'N/A'):.1f}/100, " \
-                                   f"3M Momentum: {sector_info.get('avg_momentum_3m', 'N/A'):.1f}%, " \
-                                   f"ROE: {sector_info.get('avg_roe', 'N/A'):.1f}%"
+                    quality_score = _safe_float(sector_info.get('quality_score'))
+                    sector_momentum = _safe_float(sector_info.get('avg_momentum_3m'))
+                    sector_roe = _safe_float(sector_info.get('avg_roe'))
+                    quality_text = f"{quality_score:.1f}/100" if quality_score is not None else "N/A"
+                    momentum_text = f"{sector_momentum:+.1f}%" if sector_momentum is not None else "N/A"
+                    roe_text = f"{sector_roe:.1f}%" if sector_roe is not None else "N/A"
+                    sector_context = (
+                        f"Sector: {sector}, "
+                        f"Quality Score: {quality_text}, "
+                        f"3M Momentum: {momentum_text}, "
+                        f"ROE: {roe_text}"
+                    )
 
         # Get latest company metrics
         company_metrics_files = sorted([f for f in os.listdir(SECTOR_METRICS_DIR) if f.startswith('company_metrics_')])
         company_context = "Company fundamentals not available."
+        company_metrics: Optional[Dict[str, Any]] = None
         if company_metrics_files:
             latest_company_file = os.path.join(SECTOR_METRICS_DIR, company_metrics_files[-1])
             with open(latest_company_file, 'r') as f:
                 company_data = json.load(f)
                 company_metrics = next((c for c in company_data if c['ticker'] == ticker), None)
                 if company_metrics:
-                    company_context = f"P/E: {company_metrics.get('pe_ratio', 'N/A')}, " \
-                                    f"ROE: {company_metrics.get('roe', 'N/A'):.1f}%, " \
-                                    f"3M Return: {company_metrics.get('momentum_3m', 'N/A'):.1f}%, " \
-                                    f"Volatility: {company_metrics.get('volatility', 'N/A'):.1f}%"
+                    pe_ratio_val = _safe_float(company_metrics.get('pe_ratio'))
+                    roe_val = _safe_float(company_metrics.get('roe'))
+                    momentum_val = _safe_float(company_metrics.get('momentum_3m'))
+                    volatility_val = _safe_float(company_metrics.get('volatility'))
+
+                    pe_text = f"{pe_ratio_val:.1f}" if pe_ratio_val is not None else "N/A"
+                    roe_text = f"{roe_val:.1f}%" if roe_val is not None else "N/A"
+                    momentum_text = f"{momentum_val:+.1f}%" if momentum_val is not None else "N/A"
+                    volatility_text = f"{volatility_val:.1f}%" if volatility_val is not None else "N/A"
+
+                    company_context = (
+                        f"P/E: {pe_text}, "
+                        f"ROE: {roe_text}, "
+                        f"3M Return: {momentum_text}, "
+                        f"Volatility: {volatility_text}"
+                    )
 
         # Get market index data (NASDAQ)
         try:
@@ -2414,12 +2608,19 @@ def interpret_news_with_llm(ticker: str, news_articles: List[Dict[str, Any]]) ->
         except:
             market_context = "Market data not available."
 
+        ai_layer = infer_ai_layer(sector, industry)
+        conviction_quadrant = infer_conviction_quadrant(company_metrics)
+        rsi_value, sma_position, volume_change = compute_technical_snapshot(ticker)
+
         # Compile news summaries
         news_summaries = []
         for i, article in enumerate(news_articles[:5], 1):  # Limit to 5 most recent
-            news_summaries.append(f"{i}. {article['title']} ({article['publisher']})")
-            if article.get('summary'):
-                news_summaries.append(f"   Summary: {article['summary'][:150]}...")
+            title = article.get('title') or article.get('headline') or 'Untitled headline'
+            publisher = article.get('publisher') or article.get('source') or 'News Source'
+            news_summaries.append(f"{i}. {title} ({publisher})")
+            summary_snippet = article.get('summary') or article.get('snippet')
+            if summary_snippet:
+                news_summaries.append(f"   Summary: {summary_snippet[:150]}...")
 
         news_text = "\n".join(news_summaries)
 
@@ -2508,36 +2709,36 @@ ALWAYS weave in the following investigative checks when relevant, citing concret
 Generate the analysis in the **strict JSON format** below. The entire response must be a single JSON object.
 
 ```json
-{
+{{
   "rating_buy_hold_sell": "[BUY/HOLD/SELL]",
   "sentiment_confidence": "[High/Medium/Low]",
   "key_takeaways": [
-    {
+    {{
       "type": "Fundamental Impact (Pillars A/B/E)",
       "summary": "Focus on material changes to growth rates, profitability, or demand visibility metrics."
-    },
-    {
+    }},
+    {{
       "type": "Strategic Moat & Policy Shift (Pillars C/D/F)",
       "summary": "Focus on changes to competitive position, policy tailwinds, or AI/Sector vulnerability."
-    },
-    {
+    }},
+    {{
       "type": "Technical Noise Filter (Pillar G)",
       "summary": "Focus on whether the reaction is exaggerated (RSI/Volume) or a sustained move."
-    }
+    }}
   ],
-  "investment_conclusion": {
+  "investment_conclusion": {{
     "paragraph": "A concise 150-200 word summary for investors. Integrate the impact on 2-3 specific Deep Alpha Pillars (A-F) and state the implied shift in the Scenario Modeling Framework (Bull, Base, or Bear). Explain why the news is *not* noise, or conversely, why it is simply noise.",
     "reasoning_justification": "A 1-2 sentence justification for the rating, explicitly referencing the Conviction Index drivers (Expected CAGR, Moat Strength, and/or Valuation Multiple)."
-  },
-  "next_step_focus": {
+  }},
+  "next_step_focus": {{
     "title": "Next Step: Monitoring Key Alpha Drivers",
     "monitor_points": [
       "The next earnings report's updated guidance for 5-year CAGR.",
       "Competitor reactions impacting the company's Competitive Moat (Pillar C).",
       "Official government announcements regarding relevant Policy Tailwinds (Pillar D)."
     ]
-  }
-}
+  }}
+}}
 ```
 
 """
@@ -2547,8 +2748,6 @@ Generate the analysis in the **strict JSON format** below. The entire response m
         model = genai.GenerativeModel('gemini-2.0-flash-exp')
 
         # Retry logic with exponential backoff
-        max_retries = 3
-        retry_delay = 2  # seconds
 
         for attempt in range(max_retries):
             try:
@@ -2621,17 +2820,30 @@ def save_news_interpretation(ticker: str, news_file_path: str) -> Optional[str]:
         # Generate interpretation
         logger.info(f"Generating news interpretation for {ticker}...")
         interpretation_text = interpret_news_with_llm(ticker, news_articles)
+        cleaned_interpretation = strip_code_fence(interpretation_text)
+
+        parsed_interpretation = None
+        if cleaned_interpretation:
+            try:
+                parsed_interpretation = json.loads(cleaned_interpretation)
+            except json.JSONDecodeError:
+                parsed_interpretation = None
+
+        interpretation_payload: Any = parsed_interpretation if parsed_interpretation is not None else cleaned_interpretation
 
         # Save interpretation with 1:1 mapping to news file
         interpretation_data = {
             'ticker': ticker,
-            'interpretation': interpretation_text,
+            'interpretation': interpretation_payload,
+            'interpretation_raw': interpretation_text,
             'news_file': news_filename,
             'news_timestamp': news_data.get('fetch_timestamp'),
             'interpretation_timestamp': datetime.now().isoformat(),
             'num_articles_analyzed': len(news_articles),
             'articles': news_articles  # Include articles for reference
         }
+        if parsed_interpretation is not None:
+            interpretation_data['format'] = 'json'
 
         with open(interpretation_path, 'w') as f:
             json.dump(interpretation_data, f, indent=2)
