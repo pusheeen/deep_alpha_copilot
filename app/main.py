@@ -4,16 +4,35 @@
 Main FastAPI application file, adapted to use the Google ADK agent system.
 """
 import asyncio
+import csv
+import logging
 import json
+import math
+import os
 import re
+import ssl
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from starlette.responses import FileResponse
-from pydantic import BaseModel
+from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
+from typing import Dict, List, Optional, Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+import databases
+import sqlalchemy
+import stripe
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import FileResponse
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # --- ADK Imports (Optional) ---
-from typing import Optional, Dict, Any
 try:
     from google.adk.agents import Agent
     from google.adk.runners import Runner
@@ -24,66 +43,28 @@ except ImportError:
     ADK_AVAILABLE = False
     print("Warning: Google ADK not available. Agent features will be disabled.")
 
-# Add this import
-from fastapi.middleware.cors import CORSMiddleware 
-import os
-try:
-    import stripe
-except ImportError:
-    stripe = None
-import databases
-import sqlalchemy
-from passlib.context import CryptContext
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-from fastapi import Form, Depends, HTTPException
-
 app = FastAPI()
 
-# CORS configuration - environment aware
-# In production, set ALLOWED_ORIGINS env var to your domain
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_methods=["*"], # Allows all methods
+    allow_headers=["*"], # Allows all headers
 )
+
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
 if ADK_AVAILABLE:
     try:
-        from app.agents.agents import root_agent
+        from app.agents.agents import root_agent, search_latest_news
     except ImportError:
         ADK_AVAILABLE = False
         print("Warning: Could not import agents. Agent features will be disabled.")
-
-# Import news functions directly from fetch_data module
-try:
-    from fetch_data.news import fetch_news_for_ticker, interpret_news_with_gemini
-    from fetch_data.sector_news import fetch_sector_news
-    NEWS_AVAILABLE = True
-except ImportError as e:
-    fetch_news_for_ticker = None
-    interpret_news_with_gemini = None
-    fetch_sector_news = None
-    NEWS_AVAILABLE = False
-    print(f"Warning: Could not import news functions: {e}")
-
-# Directories for cached data
-from fetch_data.utils import DATA_ROOT, NEWS_DATA_DIR, NEWS_INTERPRETATION_DIR
-import os
-
-# Cached valuation metrics directory
-VALUATION_METRICS_DIR = os.path.join(DATA_ROOT, "unstructured", "valuation_metrics")
-os.makedirs(VALUATION_METRICS_DIR, exist_ok=True)
-
 from app.scoring import compute_company_scores, ScoreComputationError
 load_dotenv()
-import math
 
 # Utility function to sanitize data for JSON serialization
 def sanitize_for_json(obj):
@@ -100,13 +81,13 @@ def sanitize_for_json(obj):
 
 # --- Configuration ---
 APP_DIR = Path(__file__).resolve().parent
-# Stripe configuration (optional)
+# Stripe configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+stripe.api_key = STRIPE_SECRET_KEY or None
+DOMAIN = os.getenv("DOMAIN", "http://localhost:8000")
 PRICE_ID = os.getenv("STRIPE_PRICE_ID")
-if stripe:
-    stripe.api_key = STRIPE_SECRET_KEY or None
 # Flag whether Stripe is configured
-HAS_STRIPE = bool(stripe and STRIPE_SECRET_KEY and PRICE_ID)
+HAS_STRIPE = bool(STRIPE_SECRET_KEY and PRICE_ID)
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db")
@@ -131,6 +112,991 @@ engine = sqlalchemy.create_engine(
 metadata.create_all(engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+STRUCTURED_DIR = DATA_ROOT / "structured"
+SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
+RUNTIME_DIR = DATA_ROOT / "runtime"
+PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
+REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
+COMPANY_STATIC_DIR = DATA_ROOT / "company"
+COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
+
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
+
+logger = logging.getLogger(__name__)
+
+SUPPORTED_TICKERS_CACHE: List[str] = []
+SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
+SUPPORTED_TICKERS_TTL = timedelta(minutes=30)
+REALTIME_NEWS_TTL = timedelta(minutes=30)
+COMPANIES_FILE = DATA_ROOT / "companies.csv"
+COMPANY_METADATA_CACHE: Dict[str, Dict[str, str]] = {}
+COMPANY_METADATA_CACHE_TIME: Optional[datetime] = None
+COMPANY_METADATA_TTL = timedelta(minutes=30)
+
+sentiment_analyzer = SentimentIntensityAnalyzer()
+ARTICLE_HTML_SNIFF_BYTES = 65536
+ARTICLE_TIMESTAMP_CACHE: Dict[str, Optional[str]] = {}
+META_TIMESTAMP_PATTERNS = [
+    re.compile(r'property=["\']article:published_time["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'property=["\']og:updated_time["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'name=["\']pubdate["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+    re.compile(r'name=["\']date["\']\s+content=["\']([^"\']+)["\']', re.IGNORECASE),
+]
+JSONLD_TIMESTAMP_PATTERNS = [
+    re.compile(r'"datePublished"\s*:\s*"([^"]+)"'),
+    re.compile(r'"dateCreated"\s*:\s*"([^"]+)"'),
+    re.compile(r'"dateModified"\s*:\s*"([^"]+)"'),
+]
+SSL_CONTEXT = ssl.create_default_context()
+
+# --- Deep Alpha heuristics for contextual data and watchlist ---
+AI_LAYER_SECTOR_DEFAULTS: Dict[str, str] = {
+    "technology": "Compute",
+    "communication services": "Interconnect",
+    "industrials": "Interconnect",
+    "energy": "Energy",
+    "utilities": "Energy",
+    "materials": "Materials",
+    "basic materials": "Materials",
+    "consumer defensive": "Services",
+    "consumer cyclical": "Services",
+    "healthcare": "Healthcare",
+    "financial services": "Services",
+}
+
+AI_LAYER_INDUSTRY_KEYWORDS: Dict[str, str] = {
+    "semiconductor": "Compute",
+    "chip": "Compute",
+    "cloud": "Compute",
+    "software": "Compute",
+    "hardware": "Compute",
+    "ai": "Compute",
+    "network": "Interconnect",
+    "communication": "Interconnect",
+    "telecom": "Interconnect",
+    "defense": "Energy",
+    "battery": "Energy",
+    "solar": "Energy",
+    "wind": "Energy",
+    "uranium": "Materials",
+    "lithium": "Materials",
+    "mining": "Materials",
+    "chemical": "Materials",
+    "insurance": "Services",
+    "bank": "Services",
+    "retail": "Services",
+    "logistics": "Interconnect",
+}
+
+WATCHLIST_LIMIT = int(os.getenv("DEEP_ALPHA_WATCHLIST_LIMIT", "4"))
+
+
+def _latest_company_metrics_file() -> Optional[Path]:
+    files = sorted(SECTOR_METRICS_DIR.glob("company_metrics_*.json"))
+    return files[-1] if files else None
+
+
+def _latest_sector_metrics_file() -> Optional[Path]:
+    files = sorted(SECTOR_METRICS_DIR.glob("sector_metrics_*.json"))
+    return files[-1] if files else None
+
+
+def _safe_float(value: Any) -> Optional[float]:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_ai_layer(sector: Optional[str], industry: Optional[str]) -> str:
+    sector_key = (sector or "").strip().lower()
+    industry_key = (industry or "").strip().lower()
+
+    if not sector_key and not industry_key:
+        return "N/A"
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in industry_key:
+            return layer
+
+    inferred = AI_LAYER_SECTOR_DEFAULTS.get(sector_key)
+    if inferred:
+        return inferred
+
+    for keyword, layer in AI_LAYER_INDUSTRY_KEYWORDS.items():
+        if keyword in sector_key:
+            return layer
+
+    return "N/A"
+
+
+def _infer_conviction_quadrant(metrics: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(metrics, dict) or not metrics:
+        return "Balanced Execution"
+
+    momentum_6m = _safe_float(metrics.get("momentum_6m"))
+    volatility = _safe_float(metrics.get("volatility"))
+    debt_to_equity = _safe_float(metrics.get("debt_to_equity"))
+    cagr = _safe_float(metrics.get("cagr"))
+
+    if momentum_6m is not None and volatility is not None:
+        if momentum_6m >= 40 and volatility >= 45:
+            return "High-Growth Challenger"
+        if momentum_6m >= 10 and volatility < 45 and (debt_to_equity is None or debt_to_equity < 120):
+            return "Strategic Compounder"
+        if momentum_6m <= -5 and debt_to_equity and debt_to_equity > 200:
+            return "Turnaround Risk"
+
+    if cagr is not None and cagr >= 25 and (debt_to_equity is None or debt_to_equity < 100):
+        return "Expansion Flywheel"
+
+    return "Balanced Execution"
+
+
+def load_supported_tickers() -> List[str]:
+    global SUPPORTED_TICKERS_CACHE, SUPPORTED_TICKERS_CACHE_TIME
+    now = datetime.now(timezone.utc)
+    if (
+        SUPPORTED_TICKERS_CACHE
+        and SUPPORTED_TICKERS_CACHE_TIME
+        and now - SUPPORTED_TICKERS_CACHE_TIME < SUPPORTED_TICKERS_TTL
+    ):
+        return SUPPORTED_TICKERS_CACHE
+
+    try:
+        from target_tickers import TARGET_TICKERS
+        base_tickers = [ticker.upper() for ticker in TARGET_TICKERS]
+    except Exception:
+        base_tickers = []
+
+    metrics_file = _latest_company_metrics_file()
+    tickers: List[str] = base_tickers[:]
+    if metrics_file and metrics_file.exists():
+        try:
+            with metrics_file.open("r") as fh:
+                data = json.load(fh)
+            metric_tickers = [entry["ticker"].upper() for entry in data if entry.get("ticker")]
+            extras = [ticker for ticker in metric_tickers if ticker not in tickers]
+            tickers.extend(extras)
+        except Exception:
+            pass
+
+    if not tickers:
+        tickers = base_tickers
+
+    SUPPORTED_TICKERS_CACHE = tickers
+    SUPPORTED_TICKERS_CACHE_TIME = now
+    return tickers
+
+
+def load_company_metadata() -> Dict[str, Dict[str, str]]:
+    global COMPANY_METADATA_CACHE, COMPANY_METADATA_CACHE_TIME
+    now = datetime.now(timezone.utc)
+    if (
+        COMPANY_METADATA_CACHE
+        and COMPANY_METADATA_CACHE_TIME
+        and now - COMPANY_METADATA_CACHE_TIME < COMPANY_METADATA_TTL
+    ):
+        return COMPANY_METADATA_CACHE
+
+    tickers = load_supported_tickers()
+    metadata: Dict[str, Dict[str, str]] = {
+        ticker: {"name": ticker, "industry": "Unknown"} for ticker in tickers
+    }
+
+    metrics_file = _latest_company_metrics_file()
+    metrics_lookup: Dict[str, Dict[str, Any]] = {}
+    if metrics_file and metrics_file.exists():
+        try:
+            with metrics_file.open("r") as fh:
+                metrics_data = json.load(fh)
+            for entry in metrics_data:
+                ticker = entry.get("ticker")
+                if ticker and ticker in metadata:
+                    metadata[ticker]["industry"] = entry.get("industry") or metadata[ticker]["industry"]
+                    metrics_lookup[ticker] = entry
+        except Exception:
+            pass
+
+    if COMPANIES_FILE.exists():
+        try:
+            with COMPANIES_FILE.open("r") as fh:
+                reader = csv.DictReader(fh)
+                for row in reader:
+                    ticker = row.get("ticker")
+                    name = row.get("company_name") or row.get("name")
+                    if ticker and ticker in metadata and name:
+                        metadata[ticker]["name"] = name
+        except Exception:
+            pass
+
+    # Persist static company snapshot
+    for ticker in metadata:
+        static_payload = {
+            "ticker": ticker,
+            "name": metadata[ticker]["name"],
+            "industry": metadata[ticker]["industry"],
+            "sources": {
+                "metrics_file": metrics_file.name if metrics_file else None,
+                "companies_csv": str(COMPANIES_FILE.name) if COMPANIES_FILE.exists() else None,
+            },
+            "metrics": metrics_lookup.get(ticker),
+            "updated_at": now.isoformat(),
+        }
+        static_path = COMPANY_STATIC_DIR / f"{ticker}.json"
+        try:
+            with static_path.open("w") as fh:
+                json.dump(static_payload, fh, indent=2)
+        except Exception as exc:
+            logger.warning("Failed to write static profile for %s: %s", ticker, exc)
+
+    COMPANY_METADATA_CACHE = metadata
+    COMPANY_METADATA_CACHE_TIME = now
+    return metadata
+
+
+def _build_watchlist_entry(
+    company: Dict[str, Any],
+    sector_info: Dict[str, Any],
+    metadata: Dict[str, str]
+) -> Dict[str, Any]:
+    ticker = company.get("ticker", "UNKNOWN")
+    sector = company.get("sector", "Unknown")
+    industry = company.get("industry", metadata.get("industry"))
+    company_name = metadata.get("name", ticker)
+
+    quality_score = _safe_float(sector_info.get("quality_score"))
+    sector_momentum = _safe_float(sector_info.get("avg_momentum_3m"))
+    sector_momentum6 = _safe_float(sector_info.get("avg_momentum_6m"))
+
+    cagr = _safe_float(company.get("cagr"))
+    momentum_3m = _safe_float(company.get("momentum_3m"))
+    momentum_6m = _safe_float(company.get("momentum_6m"))
+    volatility = _safe_float(company.get("volatility"))
+    pe_ratio = _safe_float(company.get("pe_ratio"))
+    ps_ratio = _safe_float(company.get("ps_ratio"))
+    debt_to_equity = _safe_float(company.get("debt_to_equity"))
+    interest_coverage = _safe_float(company.get("interest_coverage"))
+
+    explosive_sector = False
+    if quality_score is not None and quality_score >= 70:
+        explosive_sector = True
+    if sector_momentum is not None and sector_momentum >= 15:
+        explosive_sector = True
+
+    growth_fast = False
+    if momentum_6m is not None and momentum_6m >= 40:
+        growth_fast = True
+    if cagr is not None and cagr >= 25:
+        growth_fast = True
+
+    ai_layer = _infer_ai_layer(sector, industry)
+    conviction_quadrant = _infer_conviction_quadrant(company)
+
+    debt_manageable = True
+    if debt_to_equity is not None and debt_to_equity > 180:
+        debt_manageable = False
+    if interest_coverage is not None and interest_coverage < 4:
+        debt_manageable = False
+
+    backlog_signal = True if momentum_3m and momentum_3m >= 5 else False
+
+    base_pe_text = "N/A"
+    bull_pe_text = "N/A"
+    base_ps_text = "N/A"
+    bull_ps_text = "N/A"
+    if pe_ratio is not None and pe_ratio > 0:
+        base_pe_text = f"{pe_ratio:.1f}"
+        bull_pe_text = f"{pe_ratio * 1.2:.1f}"
+    if ps_ratio is not None and ps_ratio > 0:
+        base_ps_text = f"{ps_ratio:.1f}"
+        bull_ps_text = f"{ps_ratio * 1.2:.1f}"
+
+    came_down_from_highs = momentum_3m is not None and momentum_3m < 0
+
+    score = 0
+    if explosive_sector:
+        score += 2
+    if growth_fast:
+        score += 2
+    if ai_layer != "N/A":
+        score += 1
+    if debt_manageable:
+        score += 1
+    if backlog_signal:
+        score += 1
+    if pe_ratio is not None and pe_ratio < 80:
+        score += 1
+    if volatility is not None and volatility < 90:
+        score += 1
+    if came_down_from_highs:
+        score += 0.5
+
+    rating = "Monitor"
+    if score >= 6:
+        rating = "Buy"
+    elif score >= 4.5:
+        rating = "Watch"
+
+    thesis_points: List[str] = []
+    if explosive_sector:
+        components = []
+        if quality_score is not None:
+            components.append(f"quality {quality_score:.0f}/100")
+        if sector_momentum is not None:
+            components.append(f"3M momentum {sector_momentum:+.1f}%")
+        if sector_momentum6 is not None:
+            components.append(f"6M momentum {sector_momentum6:+.1f}%")
+        thesis_points.append(f"Explosive {sector} sector with {'; '.join(components)} supporting national and policy tailwinds.")
+    else:
+        thesis_points.append(f"{sector} sector momentum is mixed; position sizing should reflect policy and demand uncertainty.")
+
+    if growth_fast:
+        thesis_points.append(
+            f"Growth accelerates as 6M momentum {momentum_6m or 0:+.1f}% and CAGR {cagr or 0:.1f}% reflect rapid adoption."
+        )
+    else:
+        thesis_points.append("Growth trajectory is stabilizing; monitor for new catalysts before adding risk.")
+
+    if ai_layer != "N/A":
+        thesis_points.append(f"Technology readiness: positioned in the {ai_layer} layer of the AI stack, supporting feasibility of deployments.")
+
+    if debt_manageable:
+        thesis_points.append(
+            f"Balance sheet manageable with Debt/Equity {debt_to_equity or 'N/A'} and interest coverage {interest_coverage or 'N/A'}."
+        )
+    else:
+        thesis_points.append("Leverage profile elevated; prioritize cash flow monitoring before scaling exposure.")
+
+    if backlog_signal:
+        thesis_points.append(
+            f"Demand visibility remains solid: 3M momentum {momentum_3m or 0:+.1f}% suggests healthy backlog conversion."
+        )
+    else:
+        thesis_points.append("Order momentum has cooled; validate backlog commentary on the next call.")
+
+    valuation_commentary = f"Valuation base P/E {base_pe_text} (bull {bull_pe_text}); P/S {base_ps_text} (bull {bull_ps_text})."
+    thesis_points.append(valuation_commentary)
+
+    if came_down_from_highs:
+        thesis_points.append("Shares have pulled back from recent highs, offering a reset entry to rebuild positions.")
+    else:
+        thesis_points.append("Shares continue to probe highs; add on weakness to avoid chasing momentum.")
+
+    thesis_points.append("Leadership & insider activity: no major turnover flagged; monitor Form 4 filings for unexpected selling.")
+    thesis_points.append("Strategic deals & hiring: track press releases for partnerships and career-site hiring momentum to confirm execution.")
+    thesis_points.append(f"Ecosystem role: {company_name} anchors {industry or 'its niche'}, providing {ai_layer if ai_layer != 'N/A' else 'core capabilities'} across the value chain.")
+
+    risk_items: List[Dict[str, str]] = []
+    risk_highlights: List[str] = []
+
+    if volatility is not None and volatility > 90:
+        risk_items.append({
+            "title": "Volatility",
+            "summary": f"Annualized volatility at {volatility:.1f}% implies sharp swings; size positions accordingly."
+        })
+        risk_highlights.append("High volatility")
+
+    if debt_to_equity is not None and debt_to_equity > 180:
+        risk_items.append({
+            "title": "Leverage",
+            "summary": f"Debt/Equity {debt_to_equity:.0f}x with interest coverage {interest_coverage or 'N/A'} requires disciplined cash management."
+        })
+        risk_highlights.append("Elevated leverage")
+
+    if sector_momentum is not None and sector_momentum < 5:
+        risk_items.append({
+            "title": "Sector momentum",
+            "summary": f"Sector momentum at {sector_momentum:+.1f}% could fade if policy or demand catalysts stall."
+        })
+        risk_highlights.append("Momentum fragile")
+
+    if not risk_items:
+        risk_items.append({
+            "title": "Execution",
+            "summary": "Track backlog conversion, tariff exposure, and supply chain reliability to avoid thesis drift."
+        })
+        risk_highlights.append("Execution vigilance")
+
+    risk_summary = ", ".join(risk_highlights[:2])
+
+    return {
+        "ticker": ticker,
+        "name": company_name,
+        "sector": sector,
+        "industry": industry,
+        "ai_layer": ai_layer,
+        "conviction": conviction_quadrant,
+        "rating": rating,
+        "score": round(score, 1),
+        "thesis_points": thesis_points,
+        "valuation": {
+            "pe_base": base_pe_text,
+            "pe_bull": bull_pe_text,
+            "ps_base": base_ps_text,
+            "ps_bull": bull_ps_text,
+        },
+        "risk": {
+            "summary": risk_summary,
+            "items": risk_items,
+        },
+    }
+
+
+def build_deep_alpha_watchlist(
+    company_metadata: Dict[str, Dict[str, str]],
+    limit: int = WATCHLIST_LIMIT,
+) -> List[Dict[str, Any]]:
+    metrics_file = _latest_company_metrics_file()
+    sector_file = _latest_sector_metrics_file()
+    if not metrics_file or not metrics_file.exists():
+        return []
+
+    try:
+        with metrics_file.open("r") as fh:
+            company_metrics_data = json.load(fh)
+    except Exception as exc:
+        logger.warning("Failed to load company metrics for watchlist: %s", exc)
+        return []
+
+    sector_map: Dict[str, Any] = {}
+    if sector_file and sector_file.exists():
+        try:
+            with sector_file.open("r") as fh:
+                sector_payload = json.load(fh)
+            sector_map = sector_payload.get("sectors", {})
+        except Exception as exc:
+            logger.warning("Failed to load sector metrics for watchlist: %s", exc)
+
+    entries: List[Dict[str, Any]] = []
+    for company in company_metrics_data:
+        ticker = company.get("ticker")
+        if not ticker:
+            continue
+        metadata = company_metadata.get(ticker, {})
+        sector = company.get("sector", metadata.get("industry"))
+        sector_info = sector_map.get(sector, {}) if isinstance(sector_map, dict) else {}
+
+        entry = _build_watchlist_entry(company, sector_info, metadata)
+        entries.append(entry)
+
+    entries = sorted(entries, key=lambda item: item.get("score", 0), reverse=True)
+    return entries[:limit]
+
+
+def _news_cache_path(ticker: str) -> Path:
+    return REALTIME_NEWS_DIR / f"{ticker.upper()}_realtime_news.json"
+
+
+def _load_cached_news(ticker: str) -> Optional[dict]:
+    path = _news_cache_path(ticker)
+    if not path.exists():
+        return None
+    try:
+        with path.open("r") as fh:
+            data = json.load(fh)
+        fetched_at = datetime.fromisoformat(data.get("fetched_at"))
+        if datetime.now(timezone.utc) - fetched_at.replace(tzinfo=timezone.utc) > REALTIME_NEWS_TTL:
+            return None
+        return data
+    except Exception:
+        return None
+
+
+def _save_cached_news(ticker: str, payload: dict) -> None:
+    try:
+        path = _news_cache_path(ticker)
+        with path.open("w") as fh:
+            json.dump(payload, fh, indent=2)
+        _update_company_runtime(ticker, "news", payload)
+    except Exception:
+        pass
+
+
+def _compute_article_sentiment(title: str, snippet: str) -> Dict[str, Any]:
+    text = " ".join(filter(None, [title, snippet]))
+    sentiment = sentiment_analyzer.polarity_scores(text)
+    score = sentiment["compound"]
+    if score >= 0.25:
+        label = "Positive"
+    elif score <= -0.25:
+        label = "Negative"
+    else:
+        label = "Neutral"
+    return {"score": round(score, 3), "label": label}
+
+
+def _update_company_runtime(ticker: str, section: str, payload: dict) -> None:
+    ticker = ticker.upper()
+    runtime_path = COMPANY_RUNTIME_DIR / f"{ticker}.json"
+    try:
+        if runtime_path.exists():
+            with runtime_path.open("r") as fh:
+                existing = json.load(fh)
+        else:
+            existing = {"ticker": ticker}
+        existing.setdefault("runtime", {})
+        existing["runtime"][section] = payload
+        existing["updated_at"] = datetime.now(timezone.utc).isoformat()
+        with runtime_path.open("w") as fh:
+            json.dump(existing, fh, indent=2)
+    except Exception as exc:
+        logger.warning("Failed to update runtime cache for %s: %s", ticker, exc)
+
+
+def _normalize_link(link: Optional[str]) -> Optional[str]:
+    if not link:
+        return None
+    cleaned = link.split("#", 1)[0].rstrip("/")
+    return cleaned.lower() if cleaned else None
+
+
+def _normalize_title(title: Optional[str]) -> Optional[str]:
+    if not title:
+        return None
+    normalized = re.sub(r"\s+", " ", title).strip().lower()
+    return normalized or None
+
+
+def _article_identity(link: Optional[str], title: Optional[str]) -> Optional[str]:
+    return _normalize_link(link) or _normalize_title(title)
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+    return parsed
+
+
+def _coerce_timestamp(raw_value: Optional[str]) -> Optional[str]:
+    if not raw_value:
+        return None
+
+    candidate = raw_value.strip()
+    if not candidate:
+        return None
+
+    try:
+        if candidate.endswith("Z"):
+            parsed = datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+        else:
+            parsed = datetime.fromisoformat(candidate)
+        return parsed.astimezone(timezone.utc).isoformat()
+    except ValueError:
+        try:
+            parsed = parsedate_to_datetime(candidate)
+        except (TypeError, ValueError):
+            parsed = None
+
+        if parsed:
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            else:
+                parsed = parsed.astimezone(timezone.utc)
+            return parsed.isoformat()
+    except Exception:
+        return None
+    return None
+
+
+def _extract_timestamp_from_html(html: str) -> Optional[str]:
+    for pattern in META_TIMESTAMP_PATTERNS:
+        match = pattern.search(html)
+        if match:
+            coerced = _coerce_timestamp(match.group(1))
+            if coerced:
+                return coerced
+
+    for pattern in JSONLD_TIMESTAMP_PATTERNS:
+        match = pattern.search(html)
+        if match:
+            coerced = _coerce_timestamp(match.group(1))
+            if coerced:
+                return coerced
+
+    return None
+
+
+def _fetch_article_timestamp(url: str) -> Optional[str]:
+    cached = ARTICLE_TIMESTAMP_CACHE.get(url)
+    if cached is not None:
+        return cached
+
+    timestamp: Optional[str] = None
+    snippet = b""
+    last_modified: Optional[str] = None
+
+    try:
+        request = Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; deep-alpha/1.0)"},
+        )
+        with urlopen(request, timeout=5, context=SSL_CONTEXT) as response:
+            last_modified = response.headers.get("Last-Modified")
+            snippet = response.read(ARTICLE_HTML_SNIFF_BYTES)
+    except (HTTPError, URLError, TimeoutError, ValueError):
+        snippet = b""
+    except Exception:
+        snippet = b""
+
+    if snippet:
+        try:
+            html = snippet.decode("utf-8", errors="ignore")
+        except Exception:
+            html = ""
+        if html:
+            timestamp = _extract_timestamp_from_html(html)
+
+    if not timestamp and last_modified:
+        timestamp = _coerce_timestamp(last_modified)
+
+    ARTICLE_TIMESTAMP_CACHE[url] = timestamp
+    return timestamp
+
+
+def _build_article_lookup(articles: List[dict]) -> Dict[str, Dict[str, dict]]:
+    by_link: Dict[str, dict] = {}
+    by_title: Dict[str, dict] = {}
+    for article in articles:
+        link_norm = _normalize_link(article.get("link"))
+        if link_norm and link_norm not in by_link:
+            by_link[link_norm] = article
+        title_norm = _normalize_title(article.get("title"))
+        if title_norm and title_norm not in by_title:
+            by_title[title_norm] = article
+    return {"by_link": by_link, "by_title": by_title}
+
+
+def _load_offline_articles(ticker: str) -> List[dict]:
+    try:
+        from fetch_data import get_latest_news_file
+    except Exception:
+        return []
+
+    news_file = get_latest_news_file(ticker)
+    if not news_file:
+        return []
+
+    try:
+        with open(news_file, "r") as fh:
+            news_data = json.load(fh)
+    except Exception:
+        return []
+
+    articles: List[dict] = []
+    seen: set = set()
+
+    for article in news_data.get("articles", []):
+        title = article.get("title")
+        link = article.get("link") or article.get("url")
+        if not title:
+            continue
+
+        identity = _article_identity(link, title)
+        if identity and identity in seen:
+            continue
+        if identity:
+            seen.add(identity)
+
+        snippet = article.get("summary") or article.get("snippet") or ""
+        sentiment_info = _compute_article_sentiment(title, snippet)
+        articles.append(
+            {
+                "title": title,
+                "source": article.get("publisher") or article.get("source"),
+                "link": link,
+                "published": _coerce_timestamp(article.get("publish_time") or article.get("published")),
+                "snippet": snippet,
+                "sentiment": sentiment_info,
+                "origin": "cached",
+            }
+        )
+
+    return articles
+
+
+def _merge_article_fields(primary: dict, fallback: Optional[dict]) -> dict:
+    if not fallback:
+        return primary
+
+    for field in ("source", "snippet", "published"):
+        if not primary.get(field) and fallback.get(field):
+            primary[field] = fallback[field]
+
+    if not primary.get("sentiment") and fallback.get("sentiment"):
+        primary["sentiment"] = fallback["sentiment"]
+
+    return primary
+
+
+def _enrich_article_metadata(
+    article: dict,
+    lookup: Dict[str, Dict[str, dict]],
+) -> dict:
+    link = article.get("link")
+    title = article.get("title")
+    match = None
+
+    link_norm = _normalize_link(link)
+    if link_norm and link_norm in lookup["by_link"]:
+        match = lookup["by_link"][link_norm]
+    else:
+        title_norm = _normalize_title(title)
+        if title_norm and title_norm in lookup["by_title"]:
+            match = lookup["by_title"][title_norm]
+
+    article = _merge_article_fields(article, match)
+
+    if not article.get("published") and link:
+        article["published"] = _fetch_article_timestamp(link)
+
+    return article
+
+
+def _sort_articles_descending(articles: List[dict]) -> List[dict]:
+    def sort_key(entry: dict) -> datetime:
+        published_dt = _parse_iso_datetime(entry.get("published"))
+        if published_dt:
+            return published_dt
+        return datetime.fromtimestamp(0, tz=timezone.utc)
+
+    return sorted(articles, key=sort_key, reverse=True)
+
+
+def _load_offline_news_summary(ticker: str) -> Optional[dict]:
+    articles = _load_offline_articles(ticker)
+    if not articles:
+        return None
+
+    articles = _sort_articles_descending(articles)
+    avg_score = sum(a["sentiment"]["score"] for a in articles) / len(articles)
+    if avg_score >= 0.2:
+        sentiment = "Positive"
+        rating = "Buy"
+    elif avg_score <= -0.2:
+        sentiment = "Negative"
+        rating = "Sell"
+    else:
+        sentiment = "Neutral"
+        rating = "Hold"
+
+    key_points = []
+    for entry in sorted(articles, key=lambda x: abs(x["sentiment"]["score"]), reverse=True)[:3]:
+        prefix = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}.get(entry["sentiment"]["label"], "ℹ️")
+        key_points.append(f"{prefix} {entry['title']}")
+
+    payload = {
+        "ticker": ticker.upper(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "headline": "Latest coverage snapshot",
+            "sentiment": sentiment,
+            "rating": rating,
+            "confidence": "Low",
+            "key_points": key_points,
+            "rationale": "Derived from cached news files.",
+            "conclusion": "Supplement with live data for the freshest read.",
+        },
+        "articles": articles,
+    }
+    _update_company_runtime(ticker, "news", payload)
+    return payload
+
+
+def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 8) -> dict:
+    ticker = ticker.upper()
+    offline_articles = _load_offline_articles(ticker)
+    offline_lookup = _build_article_lookup(offline_articles) if offline_articles else {"by_link": {}, "by_title": {}}
+
+    if not ADK_AVAILABLE or "search_latest_news" not in globals():
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
+        return {
+            "ticker": ticker,
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "Live news service unavailable",
+                "key_points": [],
+                "rationale": "Real-time news search is disabled. Showing placeholder guidance.",
+                "conclusion": "Enable Google Custom Search credentials to receive live coverage.",
+            },
+            "articles": [],
+        }
+
+    query = f"{ticker} stock"
+    response = search_latest_news(query=query, max_results=max_results)
+    if isinstance(response, dict) and response.get("error"):
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
+        return {
+            "ticker": ticker,
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "Unable to retrieve live headlines",
+                "key_points": [],
+                "rationale": response.get("error"),
+                "conclusion": "Retry later or verify Google Custom Search credentials.",
+            },
+            "articles": [],
+        }
+
+    items = response.get("results", []) if isinstance(response, dict) else []
+
+    seen_keys = set()
+    articles: List[dict] = []
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=window_hours) if window_hours else None
+
+    for item in items:
+        link = item.get("link")
+        title = (item.get("title") or "").strip()
+        identity = _article_identity(link, title)
+        if not title or (identity and identity in seen_keys):
+            continue
+        if identity:
+            seen_keys.add(identity)
+
+        snippet = (item.get("snippet") or "").strip()
+        sentiment_info = _compute_article_sentiment(title, snippet)
+
+        article = {
+            "title": title,
+            "source": item.get("source"),
+            "link": link,
+            "published": _coerce_timestamp(item.get("published")),
+            "snippet": snippet,
+            "sentiment": sentiment_info,
+            "origin": "live",
+        }
+
+        article = _enrich_article_metadata(article, offline_lookup)
+
+        if cutoff and article.get("published"):
+            published_dt = _parse_iso_datetime(article.get("published"))
+            if published_dt and published_dt < cutoff:
+                continue
+
+        articles.append(article)
+
+    if window_hours and articles:
+        filtered: List[dict] = []
+        for art in articles:
+            published_dt = _parse_iso_datetime(art.get("published"))
+            if not published_dt or published_dt >= cutoff:
+                filtered.append(art)
+        if filtered:
+            articles = filtered
+
+    if len(articles) < max_results and offline_articles:
+        for offline_article in offline_articles:
+            identity = _article_identity(offline_article.get("link"), offline_article.get("title"))
+            if identity and identity in seen_keys:
+                continue
+            if cutoff and offline_article.get("published"):
+                offline_dt = _parse_iso_datetime(offline_article.get("published"))
+                if offline_dt and offline_dt < cutoff:
+                    continue
+            articles.append(offline_article)
+            if identity:
+                seen_keys.add(identity)
+            if len(articles) >= max_results:
+                break
+
+    articles = _sort_articles_descending(articles)[:max_results]
+
+    if not articles:
+        fallback = _load_offline_news_summary(ticker)
+        if fallback:
+            return fallback
+        return {
+            "ticker": ticker,
+            "fetched_at": datetime.now(timezone.utc).isoformat(),
+            "summary": {
+                "sentiment": "Neutral",
+                "rating": "Hold",
+                "confidence": "Low",
+                "headline": "No recent coverage available",
+                "key_points": [],
+                "rationale": "We could not locate reliable coverage within the selected lookback window.",
+                "conclusion": "Monitor upcoming catalysts before taking action.",
+            },
+            "articles": [],
+        }
+
+    avg_score = sum(art["sentiment"]["score"] for art in articles) / len(articles)
+    if avg_score >= 0.2:
+        overall_sentiment = "Positive"
+        rating = "Buy"
+    elif avg_score <= -0.2:
+        overall_sentiment = "Negative"
+        rating = "Sell"
+    else:
+        overall_sentiment = "Neutral"
+        rating = "Hold"
+
+    sorted_articles = sorted(articles, key=lambda x: abs(x["sentiment"]["score"]), reverse=True)
+    icon_by_label = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}
+    key_points = [
+        f"{icon_by_label.get(art['sentiment']['label'], 'ℹ️')} {art['title']}"
+        for art in sorted_articles[:3]
+    ]
+
+    positive = [a for a in articles if a["sentiment"]["label"] == "Positive"]
+    negative = [a for a in articles if a["sentiment"]["label"] == "Negative"]
+    rationale_parts = []
+    if positive:
+        rationale_parts.append(f"{len(positive)} source(s) highlight supportive catalysts.")
+    if negative:
+        rationale_parts.append(f"{len(negative)} source(s) flag emerging risks.")
+    if not rationale_parts:
+        rationale_parts.append("Coverage is balanced without a dominant directional signal.")
+    if offline_articles:
+        rationale_parts.append("Live feed supplemented with cached Yahoo Finance coverage for continuity.")
+    else:
+        rationale_parts.append("Live headlines sourced within the last 72 hours.")
+
+    payload = {
+        "ticker": ticker,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "sentiment": overall_sentiment,
+            "rating": rating,
+            "confidence": "Medium" if len(articles) >= 3 else "Low",
+            "headline": f"Latest coverage skews {overall_sentiment.lower()}",
+            "key_points": key_points,
+            "rationale": " ".join(rationale_parts),
+            "conclusion": (
+                "Momentum favors accumulation on strength."
+                if rating == "Buy"
+                else "Maintain exposure and reassess frequently."
+                if rating == "Hold"
+                else "Consider trimming positions or tightening stops."
+            ),
+        },
+        "articles": articles,
+    }
+    _update_company_runtime(ticker, "news", payload)
+    return payload
 
 @app.on_event("startup")
 async def startup():
@@ -264,10 +1230,6 @@ class QueryRequest(BaseModel):
     question: str
     include_reasoning: bool = False
 
-import os
-import json
-from fastapi import HTTPException
-
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
     """Serves the main index.html file."""
@@ -275,7 +1237,21 @@ async def get_index(request: Request):
     user_id = request.session.get("user")
     if user_id:
         user = await get_user_by_id(user_id)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user, "hide_sector_news": True})
+    supported_tickers = load_supported_tickers()
+    company_metadata = load_company_metadata()
+    watchlist = build_deep_alpha_watchlist(company_metadata)
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "user": user,
+            "supported_tickers": supported_tickers,
+            "supported_tickers_json": json.dumps(supported_tickers),
+            "company_metadata_json": json.dumps(company_metadata),
+            "watchlist_json": json.dumps(watchlist),
+        },
+    )
+
 
 @app.get("/api/scores/{ticker}")
 async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] = None):
@@ -283,22 +1259,9 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
     loop = asyncio.get_event_loop()
     if news_only:
         try:
-            # Determine ticker for lookup
             search_query = query or ticker
-            safe_ticker = search_query.upper()
-            # Attempt to load cached news JSON (try timestamped files first)
-            news_file = find_latest_timestamped_file(NEWS_DATA_DIR, f"{safe_ticker}_news")
-            if news_file and os.path.exists(news_file):
-                with open(news_file, "r") as f:
-                    news_json = json.load(f)
-                results = news_json.get("articles", [])
-            elif NEWS_AVAILABLE and fetch_news_for_ticker:
-                # Fetch and cache news via fetch_data.news
-                results = await loop.run_in_executor(None, fetch_news_for_ticker, safe_ticker, safe_ticker)
-                if results is None:
-                    results = []
-            else:
-                results = []
+            data = await loop.run_in_executor(None, search_latest_news, search_query)
+            results = data.get("results", []) if isinstance(data, dict) else []
             return {"status": "success", "data": {"latest_news": results}}
         except Exception as exc:  # pragma: no cover - network failures
             return {"status": "error", "message": f"Failed to fetch news: {exc}"}
@@ -311,19 +1274,6 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
         return {"status": "error", "message": str(exc)}
     except Exception as exc:  # pragma: no cover - unexpected errors bubbled to client
         return {"status": "error", "message": f"Unexpected error: {exc}"}
-
-@app.get("/api/news-interpretation/{ticker}")
-async def get_news_interpretation(ticker: str):
-    """Return precomputed AI analysis for news interpretation from cache."""
-    safe_ticker = ticker.upper()
-    # Try to find latest timestamped file first
-    interp_file = find_latest_timestamped_file(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation")
-    if interp_file and os.path.exists(interp_file):
-        with open(interp_file, "r") as f:
-            data = json.load(f)
-        return {"status": "success", "data": data}
-    else:
-        return {"status": "error", "message": f"No precomputed news interpretation for {ticker}. Please run the news interpretation job."}
 
 @app.get("/api/price-history/{ticker}")
 async def get_price_history(ticker: str, period: str = "1m"):
@@ -342,23 +1292,13 @@ async def get_price_history(ticker: str, period: str = "1m"):
 
 @app.get("/api/valuation-metrics/{ticker}")
 async def get_valuation_metrics(ticker: str):
-    """Return historical P/E and P/S ratios with industry benchmarks (cached or live)."""
-    from app.scoring.engine import get_valuation_metrics as compute_metrics
+    """Return historical P/E and P/S ratios with industry benchmarks."""
+    from app.scoring.engine import get_valuation_metrics
 
-    safe_ticker = ticker.upper()
-    # Attempt to load cached valuation metrics JSON if available
-    metrics_file = os.path.join(VALUATION_METRICS_DIR, f"{safe_ticker}_valuation_metrics.json")
     try:
-        if os.path.exists(metrics_file):
-            with open(metrics_file, "r") as f:
-                data = json.load(f)
-        else:
-            # Compute metrics and cache to file
-            loop = asyncio.get_event_loop()
-            data = await loop.run_in_executor(None, compute_metrics, safe_ticker)
-            data = sanitize_for_json(data)
-            with open(metrics_file, "w") as f:
-                json.dump(data, f)
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
+        data = sanitize_for_json(data)
         return {"status": "success", "data": data}
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
@@ -375,473 +1315,65 @@ async def get_market_conditions():
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
 
-@app.get("/api/sector-news/{sector}")
-async def get_sector_news_endpoint(sector: str):
-    """Return the latest news for a sector from cached JSON files."""
-    print(f"--- Getting sector news for {sector} ---")
-
-    try:
-        # Sanitize sector name for filename (same as in fetch script)
-        import re
-        safe_sector_name = re.sub(r'[^a-zA-Z0-9_]', '_', sector)
-        sector_news_dir = "data/unstructured/sector_news"
-
-        # Find latest timestamped file
-        sector_file = find_latest_timestamped_file(sector_news_dir, f"{safe_sector_name}_news")
-
-        # Check if sector file exists
-        if not sector_file or not os.path.exists(sector_file):
-            return {
-                "status": "error",
-                "message": f"No cached news found for {sector} sector. Please run news update script."
-            }
-
-        # Load sector news
-        with open(sector_file, 'r') as f:
-            sector_data = json.load(f)
-
-        articles = sector_data.get('articles', [])
-
-        if not articles:
-            return {"status": "error", "message": "No articles found for this sector"}
-
-        # Normalize article structure to match frontend expectations
-        normalized_articles = []
-        for article in articles:
-            normalized_articles.append({
-                'title': article.get('title'),
-                'link': article.get('link'),
-                'snippet': article.get('summary', article.get('snippet', '')),
-                'source': article.get('publisher', article.get('source', 'Unknown')),
-                'published': article.get('publish_time', article.get('published', ''))
-            })
-
-        # Convert to expected format with results
-        news_data = {
-            "answer": json.dumps({"results": normalized_articles}),
-            "status": "success"
-        }
-        return {"status": "success", "data": news_data}
-    except Exception as exc:
-        print(f"Error loading cached sector news: {exc}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": f"Failed to load cached sector news: {exc}"}
-
-@app.get("/api/token-usage")
-async def get_token_usage():
-    """Return AI token consumption data by model from the latest token usage file."""
-    try:
-        # Try to find actual token usage file first
-        token_usage_dir = "data/unstructured/token_usage"
-        token_file = find_latest_timestamped_file(token_usage_dir, "token_usage")
-        
-        # Fallback to rankings file if usage file doesn't exist
-        if not token_file:
-            token_file = find_latest_timestamped_file(token_usage_dir, "openrouter_rankings")
-        
-        if not token_file:
-            return {
-                "status": "error",
-                "message": "No token usage data found. Please run fetch_data/fetch_token_usage.py to generate data."
-            }
-        
-        # Load token usage data
-        with open(token_file, 'r') as f:
-            token_data = json.load(f)
-        
-        # Check if we have actual measured data (newest format - from rankings chart)
-        if 'data_type' in token_data and token_data['data_type'] == 'actual_measured_data':
-            # ACTUAL measurements from OpenRouter rankings chart
-            response_data = {
-                "fetch_timestamp": token_data.get('fetch_timestamp'),
-                "data_type": "actual_measured_data",
-                "platform": token_data.get('platform', 'OpenRouter'),
-                "current_stats": token_data.get('current_stats', {}),
-                "data_points": token_data.get('data_points', []),
-                "source": token_data.get('source', 'OpenRouter rankings chart'),
-                "note": token_data.get('note', 'Actual measurements only')
-            }
-
-            return {
-                "status": "success",
-                "data": response_data
-            }
-        # Check if we have actual published statistics (new format)
-        elif 'data_type' in token_data and token_data['data_type'] == 'actual_published_statistics':
-            # ACTUAL OpenRouter platform statistics
-            response_data = {
-                "fetch_timestamp": token_data.get('fetch_timestamp'),
-                "data_type": "actual_published_statistics",
-                "platform": token_data.get('platform', 'OpenRouter'),
-                "current_usage": token_data.get('current_usage', {}),
-                "growth_metrics": token_data.get('growth_metrics', {}),
-                "daily_usage": token_data.get('data_points', []),  # Use data_points as daily_usage for frontend
-                "sources": token_data.get('sources', []),
-                "note": token_data.get('note', 'Actual published statistics')
-            }
-
-            return {
-                "status": "success",
-                "data": response_data
-            }
-        # Check if we have daily usage data (old synthesized format)
-        elif 'daily_usage' in token_data:
-            # Old format: synthesized daily totals
-            response_data = {
-                "fetch_timestamp": token_data.get('fetch_timestamp'),
-                "days": token_data.get('days', 90),
-                "total_tokens": token_data.get('total_tokens', 0),
-                "total_requests": token_data.get('total_requests', 0),
-                "total_cost": token_data.get('total_cost', 0),
-                "daily_usage": token_data['daily_usage'],
-                "source": token_data.get('source', 'estimated')
-            }
-
-            return {
-                "status": "success",
-                "data": response_data
-            }
-        # Check if we have aggregated_by_model (old format with model-specific data)
-        elif 'aggregated_by_model' in token_data:
-            # Use actual aggregated usage data
-            model_consumption = token_data['aggregated_by_model'][:15]
-            # Format for frontend
-            formatted_consumption = []
-            for model in model_consumption:
-                formatted_consumption.append({
-                    "model_id": model.get('model_id', ''),
-                    "model_name": model.get('model_name', model.get('model_id', '')),
-                    "tokens": model.get('total_tokens', 0),
-                    "prompt_price": model.get('prompt_price', 0),
-                    "completion_price": model.get('completion_price', 0),
-                    "requests": model.get('total_requests', 0),
-                    "cost": model.get('total_cost', 0)
-                })
-            
-            response_data = {
-                "fetch_timestamp": token_data.get('fetch_timestamp'),
-                "days": token_data.get('days', 90),
-                "total_models": len(token_data.get('aggregated_by_model', [])),
-                "total_tokens": token_data.get('total_tokens', 0),
-                "total_requests": token_data.get('total_requests', 0),
-                "model_consumption": formatted_consumption,
-                "source": token_data.get('source', 'estimated')
-            }
-            
-            # Include daily usage if available
-            if 'daily_usage' in token_data:
-                response_data['daily_usage'] = token_data['daily_usage']
-            
-            return {
-                "status": "success",
-                "data": response_data
-            }
-        else:
-            # Fallback: use rankings data to estimate
-            rankings = token_data.get('rankings', [])
-            
-            model_consumption = []
-            for model in rankings[:20]:  # Top 20 models
-                model_id = model.get('id', '')
-                model_name = model.get('name', model_id)
-                pricing = model.get('pricing', {})
-                
-                prompt_price = float(pricing.get('prompt', 0))
-                completion_price = float(pricing.get('completion', 0))
-                
-                # Estimate tokens: inverse relationship with price
-                base_tokens = 1000000
-                if prompt_price > 0:
-                    estimated_tokens = int(base_tokens / (prompt_price * 1000000 + 1))
-                else:
-                    estimated_tokens = base_tokens
-                
-                model_consumption.append({
-                    "model_id": model_id,
-                    "model_name": model_name,
-                    "tokens": estimated_tokens,
-                    "prompt_price": prompt_price,
-                    "completion_price": completion_price
-                })
-            
-            model_consumption.sort(key=lambda x: x['tokens'], reverse=True)
-            
-            return {
-                "status": "success",
-                "data": {
-                    "fetch_timestamp": token_data.get('fetch_timestamp'),
-                    "days": token_data.get('days', 90),
-                    "total_models": token_data.get('total_models', len(rankings)),
-                    "model_consumption": model_consumption[:15],
-                    "source": "estimated"
-                }
-            }
-    except Exception as exc:
-        print(f"Error loading token usage: {exc}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": f"Failed to load token usage: {exc}"}
-
-@app.get("/api/token-usage-plot")
-async def get_token_usage_plot():
-    """Serve the latest token usage plot image."""
-    try:
-        token_usage_dir = "data/unstructured/token_usage"
-        plot_file = find_latest_timestamped_file(token_usage_dir, "token_usage_plot", extension=".png")
-
-        if not plot_file:
-            # Return a placeholder or error
-            return {"status": "error", "message": "No token usage plot found. Please run fetch_data/token_usage.py to generate the plot."}
-
-        return FileResponse(plot_file, media_type="image/png")
-    except Exception as exc:
-        print(f"Error loading token usage plot: {exc}")
-        return {"status": "error", "message": f"Failed to load token usage plot: {exc}"}
-
-@app.get("/api/flow-plot/{ticker}")
-async def get_flow_plot(ticker: str):
-    """Serve the latest flow plot image for a given ticker."""
-    try:
-        flow_dir = "data/structured/flow_data"
-        plot_file = find_latest_timestamped_file(flow_dir, f"{ticker}_flow_plot", extension=".png")
-
-        if not plot_file:
-            return {"status": "error", "message": f"No flow plot found for {ticker}. Please run fetch_data.py to generate the plot."}
-
-        return FileResponse(plot_file, media_type="image/png")
-    except Exception as exc:
-        print(f"Error loading flow plot for {ticker}: {exc}")
-        return {"status": "error", "message": f"Failed to load flow plot: {exc}"}
-
-def find_latest_timestamped_file(directory: str, prefix: str, extension: str = ".json") -> Optional[str]:
-    """Find the latest timestamped file matching the prefix pattern.
-
-    Supports two timestamp formats:
-    - {prefix}_YYYYMMDD_HHMMSS.{extension} (news files, plots)
-    - {prefix}_YYYYMMDD.{extension} (flow data files)
-    Returns the file with the latest timestamp.
-    """
-    import glob
-    from datetime import datetime
-
-    # Pattern to match only timestamped files
-    pattern = os.path.join(directory, f"{prefix}_*{extension}")
-    matching_files = glob.glob(pattern)
-
-    if not matching_files:
-        return None
-
-    # Extract timestamp from filename and find the latest
-    latest_file = None
-    latest_timestamp = None
-
-    for file_path in matching_files:
-        filename = os.path.basename(file_path)
-        # Remove prefix and extension to get timestamp
-        if filename.startswith(prefix + "_") and filename.endswith(extension):
-            timestamp_str = filename[len(prefix) + 1:-len(extension)]  # Remove prefix_ and extension
-
-            # Try both timestamp formats
-            timestamp = None
-
-            # Try YYYYMMDD_HHMMSS format first
-            try:
-                timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
-            except ValueError:
-                # Try YYYYMMDD format (for flow data files)
-                try:
-                    timestamp = datetime.strptime(timestamp_str, "%Y%m%d")
-                except ValueError:
-                    # Skip files that don't match either format
-                    continue
-
-            if timestamp and (latest_timestamp is None or timestamp > latest_timestamp):
-                latest_timestamp = timestamp
-                latest_file = file_path
-
-    return latest_file
-
-@app.get("/api/flow-data/{ticker}")
-async def get_flow_data_endpoint(ticker: str, flow_type: str = "combined"):
-    """Return the latest flow data (institutional and retail) for a ticker.
-
-    Args:
-        ticker: Stock ticker symbol
-        flow_type: Type of flow data ('institutional', 'retail', 'combined', 'changes')
-    """
-    print(f"--- Getting flow data for {ticker} (type: {flow_type}) ---")
-
-    try:
-        ticker = ticker.upper().strip()
-
-        # Find the latest flow data file
-        flow_dir = "data/structured/flow_data"
-
-        # Determine file pattern based on flow_type
-        if flow_type == "institutional":
-            pattern_prefix = f"{ticker}_institutional_flow"
-        elif flow_type == "retail":
-            pattern_prefix = f"{ticker}_retail_flow"
-        else:  # combined or changes
-            pattern_prefix = f"{ticker}_combined_flow"
-
-        flow_file = find_latest_timestamped_file(flow_dir, pattern_prefix)
-
-        if not flow_file:
-            return {
-                "status": "error",
-                "message": f"No flow data found for {ticker}. Please run the data fetching script to generate flow data."
-            }
-
-        print(f"Loading flow data from: {flow_file}")
-
-        # Load flow data
-        with open(flow_file, 'r') as f:
-            flow_data = json.load(f)
-
-        # If requesting changes only, extract just the changes section
-        if flow_type == "changes":
-            if "institutional_changes" in flow_data:
-                response_data = {
-                    "ticker": ticker,
-                    "flow_type": flow_type,
-                    "data": flow_data["institutional_changes"],
-                    "file_date": os.path.basename(flow_file).split('_')[-1].replace('.json', '')
-                }
-            else:
-                return {
-                    "status": "error",
-                    "message": "Institutional changes data not available in this file"
-                }
-        else:
-            response_data = {
-                "ticker": ticker,
-                "flow_type": flow_type,
-                "data": flow_data,
-                "file_date": os.path.basename(flow_file).split('_')[-1].replace('.json', '')
-            }
-
-        return {"status": "success", "data": response_data}
-
-    except Exception as exc:
-        print(f"Error loading flow data: {exc}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": f"Failed to load flow data: {exc}"}
-
 @app.get("/api/latest-news/{ticker}")
-async def get_latest_news_endpoint(ticker: str):
-    """Return the latest news for a ticker from the most recent timestamped JSON file.
-
-    Only uses files with timestamp format: {ticker}_news_YYYYMMDD_HHMMSS.json
-    Automatically selects the file with the latest timestamp.
-    """
-    print(f"--- Getting latest news for {ticker} ---")
-
+async def get_latest_news(ticker: str):
+    """Return the latest news and interpretation for a ticker."""
     try:
-        ticker = ticker.upper().strip()
+        ticker = ticker.upper()
 
-        # Find the latest timestamped news file
-        news_dir = "data/unstructured/news"
-        news_file = find_latest_timestamped_file(news_dir, f"{ticker}_news")
-        
-        if not news_file:
-            return {
-                "status": "error",
-                "message": f"No timestamped news files found for {ticker}. Please run news update script to generate timestamped files."
-            }
+        payload = _load_cached_news(ticker)
+        if not payload:
+            payload = fetch_realtime_news(ticker)
+            _save_cached_news(ticker, payload)
 
-        print(f"Loading news from: {news_file}")
+        # Attach Deep Alpha interpretation card (new structure) and legacy text fallback if available
+        deep_alpha_card: Optional[dict] = None
+        interpretation_summary: Optional[str] = None
+        card_generated_at: Optional[str] = None
+        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
+        interpretation_files = sorted(
+            [
+                file_path
+                for file_path in interpretation_dir.glob(f"{ticker}_news_interpretation_*.json")
+            ]
+        )
+        if interpretation_files:
+            try:
+                with interpretation_files[-1].open("r") as fh:
+                    interpretation_blob = json.load(fh)
+                card_generated_at = interpretation_blob.get("interpretation_timestamp")
+                raw_interpretation = (
+                    interpretation_blob.get("interpretation")
+                    or interpretation_blob.get("analysis")
+                )
 
-        # Load news articles
-        with open(news_file, 'r') as f:
-            news_data_raw = json.load(f)
+                if isinstance(raw_interpretation, dict):
+                    deep_alpha_card = raw_interpretation
+                elif isinstance(raw_interpretation, str):
+                    try:
+                        parsed = json.loads(raw_interpretation)
+                        if isinstance(parsed, dict):
+                            deep_alpha_card = parsed
+                        else:
+                            interpretation_summary = raw_interpretation
+                    except json.JSONDecodeError:
+                        interpretation_summary = raw_interpretation
+                elif raw_interpretation is not None:
+                    interpretation_summary = str(raw_interpretation)
 
-        articles = news_data_raw.get('articles', [])
-        company_name = news_data_raw.get('company_name', ticker)
+                # Preserve legacy analysis field if available separately
+                if not interpretation_summary:
+                    interpretation_summary = interpretation_blob.get("analysis")
+            except Exception:
+                interpretation_summary = None
 
-        if not articles:
-            return {
-                "status": "error",
-                "message": "No recent news found for this ticker."
-            }
+        payload["deep_alpha_analysis"] = deep_alpha_card
+        payload["legacy_analysis"] = interpretation_summary
+        payload["analysis_generated_at"] = card_generated_at
 
-        # Convert to frontend format
-        results = []
-        for article in articles:
-            results.append({
-                "title": article.get('title', 'No title'),
-                "link": article.get('link', ''),
-                "snippet": article.get('summary', ''),
-                "published": article.get('publish_time'),
-                "source": article.get('publisher', 'Unknown'),
-                "type": article.get('type', 'article')
-            })
-
-        # Load precomputed AI interpretation from cache
-        safe_ticker = ticker.upper()
-        # Look for static precomputed file first, then timestamped variants
-        static_file = os.path.join(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation.json")
-        if os.path.exists(static_file):
-            interp_file = static_file
-        else:
-            interp_file = find_latest_timestamped_file(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation")
-        if interp_file and os.path.exists(interp_file):
-            with open(interp_file, 'r') as f:
-                interpretation_result = json.load(f)
-            # Map to frontend structure
-            rec = interpretation_result.get('recommendation', '').upper()
-            sentiment = 'neutral'
-            sentiment_score = 50
-            if rec == 'BUY':
-                sentiment = 'bullish'
-                sentiment_score = 75
-            elif rec == 'SELL':
-                sentiment = 'bearish'
-                sentiment_score = 25
-            interpretation = {
-                'ticker': ticker,
-                'sentiment': sentiment,
-                'sentiment_score': sentiment_score,
-                'summary': interpretation_result.get('interpretation', ''),
-                'recommendation': rec or 'N/A',
-                'reasoning': interpretation_result.get('reasoning', ''),
-                'investment_impact': interpretation_result.get('reasoning', ''),
-                'short_term_outlook': interpretation_result.get('reasoning', ''),
-            }
-        else:
-            interpretation = {
-                'ticker': ticker,
-                'sentiment': 'neutral',
-                'sentiment_score': 50,
-                'summary': 'No precomputed AI analysis available.',
-                'recommendation': 'N/A',
-                'reasoning': '',
-                'investment_impact': '',
-                'short_term_outlook': '',
-            }
-
-        data = {
-            "query": ticker,
-            "company_name": company_name,
-            "results": results,
-            "interpretation": interpretation,
-            "total_articles": len(results)
-        }
-
-        # Format as expected by frontend (wrap in answer field as JSON string)
-        news_data = {
-            "answer": json.dumps(data),
-            "status": "success"
-        }
-        return {"status": "success", "data": news_data}
+        return {"status": "success", "data": payload}
     except Exception as exc:
-        print(f"Error loading cached news: {exc}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": f"Failed to load cached news: {exc}"}
-
+        return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):

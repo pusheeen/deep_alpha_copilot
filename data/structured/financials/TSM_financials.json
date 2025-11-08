@@ -1,6 +1,6 @@
 {
   "ticker": "TSM",
-  "fetch_date": "2025-10-20T19:30:32.987344",
+  "fetch_date": "2025-11-07T19:46:05.780875",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 197845319.246856,
@@ -2427,12 +2427,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 1544028028928,
-    "enterprise_value": 5894298402816,
-    "trailing_pe": 32.464558,
-    "forward_pe": 36.844063,
-    "price_to_book": 1.5443916,
-    "price_to_sales": 0.4251852,
+    "market_cap": 1485938884608,
+    "enterprise_value": 5671818887168,
+    "trailing_pe": 31.833334,
+    "forward_pe": 35.45792,
+    "price_to_book": 1.4862888,
+    "price_to_sales": 0.40918896,
+    "forward_ps": null,
     "profit_margins": 0.43287,
     "operating_margins": 0.50578,
     "roe": 0.34657001,

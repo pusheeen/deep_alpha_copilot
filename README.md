@@ -115,6 +115,91 @@ deep_alpha_copilot/
 └── cloudbuild.yaml            # Google Cloud Build config
 ```
 
+## Data Storage Layout
+
+- `data/structured/`
+  - `financials/`, `earnings/`, `prices/`: point-in-time datasets produced by the ingestion pipeline.
+  - `sector_metrics/`: rolling company and sector aggregates (latest file drives ticker discovery and industry benchmarks).
+  - `industry_benchmarks.json`: cached reference P/E and P/S ratios.
+- `data/unstructured/`
+  - `news/` and `news_interpretation/`: historical article dumps plus AI summaries generated during ingestion.
+  - `reddit/`, `x/`: sentiment snapshots captured from social channels.
+- `data/company/{TICKER}.json`: static profile composed from the latest sector metrics and `companies.csv`. Example:
+  ```json
+  {
+    "ticker": "NVDA",
+    "name": "NVIDIA Corp",
+    "industry": "Semiconductors",
+    "sources": {
+      "metrics_file": "company_metrics_20251026_223134.json",
+      "companies_csv": "companies.csv"
+    },
+    "metrics": { "...": "..." },
+    "updated_at": "2025-10-30T04:15:05.312Z"
+  }
+  ```
+- `data/runtime/`
+  - `price_snapshots/{TICKER}.json`: most recent price pull served to the UI. Schema:
+    ```json
+    {
+      "ticker": "NVDA",
+      "fetched_at": "2025-10-30T04:15:05.312Z",
+      "period": "1m",
+      "current": {
+        "date": "2025-10-29",
+        "open": 205.11,
+        "high": 207.37,
+        "low": 204.90,
+        "close": 207.05,
+        "volume": 307574800,
+        "daily_change": 0.55
+      },
+      "trend": {
+        "start_date": "2025-09-29",
+        "end_date": "2025-10-29",
+        "start_price": 139.30,
+        "end_price": 207.05,
+        "price_change": 67.75,
+        "price_change_pct": 48.64,
+        "direction": "up",
+        "high": 207.37,
+        "low": 86.61,
+        "avg_volume": 225777778
+      }
+    }
+    ```
+  - `news/{TICKER}_realtime_news.json`: live news cache used by the UI. Each refresh merges Google Custom Search headlines with the latest Yahoo Finance dump and de-duplicates by link/title. Articles carry an `origin` of `live` or `cached`, and the `published` field is enriched from the API, structured HTML metadata, or the cached file so timestamps rarely come back `null`.
+    Schema:
+    ```json
+    {
+      "ticker": "NVDA",
+      "fetched_at": "2025-10-30T04:15:05.312Z",
+      "summary": {
+        "headline": "Latest coverage skews positive",
+        "sentiment": "Positive",
+        "rating": "Buy",
+        "confidence": "Medium",
+        "key_points": ["✅ ..." ],
+        "rationale": "3 source(s) highlight supportive catalysts.",
+        "conclusion": "Momentum favors accumulation on strength."
+      },
+      "articles": [
+        {
+          "title": "...",
+          "source": "Reuters",
+          "link": "https://...",
+          "published": "2025-10-29T21:05:00Z",
+          "snippet": "...",
+          "sentiment": { "label": "Positive", "score": 0.52 },
+          "origin": "live"
+        }
+      ],
+      "legacy_analysis": "Full-text interpretation from the nightly batch (optional)."
+    }
+    ```
+  - `company/{TICKER}.json`: consolidated runtime cache that combines the latest price snapshot and news summary for quick reuse by the UI.
+  Runtime artifacts are refreshed automatically by the API. Cached files expire after 30 minutes.
+
 ## Quick Start
 
 ### Local Development

@@ -1,6 +1,6 @@
 {
   "ticker": "MP",
-  "fetch_date": "2025-10-24T23:50:24.121495",
+  "fetch_date": "2025-11-07T19:45:22.548830",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 14120873.0,
@@ -1997,12 +1997,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 12540332032,
-    "enterprise_value": 12731448320,
+    "market_cap": 10377961472,
+    "enterprise_value": 9391374336,
     "trailing_pe": null,
-    "forward_pe": 590.0833,
-    "price_to_book": 11.454221,
-    "price_to_sales": 51.794727,
+    "forward_pe": 488.33334,
+    "price_to_book": 9.065594,
+    "price_to_sales": 42.86359,
+    "forward_ps": null,
     "profit_margins": -0.41872,
     "operating_margins": -0.7686,
     "roe": -0.09566,

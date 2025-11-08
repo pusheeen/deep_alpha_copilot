@@ -1,120 +1,90 @@
-INFO:     Started server process [54898]
-INFO:     Waiting for application startup.
-App name mismatch detected. The runner is configured with app name "Financial_Root_Agent_app", but the root agent was loaded from "/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/.venv/lib/python3.13/site-packages/google/adk/agents", which implies app name "agents".
-INFO:     Application startup complete.
+INFO:     Will watch for changes in these directories: ['/Users/luying/Documents/deep_alpha_copilot']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-Warning: NEO4J_URI not provided, Neo4j functionality will be disabled
-Initializing ADK Agent...
-Agent is ready.
-INFO:     127.0.0.1:63586 - "HEAD / HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:63593 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63598 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63726 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63726 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/MU HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/TSM HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/RR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/IREN HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63734 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63734 - "GET /api/price-history/VRT?period=1m HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/SMR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/VST HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/NXE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63727 - "GET /api/scores/QS HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/MU HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/TSM HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/RR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/IREN HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/SMR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/VST HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/NXE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63798 - "GET /api/scores/MU HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63798 - "GET /api/price-history/MU?period=1m HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63785 - "GET /api/scores/QS HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63826 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63830 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63830 - "GET /api/price-history/EOSE?period=1m HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63844 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63860 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/MU HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/TSM HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/RR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/IREN HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63914 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63914 - "GET /api/price-history/INOD?period=1m HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/SMR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/VST HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/NXE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/QS HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/MU HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/AVGO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/TSM HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/RR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/IREN HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/SMR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/VST HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/NXE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63905 - "GET /api/scores/QS HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52730 - "GET /favicon.ico HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:52729 - "GET /api/scores/TSM HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/VRT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/SMCI HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/INOD HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/RR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/IREN HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/CIFR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/RIOT HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/SMR HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/VST HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/NXE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52729 - "GET /api/scores/QS HTTP/1.1" 200 OK
+INFO:     Started reloader process [35007] using StatReload
+
+============================================================
+🚀 Starting deepAlpha Copilot Server
+============================================================
+
+📊 Access the UI at: http://localhost:8000
+📚 API docs at: http://localhost:8000/docs
+
+Press CTRL+C to stop the server
+
+============================================================
+
+INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
+INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
+INFO:app.scoring.engine:📂 Data directories initialized:
+INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
+INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
+INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
+INFO:     Started server process [35010]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+Warning: Could not import agents. Agent features will be disabled.
+ADK not available. Agent features disabled.
+--- Getting latest news for AAPL ---
+INFO:     127.0.0.1:55453 - "GET /api/latest-news/AAPL HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55463 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55489 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55546 - "GET /api/market-conditions HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'app/main.py'. Reloading...
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [54898]
+INFO:     Finished server process [35010]
+INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
+INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
+INFO:app.scoring.engine:📂 Data directories initialized:
+INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
+INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
+INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
+INFO:     Started server process [36010]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+Warning: Could not import agents. Agent features will be disabled.
+ADK not available. Agent features disabled.
+INFO:     127.0.0.1:55652 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55652 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55708 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55759 - "GET /api/market-conditions HTTP/1.1" 200 OK
+--- Getting latest news for AAPL ---
+Loading news from: data/unstructured/news/AAPL_news_20250101_000000.json
+INFO:     127.0.0.1:55801 - "GET /api/latest-news/AAPL HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55984 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55984 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56126 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56226 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56280 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56637 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56781 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56916 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56939 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57015 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57127 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57127 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57184 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57237 - "GET /api/market-conditions HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'fetch_token_usage.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36010]
+INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
+INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
+INFO:app.scoring.engine:📂 Data directories initialized:
+INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
+INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
+INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
+INFO:     Started server process [43810]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+Warning: Could not import agents. Agent features will be disabled.
+ADK not available. Agent features disabled.
+INFO:     127.0.0.1:57626 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57626 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57906 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58039 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58130 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58549 - "GET /api/market-conditions HTTP/1.1" 200 OK

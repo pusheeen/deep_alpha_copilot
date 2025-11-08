@@ -24,19 +24,9 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from datetime import datetime, timedelta
 import logging
-import os
 
 # Logger for this module
 logger = logging.getLogger(__name__)
-
-
-# Cache for valuation metrics
-_valuation_metrics_cache = {}
-_VALUATION_METRICS_CACHE_TTL = 3600  # 1 hour in seconds
-
-# Cache for company scores
-_scores_cache = {}
-_SCORES_CACHE_TTL = 3600  # 1 hour in seconds
 
 
 def safe_json_serialize(obj):
@@ -63,55 +53,23 @@ class ScoreComputationError(Exception):
     """Raised when score computation fails for a ticker."""
 
 
-# ============================================================================
-# ENVIRONMENT-BASED DATA DIRECTORY CONFIGURATION
-# ============================================================================
-
-def get_data_root() -> Path:
-    """
-    Get data directory based on environment.
-
-    Environments:
-    - Local development: ./data/
-    - Production (Cloud Run): /tmp/data/ (cached from Cloud Storage)
-    - Docker (local): /app/data/ (for local Docker testing)
-    """
-    # 1. Check environment variable (highest priority)
-    if data_root_env := os.getenv("DATA_ROOT"):
-        path = Path(data_root_env)
-        logger.info(f"📁 Using DATA_ROOT from environment: {path}")
-        return path
-
-    # 2. Check if running in Cloud Run (production)
-    if os.getenv("K_SERVICE"):  # Cloud Run sets this automatically
-        path = Path("/tmp/data")
-        logger.info(f"☁️ Detected Cloud Run environment, using: {path}")
-        return path
-
-    # 3. Check if running in Docker (local testing)
-    if Path("/app/data").exists():
-        path = Path("/app/data")
-        logger.info(f"🐳 Detected Docker environment, using: {path}")
-        return path
-
-    # 4. Default to local development
-    path = Path(__file__).resolve().parents[2] / "data"
-    logger.info(f"💻 Using local development data directory: {path}")
-    return path
-
-
-# Initialize data directories
-DATA_ROOT = get_data_root()
+DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
+# Fix for Docker container deployment
+if not DATA_ROOT.exists():
+    DATA_ROOT = Path("/app/data")
 FINANCIALS_DIR = DATA_ROOT / "structured" / "financials"
 EARNINGS_DIR = DATA_ROOT / "structured" / "earnings"
 PRICES_DIR = DATA_ROOT / "structured" / "prices"
+SECTOR_METRICS_DIR = DATA_ROOT / "structured" / "sector_metrics"
+RUNTIME_DIR = DATA_ROOT / "runtime"
+PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
+REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
+COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
 REPORTS_DIR = DATA_ROOT / "reports"
 REDDIT_DIR = DATA_ROOT / "unstructured" / "reddit"
 
-logger.info(f"📂 Data directories initialized:")
-logger.info(f"   FINANCIALS_DIR: {FINANCIALS_DIR}")
-logger.info(f"   EARNINGS_DIR: {EARNINGS_DIR}")
-logger.info(f"   PRICES_DIR: {PRICES_DIR}")
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_RUNTIME_DIR]:
+    directory.mkdir(parents=True, exist_ok=True)
 
 CRITICAL_PATH_MAP: Dict[str, float] = {
     "NVDA": 10.0,
@@ -148,6 +106,34 @@ SECTOR_GROWTH_BONUS = {
 }
 
 sentiment_analyzer = SentimentIntensityAnalyzer()
+
+
+def _round(value: Optional[float], decimals: int = 1) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        factor = 10 ** decimals
+        return round(float(value) * factor) / factor
+    except Exception:
+        return None
+
+
+def _update_runtime_cache(ticker: str, section: str, payload: dict) -> None:
+    ticker = ticker.upper()
+    path = COMPANY_RUNTIME_DIR / f"{ticker}.json"
+    try:
+        if path.exists():
+            with path.open("r") as fh:
+                existing = json.load(fh)
+        else:
+            existing = {"ticker": ticker}
+        existing.setdefault("runtime", {})
+        existing["runtime"][section] = payload
+        existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
+        with path.open("w") as fh:
+            json.dump(existing, fh, indent=2)
+    except Exception as exc:
+        logger.warning("Unable to update runtime cache for %s: %s", ticker, exc)
 
 
 def extract_year_from_summary(summary: Optional[str]) -> Optional[int]:
@@ -188,9 +174,10 @@ def load_industry_benchmarks() -> Dict[str, Dict[str, float]]:
     Returns:
         Dictionary mapping industry names to benchmark metrics (pe, ps)
     """
-    benchmark_dir = Path(DATA_ROOT) / "structured" / "industry_benchmark"
+    benchmark_file = Path("data/structured/industry_benchmarks.json")
 
-    # Hardcoded fallback benchmarks
+    # Hardcoded fallback benchmarks (will be used if file doesn't exist)
+    # Note: No default fallback - if industry not found, returns None
     fallback_benchmarks = {
         'Semiconductors': {'pe': 28.5, 'ps': 6.2},
         'Software': {'pe': 35.2, 'ps': 8.5},
@@ -209,23 +196,24 @@ def load_industry_benchmarks() -> Dict[str, Dict[str, float]]:
         'Specialty Chemicals': {'pe': 18.5, 'ps': 2.5}
     }
 
-    if benchmark_dir.exists():
-        benchmark_files = sorted(benchmark_dir.glob("industry_benchmark_*.json"), reverse=True)
-        if benchmark_files:
-            benchmark_file = benchmark_files[0]
-            logger.info(f"Loading latest industry benchmarks from {benchmark_file}")
-            try:
-                with open(benchmark_file, 'r') as f:
-                    data = json.load(f)
-                    benchmarks = data.get('benchmarks', {})
-                generated_at = data.get('generated_at', 'unknown')
-                logger.info(f"Loaded industry benchmarks generated at {generated_at}")
-                return benchmarks
-            except Exception as e:
-                logger.error(f"Failed to load industry benchmarks from {benchmark_file}: {e}")
+    if not benchmark_file.exists():
+        logger.warning(f"Industry benchmarks file not found at {benchmark_file}, using fallback values")
+        return fallback_benchmarks
 
-    logger.warning(f"Using hardcoded fallback industry benchmarks.")
-    return fallback_benchmarks
+    try:
+        with open(benchmark_file, 'r') as f:
+            data = json.load(f)
+            benchmarks = data.get('benchmarks', {})
+
+        # Log when benchmarks were generated
+        generated_at = data.get('generated_at', 'unknown')
+        logger.info(f"Loaded industry benchmarks generated at {generated_at}")
+
+        return benchmarks
+
+    except Exception as e:
+        logger.error(f"Failed to load industry benchmarks from {benchmark_file}: {e}")
+        return fallback_benchmarks
 
 
 _reddit_sentiment_cache = {}
@@ -1713,90 +1701,159 @@ def get_score_benchmarks(component_scores: dict, info: dict) -> dict:
 def get_price_history_with_events(ticker: str, news_items: List[dict], period: str = "1m") -> dict:
     """
     Fetch historical price data and annotate with major events.
-    Uses yfinance to fetch data for the given period.
+    For intraday periods (1d, 1w), fetches live minute/hour data from yfinance.
+    For longer periods, uses local CSV data and enriches with the most recent intraday snapshot.
     Returns time series data suitable for charting with event markers.
     """
     try:
-        if period == "1d":
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period=period)
+        import yfinance as yf
+
+        latest_snapshot = None
+        hist = pd.DataFrame()
+
+        if period in ["1d", "1w"]:
+            try:
+                yf_period, interval = ("1d", "5m") if period == "1d" else ("5d", "30m")
+                stock = yf.Ticker(ticker)
+                hist = stock.history(period=yf_period, interval=interval)
+
+                if hist.empty:
+                    logger.warning("No intraday data available for %s period %s", ticker, period)
+                    return {"price_data": [], "events": [], "error": "No intraday data available"}
+
+                if isinstance(hist.index, pd.DatetimeIndex) and hist.index.tz is not None:
+                    hist.index = hist.index.tz_convert("UTC").tz_localize(None)
+            except Exception as exc:
+                logger.error("Error fetching intraday data for %s: %s", ticker, exc)
+                return {"price_data": [], "events": [], "error": str(exc)}
         else:
-            price_df = load_price_history(ticker)
-            
-            # Map period string to timedelta
-            period_map = {
-                "5d": timedelta(days=5),
-                "1mo": timedelta(days=30),
-                "3mo": timedelta(days=90),
-                "6mo": timedelta(days=180),
-                "1y": timedelta(days=365),
-                "2y": timedelta(days=730),
-                "5y": timedelta(days=1825),
-                "10y": timedelta(days=3650),
-                "ytd": None, # Special case
-                "max": None # Special case
+            try:
+                price_df = load_price_history(ticker)
+            except ScoreComputationError:
+                return {"price_data": [], "events": []}
+
+            if price_df.empty:
+                return {"price_data": [], "events": []}
+
+            if isinstance(price_df.index, pd.DatetimeIndex) and price_df.index.tz is not None:
+                price_df.index = price_df.index.tz_convert("UTC").tz_localize(None)
+
+            period_days_map = {
+                "5d": 5,
+                "1m": 30,
+                "1mo": 30,
+                "3m": 90,
+                "3mo": 90,
+                "6m": 180,
+                "6mo": 180,
+                "1y": 365,
+                "2y": 730,
+                "5y": 1825,
+                "10y": 3650,
+                "ytd": None,
+                "max": None,
             }
-            
-            # Handle "1m" as "1mo"
-            if period == "1m":
-                period = "1mo"
+            days = period_days_map.get(period, 30)
+            if days:
+                cutoff_date = datetime.now() - timedelta(days=days)
+                hist = price_df[price_df.index >= cutoff_date]
+            elif period == "ytd":
+                cutoff_date = datetime(datetime.now().year, 1, 1)
+                hist = price_df[price_df.index >= cutoff_date]
+            else:
+                hist = price_df
 
-            if period in period_map:
-                delta = period_map.get(period)
-                if delta:
-                    start_date = datetime.now() - delta
-                    hist = price_df[price_df.index >= start_date]
-                elif period == "ytd":
-                    start_date = datetime(datetime.now().year, 1, 1)
-                    hist = price_df[price_df.index >= start_date]
-                else: # max
-                    hist = price_df
-            else: # default to 1 month
-                start_date = datetime.now() - timedelta(days=30)
-                hist = price_df[price_df.index >= start_date]
+            if hist.empty:
+                return {"price_data": [], "events": []}
 
-        if hist.empty:
-            logger.warning(f"No price data available for {ticker} period {period}")
-            return {"price_data": [], "events": [], "error": "No price data available"}
+            try:
+                stock = yf.Ticker(ticker)
+                intraday = stock.history(period="1d", interval="1m")
+                if not intraday.empty:
+                    timestamp = intraday.index[-1]
+                    if isinstance(timestamp, pd.DatetimeIndex):
+                        timestamp = timestamp[-1]
+                    if isinstance(timestamp, pd.Timestamp) and timestamp.tzinfo is not None:
+                        timestamp = timestamp.tz_convert("UTC").tz_localize(None)
+                    last_row = intraday.iloc[-1]
+                    latest_snapshot = {
+                        "timestamp": timestamp.isoformat() if hasattr(timestamp, "isoformat") else str(timestamp),
+                        "open": _round(last_row.get("Open")),
+                        "high": _round(last_row.get("High")),
+                        "low": _round(last_row.get("Low")),
+                        "close": _round(last_row.get("Close")),
+                        "volume": int(last_row.get("Volume") or 0),
+                    }
+            except Exception as exc:
+                logger.warning("Failed to fetch live price snapshot for %s: %s", ticker, exc)
 
-        # Strip timezone info
-        if isinstance(hist.index, pd.DatetimeIndex) and hist.index.tz is not None:
-            hist.index = hist.index.tz_convert('UTC').tz_localize(None)
-        
-        # Prepare price data and identify significant movements
-        price_data = []
-        significant_moves = []
-        
-        for i, (date, row) in enumerate(hist.iterrows()):
-            # Calculate daily change
-            daily_change = ((row['Close'] - row['Open']) / row['Open'] * 100) if row['Open'] > 0 else 0
-            
-            price_data.append({
-                "date": date.strftime("%Y-%m-%d %H:%M") if period in ["1d", "1w"] else date.strftime("%Y-%m-%d"),
-                "open": float(row['Open']),
-                "high": float(row['High']),
-                "low": float(row['Low']),
-                "close": float(row['Close']),
-                "volume": int(row['Volume']),
-                "daily_change": daily_change
-            })
-            
-            # Track significant price movements (>10% or <-10%)
+        price_data: List[Dict[str, Any]] = []
+        significant_moves: List[Dict[str, Any]] = []
+
+        for date, row in hist.iterrows():
+            open_price = _round(row["Open"])
+            close_price = _round(row["Close"])
+            high_price = _round(row["High"])
+            low_price = _round(row["Low"])
+            if row["Open"] and row["Open"] != 0:
+                daily_change = _round(((row["Close"] - row["Open"]) / row["Open"]) * 100)
+            else:
+                daily_change = 0.0
+            price_data.append(
+                {
+                    "date": date.strftime("%Y-%m-%d %H:%M") if period in ["1d", "1w"] else date.strftime("%Y-%m-%d"),
+                    "open": open_price,
+                    "high": high_price,
+                    "low": low_price,
+                    "close": close_price,
+                    "volume": int(row["Volume"]),
+                    "daily_change": daily_change,
+                }
+            )
             if abs(daily_change) >= 10:
-                significant_moves.append({
-                    "date": date.strftime("%Y-%m-%d"),
-                    "change": daily_change,
-                    "close": float(row['Close'])
-                })
-        
-        # Create a map of news by date for quick lookup
-        news_by_date = {}
-        now = datetime.now()  # Use timezone-naive datetime
+                significant_moves.append(
+                    {
+                        "date": date.strftime("%Y-%m-%d"),
+                        "change": daily_change,
+                        "close": close_price,
+                    }
+                )
+
+        if latest_snapshot and period not in ["1d", "1w"]:
+            snapshot_date = latest_snapshot["timestamp"][:10]
+            existing = next((idx for idx, item in enumerate(price_data) if item["date"] == snapshot_date), None)
+            open_px = latest_snapshot["open"]
+            close_px = latest_snapshot["close"]
+            if open_px and open_px != 0 and close_px is not None:
+                snapshot_change = _round(((close_px - open_px) / open_px) * 100)
+            else:
+                snapshot_change = 0.0
+            snapshot_entry = {
+                "date": snapshot_date,
+                "open": open_px,
+                "high": latest_snapshot["high"],
+                "low": latest_snapshot["low"],
+                "close": close_px,
+                "volume": latest_snapshot["volume"],
+                "daily_change": snapshot_change,
+            }
+            if existing is not None:
+                price_data[existing] = snapshot_entry
+            else:
+                price_data.append(snapshot_entry)
+                price_data.sort(key=lambda x: x["date"])
+
+        news_by_date: Dict[str, List[dict]] = {}
+        now = datetime.now()
 
         for item in news_items or []:
             content = item.get("content") or {}
             title = content.get("title") or item.get("title") or "Event"
-            provider = (content.get("provider") or {}).get("displayName") or (item.get("provider") or {}).get("displayName") or "Unknown"
+            provider = (
+                (content.get("provider") or {}).get("displayName")
+                or (item.get("provider") or {}).get("displayName")
+                or "Unknown"
+            )
             link = (
                 item.get("link")
                 or (item.get("canonicalUrl") or {}).get("url")
@@ -1806,11 +1863,9 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
             provider_time = item.get("providerPublishTime") or content.get("pubDate")
 
             if isinstance(provider_time, (int, float)):
-                # Convert to timezone-naive datetime
                 published_at = datetime.fromtimestamp(provider_time)
             elif isinstance(provider_time, str) and provider_time:
                 try:
-                    # Parse and remove timezone info
                     published_at = datetime.fromisoformat(provider_time.replace("Z", "+00:00"))
                     if published_at.tzinfo is not None:
                         published_at = published_at.replace(tzinfo=None)
@@ -1818,132 +1873,137 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
                     published_at = now
             else:
                 published_at = now
-            
+
             event_date = published_at.strftime("%Y-%m-%d")
-            
-            if event_date not in news_by_date:
-                news_by_date[event_date] = []
-            
+            news_by_date.setdefault(event_date, [])
             sentiment = sentiment_analyzer.polarity_scores(title)
-            news_by_date[event_date].append({
-                "title": title,
-                "source": provider,
-                "link": link or f"https://finance.yahoo.com/quote/{ticker}/news",
-                "sentiment": sentiment["compound"]
-            })
-        
-        # Annotate significant moves with news or mark as unexplained
-        events = []
+            news_by_date[event_date].append(
+                {
+                    "title": title,
+                    "source": provider,
+                    "link": link or f"https://finance.yahoo.com/quote/{ticker}/news",
+                    "sentiment": sentiment["compound"],
+                }
+            )
+
+        events: List[dict] = []
         for move in significant_moves:
-            move_date = move['date']
-            
+            move_date = move["date"]
             if move_date in news_by_date and news_by_date[move_date]:
-                # Found news on this date
-                news_item = news_by_date[move_date][0]  # Use the first/most relevant
-                events.append({
-                    "date": move_date,
-                    "title": news_item['title'],
-                    "source": news_item['source'],
-                    "link": news_item['link'],
-                    "price": move['close'],
-                    "price_change": move['change'],
-                    "sentiment": news_item['sentiment'],
-                    "has_news": True
-                })
+                news_item = news_by_date[move_date][0]
+                events.append(
+                    {
+                        "date": move_date,
+                        "title": news_item["title"],
+                        "source": news_item["source"],
+                        "link": news_item["link"],
+                        "price": _round(move["close"]),
+                        "price_change": _round(move["change"]),
+                        "sentiment": news_item["sentiment"],
+                        "has_news": True,
+                    }
+                )
             else:
-                # No news found - search for events that could explain the price movement
-                search_result = search_events_for_date(ticker, move_date, move['change'])
+                search_result = search_events_for_date(ticker, move_date, move["change"])
                 if search_result:
-                    events.append({
-                        "date": move_date,
-                        "title": search_result['title'],
-                        "source": search_result['source'],
-                        "link": search_result['link'],
-                        "price": move['close'],
-                        "price_change": move['change'],
-                        "sentiment": search_result['sentiment'],
-                        "has_news": True
-                    })
+                    events.append(
+                        {
+                            "date": move_date,
+                            "title": search_result["title"],
+                            "source": search_result["source"],
+                            "link": search_result["link"],
+                            "price": _round(move["close"]),
+                            "price_change": _round(move["change"]),
+                            "sentiment": search_result["sentiment"],
+                            "has_news": True,
+                        }
+                    )
                 else:
-                    # Fallback to generic significant move description
-                    direction = "surge" if move['change'] > 0 else "drop"
-                    events.append({
-                        "date": move_date,
-                        "title": f"Significant price {direction} ({abs(move['change']):.1f}%)",
-                        "source": "Yahoo Finance",
-                        "link": f"https://finance.yahoo.com/quote/{ticker}/history?period1={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp())}&period2={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp()) + 86400}&interval=1d",
-                        "price": move['close'],
-                        "price_change": move['change'],
-                        "sentiment": 0.5 if move['change'] > 0 else -0.5,
-                        "has_news": False
-                    })
-        
-        # Also include recent news events even if not on significant move days
+                    direction = "surge" if move["change"] > 0 else "drop"
+                    events.append(
+                        {
+                            "date": move_date,
+                            "title": f"Significant price {direction} ({abs(move['change']):.1f}%)",
+                            "source": "Yahoo Finance",
+                            "link": f"https://finance.yahoo.com/quote/{ticker}/history?period1={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp())}&period2={int(datetime.strptime(move_date, '%Y-%m-%d').timestamp()) + 86400}&interval=1d",
+                            "price": _round(move["close"]),
+                            "price_change": _round(move["change"]),
+                            "sentiment": 0.5 if move["change"] > 0 else -0.5,
+                            "has_news": False,
+                        }
+                    )
+
         recent_news_events = []
-        for date, news_list in sorted(news_by_date.items(), reverse=True)[:5]:
-            if not any(e['date'] == date for e in events):
-                matching_price = next((p for p in price_data if p['date'] == date), None)
+        for date_key, news_list in sorted(news_by_date.items(), reverse=True)[:5]:
+            if not any(event["date"] == date_key for event in events):
+                matching_price = next((p for p in price_data if p["date"] == date_key), None)
                 if matching_price and news_list:
                     news_item = news_list[0]
-                    recent_news_events.append({
-                        "date": date,
-                        "title": news_item['title'],
-                        "source": news_item['source'],
-                        "link": news_item['link'],
-                        "price": matching_price['close'],
-                        "price_change": matching_price['daily_change'],
-                        "sentiment": news_item['sentiment'],
-                        "has_news": True
-                    })
-        
-        # Combine and sort all events
-        all_events = events + recent_news_events
-        all_events.sort(key=lambda x: x['date'], reverse=True)
+                    recent_news_events.append(
+                        {
+                            "date": date_key,
+                            "title": news_item["title"],
+                            "source": news_item["source"],
+                            "link": news_item["link"],
+                            "price": _round(matching_price["close"]),
+                            "price_change": _round(matching_price["daily_change"]),
+                            "sentiment": news_item["sentiment"],
+                            "has_news": True,
+                        }
+                    )
 
-        # Calculate period trend
+        all_events = events + recent_news_events
+        all_events.sort(key=lambda x: x["date"], reverse=True)
+
         trend = None
         if len(price_data) >= 2:
-            start_price = price_data[0]['close']
-            end_price = price_data[-1]['close']
-            price_change = end_price - start_price
-            price_change_pct = (price_change / start_price) * 100 if start_price > 0 else 0
-
+            start_price = price_data[0]["close"]
+            end_price = price_data[-1]["close"]
+            price_change = (end_price or 0) - (start_price or 0)
+            price_change_pct = (price_change / start_price * 100) if start_price else 0
             trend = {
-                "start_date": price_data[0]['date'],
-                "end_date": price_data[-1]['date'],
-                "start_price": round(start_price, 2),
-                "end_price": round(end_price, 2),
-                "price_change": round(price_change, 2),
-                "price_change_pct": round(price_change_pct, 2),
+                "start_date": price_data[0]["date"],
+                "end_date": price_data[-1]["date"],
+                "start_price": _round(start_price),
+                "end_price": _round(end_price),
+                "price_change": _round(price_change),
+                "price_change_pct": _round(price_change_pct),
                 "direction": "up" if price_change >= 0 else "down",
-                "high": round(max(p['high'] for p in price_data), 2),
-                "low": round(min(p['low'] for p in price_data), 2),
-                "avg_volume": int(sum(p['volume'] for p in price_data) / len(price_data))
+                "high": _round(max(p["high"] for p in price_data if p["high"] is not None)),
+                "low": _round(min(p["low"] for p in price_data if p["low"] is not None)),
+                "avg_volume": int(sum(p["volume"] for p in price_data) / len(price_data)),
             }
+
+        try:
+            if price_data:
+                snapshot_payload = {
+                    "ticker": ticker.upper(),
+                    "fetched_at": datetime.now(timezone.utc).isoformat(),
+                    "period": period,
+                    "current": price_data[-1],
+                    "trend": trend,
+                }
+                snapshot_path = PRICE_SNAPSHOT_DIR / f"{ticker.upper()}.json"
+                with snapshot_path.open("w") as fh:
+                    json.dump(snapshot_payload, fh, indent=2)
+                _update_runtime_cache(ticker, f'price_{period}', snapshot_payload)
+        except Exception as exc:
+            logger.warning("Failed to persist price snapshot for %s: %s", ticker, exc)
 
         return {
             "price_data": price_data,
-            "events": all_events[:15],  # Limit to 15 most relevant events
+            "events": all_events[:15],
             "significant_moves": len(significant_moves),
             "period": period,
-            "trend": trend
+            "trend": trend,
         }
-    except Exception as e:
-        print(f"Error fetching price history: {e}")
-        return {"price_data": [], "events": [], "error": str(e)}
+    except Exception as exc:
+        logger.error("Error fetching price history: %s", exc)
+        return {"price_data": [], "events": [], "error": str(exc)}
 
 
 def compute_company_scores(ticker: str) -> Dict[str, object]:
     ticker = ticker.upper()
-
-    now_ts = datetime.now(timezone.utc).timestamp()
-    if ticker in _scores_cache:
-        cached_data, timestamp = _scores_cache[ticker]
-        if now_ts - timestamp < _SCORES_CACHE_TTL:
-            logger.info(f"Cache hit for company scores for {ticker}")
-            return cached_data
-
-    logger.info(f"Cache miss for company scores for {ticker}, fetching new data")
     
     # Load data with error handling
     try:
@@ -2139,9 +2199,7 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
     }
     
     # Apply safe JSON serialization to handle NaN/infinity values
-    result = safe_json_serialize(result)
-    _scores_cache[ticker] = (result, now_ts)
-    return result
+    return safe_json_serialize(result)
 
 
 def get_valuation_metrics(ticker: str) -> dict:
@@ -2245,8 +2303,7 @@ def get_valuation_metrics(ticker: str) -> dict:
         current_pe = info.get('trailingPE')
         current_ps = info.get('priceToSalesTrailing12Months')
         forward_pe = info.get('forwardPE')
-        forward_ps = info.get('forwardPS')
-
+        
         return {
             'ticker': ticker,
             'sector': sector,
@@ -2255,7 +2312,6 @@ def get_valuation_metrics(ticker: str) -> dict:
                 'pe_ratio': round(current_pe, 2) if current_pe else None,
                 'ps_ratio': round(current_ps, 2) if current_ps else None,
                 'forward_pe': round(forward_pe, 2) if forward_pe else None,
-                'forward_ps': round(forward_ps, 2) if forward_ps else None,
                 'benchmark_pe': benchmark['pe'],
                 'benchmark_ps': benchmark['ps']
             },

@@ -1,6 +1,6 @@
 {
   "ticker": "ORCL",
-  "fetch_date": "2025-10-20T19:30:42.024569",
+  "fetch_date": "2025-11-07T19:45:13.182627",
   "income_statement": {
     "2025-05-31 00:00:00": {
       "Tax Effect Of Unusual Items": -96679000.0,
@@ -2119,12 +2119,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 830464393216,
-    "enterprise_value": 928948682752,
-    "trailing_pe": 67.60488,
-    "forward_pe": 38.71229,
-    "price_to_book": 32.60174,
-    "price_to_sales": 14.071375,
+    "market_cap": 682080665600,
+    "enterprise_value": 781037469696,
+    "trailing_pe": 55.384254,
+    "forward_pe": 33.416203,
+    "price_to_book": 28.141613,
+    "price_to_sales": 11.557163,
+    "forward_ps": null,
     "profit_margins": 0.21079999,
     "operating_margins": 0.31381,
     "roe": 0.69241995,

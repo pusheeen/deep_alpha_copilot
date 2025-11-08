@@ -4,8 +4,12 @@ langchain
 langchain-community
 litellm
 google-cloud-aiplatform
+google-cloud-storage
+google-cloud-bigquery
+google-cloud-secret-manager
 google-api-python-client
 google-generativeai
+youtube-transcript-api
 markdown
 scipy
 # scikit-learn  # Temporarily disabled for deployment
@@ -35,4 +39,6 @@ python-multipart
 jinja2
 itsdangerous
 celery
+flask
 # redis  # Disabled - not needed for basic deployment
+matplotlib

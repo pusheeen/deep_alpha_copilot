@@ -28,10 +28,10 @@ os.makedirs(TOKEN_USAGE_DIR, exist_ok=True)
 def fetch_openrouter_rankings_data() -> Dict:
     """
     Fetch actual token usage data from OpenRouter rankings page.
-    
+
     Reference: https://openrouter.ai/rankings
     The rankings page shows actual token consumption by model.
-    
+
     Returns:
         Dictionary with actual token usage by model/provider
     """
@@ -39,14 +39,14 @@ def fetch_openrouter_rankings_data() -> Dict:
         # Try to fetch rankings data - OpenRouter may have an internal API
         # Based on website data: August ~3T/day, November ~6T+/day
         url = "https://openrouter.ai/api/v1/rankings"
-        
+
         headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
             'Accept': 'application/json',
             'HTTP-Referer': 'https://github.com/yinglu1985/deep_alpha_copilot',
             'X-Title': 'Deep Alpha Copilot'
         }
-        
+
         response = requests.get(url, headers=headers, timeout=30)
         if response.status_code == 200:
             try:
@@ -55,14 +55,108 @@ def fetch_openrouter_rankings_data() -> Dict:
                 return data
             except json.JSONDecodeError:
                 pass
-        
+
         # If API doesn't work, return None to use fallback
         logger.info("Rankings API not available, using fallback method")
         return None
-        
+
     except Exception as e:
         logger.warning(f"Could not fetch rankings data: {e}")
         return None
+
+
+def fetch_openrouter_model_catalog(view: str = "trending") -> dict:
+    """
+    Fetch model catalog from OpenRouter API.
+
+    This is different from rankings - it fetches the available models and their specs.
+
+    Args:
+        view: View type - 'trending', 'popular', or 'new'
+
+    Returns:
+        Dictionary containing model catalog data
+    """
+    api_key = os.getenv('OPENROUTER_API_KEY')
+
+    if not api_key:
+        logger.error("OPENROUTER_API_KEY not found in environment variables")
+        return {
+            'view': view,
+            'fetch_timestamp': datetime.now().isoformat(),
+            'error': 'OPENROUTER_API_KEY not configured',
+            'models': []
+        }
+
+    logger.info(f"Fetching OpenRouter model catalog (view: {view})...")
+
+    try:
+        url = "https://openrouter.ai/api/v1/models"
+
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://github.com/yinglu1985/deep_alpha_copilot',
+            'X-Title': 'Deep Alpha Copilot'
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+
+        data = response.json()
+        models = data.get('data', [])
+
+        logger.info(f"Fetched {len(models)} models from OpenRouter API")
+
+        # Sort models based on view preference
+        if view == "trending":
+            sorted_models = sorted(models, key=lambda x: x.get('created', 0), reverse=True)
+        elif view == "popular":
+            sorted_models = sorted(models, key=lambda x: float(x.get('pricing', {}).get('prompt', '999')))
+        else:  # new
+            sorted_models = sorted(models, key=lambda x: x.get('created', 0), reverse=True)
+
+        # Extract relevant information
+        catalog_data = []
+        for model in sorted_models[:50]:  # Top 50 models
+            catalog_data.append({
+                'id': model.get('id'),
+                'name': model.get('name'),
+                'description': model.get('description'),
+                'pricing': model.get('pricing'),
+                'context_length': model.get('context_length'),
+                'architecture': model.get('architecture'),
+                'top_provider': model.get('top_provider')
+            })
+
+        result = {
+            'view': view,
+            'fetch_timestamp': datetime.now().isoformat(),
+            'total_models': len(models),
+            'models': catalog_data,
+            'note': f'Top {len(catalog_data)} models from OpenRouter API'
+        }
+
+        logger.info(f"Successfully fetched {len(catalog_data)} model specs")
+        return result
+
+    except requests.exceptions.HTTPError as e:
+        logger.error(f"HTTP Error fetching OpenRouter model catalog: {e}")
+        logger.error(f"Response: {e.response.text if hasattr(e, 'response') else 'No response'}")
+        return {
+            'view': view,
+            'fetch_timestamp': datetime.now().isoformat(),
+            'error': f'HTTP Error: {str(e)}',
+            'models': []
+        }
+    except Exception as e:
+        logger.error(f"Error fetching OpenRouter model catalog: {e}")
+        return {
+            'view': view,
+            'fetch_timestamp': datetime.now().isoformat(),
+            'error': str(e),
+            'models': []
+        }
 
 
 def fetch_openrouter_usage_history(days: int = 365) -> Dict:

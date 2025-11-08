@@ -16,6 +16,8 @@ from bigquery_schemas import create_all_tables
 from google.cloud import bigquery, secretmanager
 # Email notifications
 from email_notifier import EmailNotifier
+# Cloud Storage helper
+from storage_helper import DataStorageManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,6 +28,12 @@ app = Flask(__name__)
 # Get GCP project ID from environment
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", os.getenv("GOOGLE_CLOUD_PROJECT"))
 DATASET_ID = "deep_alpha_copilot"
+
+# Initialize Cloud Storage manager (environment-aware)
+storage_manager = DataStorageManager(
+    bucket_name="deep-alpha-copilot-data",
+    project_id=PROJECT_ID
+)
 
 
 def get_secret(secret_name):
@@ -248,15 +256,26 @@ def fetch_data_cloud_run():
         request_json = request.get_json(silent=True)
         tickers = request_json.get("tickers") if request_json else None
 
+        # Step 1: Download existing data from Cloud Storage (for incremental updates)
+        logger.info("📥 Downloading existing data from Cloud Storage...")
+        storage_manager.download_all_data()
+
+        # Step 2: Fetch fresh data from APIs and upload to BigQuery
         results = fetch_and_upload_data(tickers)
 
-        # Send summary email
+        # Step 3: Upload updated data to Cloud Storage (persistence)
+        logger.info("📤 Uploading updated data to Cloud Storage...")
+        uploaded_count = storage_manager.upload_data_folder()
+        results["cloud_storage_uploads"] = uploaded_count
+
+        # Step 4: Send summary email
         try:
             notifier = EmailNotifier()
             summary_stats = {'company_metrics': {'new': len(results.get('tickers_processed', []))}}
             notifier.send_summary_email(summary_stats, results.get('errors', []))
         except Exception as e:
             logger.error(f"Error sending summary email: {e}")
+
         return jsonify(results), 200 if results["status"] == "success" else 500
 
     except Exception as e:
@@ -274,6 +293,22 @@ def setup_bigquery():
     except Exception as e:
         logger.error(f"Error setting up BigQuery: {e}")
         return jsonify({"status": "error", "error": str(e)}), 500
+
+
+# Startup: Download data from Cloud Storage on container start (production only)
+@app.before_first_request
+def startup():
+    """Download data from Cloud Storage when container starts."""
+    try:
+        logger.info("🚀 Application startup: Downloading data from Cloud Storage...")
+        count = storage_manager.download_all_data()
+        if count > 0:
+            logger.info(f"✅ Startup complete: {count} files cached locally")
+        else:
+            logger.info("ℹ️ Startup complete: Running in local mode or no data to download")
+    except Exception as e:
+        logger.warning(f"⚠️ Could not download data on startup: {e}")
+        logger.info("Will fetch fresh data on first /fetch request")
 
 
 if __name__ == "__main__":

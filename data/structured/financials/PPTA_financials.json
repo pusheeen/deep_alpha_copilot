@@ -1,6 +1,6 @@
 {
   "ticker": "PPTA",
-  "fetch_date": "2025-10-24T23:52:06.894056",
+  "fetch_date": "2025-11-07T19:45:31.558671",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -1576,12 +1576,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 2506918144,
-    "enterprise_value": 2081068928,
+    "market_cap": 2715323392,
+    "enterprise_value": 1971347584,
     "trailing_pe": null,
-    "forward_pe": -105.90909,
-    "price_to_book": 4.7483187,
+    "forward_pe": -101.27273,
+    "price_to_book": 4.5404525,
     "price_to_sales": null,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": 0.0,
     "roe": -0.076409996,

@@ -22,7 +22,7 @@ except ImportError:
     HttpError = Exception  # type: ignore[assignment]
 
 # --- Setup ---
-llm = LiteLlm(model="gemini-2.5-flash")
+llm = LiteLlm(model="gemini-2.5-pro")
 
 embeddings = VertexAIEmbeddings(model_name="text-embedding-005")
 
@@ -468,6 +468,85 @@ news_search_subagent = Agent(
     """
 )
 
+def get_sector_news(sector: str) -> dict:
+    """
+    Fetches news articles for a given financial sector.
+    """
+    from fetch_data.sector_news import fetch_sector_news
+    try:
+        articles = fetch_sector_news(sector)
+        return {'sector': sector, 'articles': articles}
+    except Exception as e:
+        return {'error': f"Failed to fetch sector news for {sector}: {e}"}
+
+sector_news_subagent = Agent(
+    name="SectorNews_Agent",
+    model=llm,
+    tools=[get_sector_news],
+    description="Use to fetch the latest news articles for a given financial sector.",
+    instruction="""
+    Your task is to retrieve the latest news articles for a financial sector.
+    Use the `get_sector_news` tool, which takes a sector name as input and returns the articles.
+    """
+)
+
+def get_token_usage(days: int = 90) -> dict:
+    """
+    Fetches AI token usage data from OpenRouter API for the last N days.
+    
+    Args:
+        days: Number of days of history to fetch (default: 90, i.e., 3 months)
+    
+    Returns:
+        Dictionary containing token usage data by model
+    """
+    from fetch_data.token_usage import fetch_openrouter_usage_history, aggregate_usage_by_model
+    
+    try:
+        usage_data = fetch_openrouter_usage_history(days=days)
+        
+        if usage_data.get('error'):
+            return {'error': usage_data.get('error')}
+        
+        # Aggregate by model if we have usage data
+        if usage_data.get('usage_data'):
+            aggregated = aggregate_usage_by_model(usage_data['usage_data'])
+            usage_data['aggregated_by_model'] = aggregated
+        
+        return {
+            'status': 'success',
+            'days': usage_data.get('days', days),
+            'total_models': len(usage_data.get('aggregated_by_model', [])),
+            'total_tokens': usage_data.get('total_tokens', 0),
+            'total_requests': usage_data.get('total_requests', 0),
+            'fetch_timestamp': usage_data.get('fetch_timestamp'),
+            'model_consumption': usage_data.get('aggregated_by_model', [])[:15],  # Top 15
+            'source': usage_data.get('source', 'estimated')
+        }
+    except Exception as e:
+        return {'error': f"Failed to fetch token usage: {e}"}
+
+token_usage_subagent = Agent(
+    name="TokenUsage_Agent",
+    model=llm,
+    tools=[get_token_usage],
+    description="Use to fetch AI token consumption data from OpenRouter API. Shows which AI models are being used and their token consumption over the last 3 months.",
+    instruction="""
+    Your task is to retrieve AI token usage data showing which models are consuming tokens.
+    
+    CAPABILITIES:
+    - Fetch token usage for the last 3 months (90 days) by default
+    - Show token consumption by model
+    - Display total tokens, requests, and costs
+    
+    IMPORTANT:
+    - Use get_token_usage() to fetch the latest data
+    - Present the data in a clear, organized format
+    - Highlight the most used models
+    - Explain what the token usage means for the system
+    """
+)
+
 market_data_subagent = Agent(
     name="MarketData_Agent",
     model=llm,
@@ -488,6 +567,219 @@ market_data_subagent = Agent(
     - Do not generate forecasts; stick to retrieved data
     """
 )
+
+
+
+
+def get_market_index_data(index_name: str) -> dict:
+    """
+    Fetches data for a specific market index.
+    """
+    from fetch_data.market_indices import fetch_market_indices
+    indices = fetch_market_indices()
+    return indices.get(index_name, {"error": f"Index '{index_name}' not found."})
+
+market_indices_subagent = Agent(
+    name="MarketIndices_Agent",
+    model=llm,
+    tools=[get_market_index_data],
+    description="Use to get data for major market indices like VIX, NASDAQ, Dow Jones, and Russell 2000.",
+    instruction="""
+    Your task is to provide data for a given market index.
+    Use the `get_market_index_data` tool to retrieve the data.
+    """
+)
+
+def query_twitter_data(ticker: str) -> dict:
+    """
+    Fetches real-time Twitter/X data for a specific company ticker.
+    """
+    from fetch_data.twitter import fetch_x_data_for_company, initialize_x_client
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    client = initialize_x_client()
+    if not client:
+        return {"error": "X/Twitter client not available."}
+    analyzer = SentimentIntensityAnalyzer()
+    # This is a simplified version for real-time query, for full data use the batch script
+    # We need to get company name and ceo name from somewhere, for now, we'll just use the ticker
+    return fetch_x_data_for_company(client, ticker, ticker, "", analyzer)
+
+twitter_subagent = Agent(
+    name="Twitter_Agent",
+    model=llm,
+    tools=[query_twitter_data],
+    description="Use for REAL-TIME Twitter/X sentiment analysis and social media discussions about stocks.",
+    instruction="""
+    Your task is to fetch and analyze LIVE Twitter/X sentiment for specific tickers.
+    """
+)
+
+def get_sector_metrics(sector: str) -> dict:
+    """
+    Fetches calculated metrics for a given financial sector.
+    """
+    import json
+    from fetch_data.utils import SECTOR_METRICS_DIR
+    try:
+        with open(os.path.join(SECTOR_METRICS_DIR, "sector_metrics.json"), 'r') as f:
+            sector_metrics = json.load(f)
+        return sector_metrics.get(sector, {"error": f"Sector '{sector}' not found."})
+    except FileNotFoundError:
+        return {"error": "Sector metrics file not found. Please run the data fetching script."}
+    except Exception as e:
+        return {"error": f"Error reading sector metrics: {e}"}
+
+sector_metrics_subagent = Agent(
+    name="SectorMetrics_Agent",
+    model=llm,
+    tools=[get_sector_metrics],
+    description="Use to get calculated metrics for a specific financial sector (e.g., 'Technology', 'Energy').",
+    instruction="""
+    Your task is to provide calculated metrics for a given financial sector.
+    Use the `get_sector_metrics` tool to retrieve the data.
+    """
+)
+
+def get_flow_data(ticker: str, flow_type: str = "combined", date: str = "latest") -> dict:
+    """
+    Fetches institutional and retail flow data for a ticker.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., 'NVDA', 'AVGO')
+        flow_type: Type of flow data to retrieve:
+            - 'institutional': Institutional ownership and flow
+            - 'retail': Retail flow estimates
+            - 'combined': Both institutional and retail (default)
+            - 'changes': Institutional changes only
+        date: Date to retrieve (YYYYMMDD format) or 'latest' for most recent
+
+    Returns:
+        dict: Flow data for the specified ticker
+    """
+    import json
+    import glob
+    from fetch_data.utils import FLOW_DATA_DIR
+
+    try:
+        ticker = ticker.upper().strip()
+
+        # Determine the file pattern based on flow_type
+        if flow_type == "institutional":
+            pattern = os.path.join(FLOW_DATA_DIR, f"{ticker}_institutional_flow_*.json")
+        elif flow_type == "retail":
+            pattern = os.path.join(FLOW_DATA_DIR, f"{ticker}_retail_flow_*.json")
+        else:  # combined or changes
+            pattern = os.path.join(FLOW_DATA_DIR, f"{ticker}_combined_flow_*.json")
+
+        # Find matching files
+        files = glob.glob(pattern)
+
+        if not files:
+            return {
+                "status": "error",
+                "ticker": ticker,
+                "message": f"No flow data files found for {ticker}. Please run the data fetching script first."
+            }
+
+        # Sort files by date (newest first) and get the latest or specific date
+        files.sort(reverse=True)
+
+        if date == "latest":
+            filename = files[0]
+        else:
+            # Look for specific date
+            date_match = [f for f in files if date in f]
+            if not date_match:
+                return {
+                    "status": "error",
+                    "ticker": ticker,
+                    "message": f"No flow data found for {ticker} on date {date}"
+                }
+            filename = date_match[0]
+
+        with open(filename, 'r') as f:
+            flow_data = json.load(f)
+
+        # If requesting changes only, extract just the changes section
+        if flow_type == "changes":
+            if "institutional_changes" in flow_data:
+                return {
+                    "status": "success",
+                    "ticker": ticker,
+                    "flow_type": flow_type,
+                    "data": flow_data["institutional_changes"],
+                    "file_date": os.path.basename(filename).split('_')[-1].replace('.json', '')
+                }
+            else:
+                return {
+                    "status": "error",
+                    "ticker": ticker,
+                    "message": "Institutional changes data not available in this file"
+                }
+
+        return {
+            "status": "success",
+            "ticker": ticker,
+            "flow_type": flow_type,
+            "data": flow_data,
+            "file_date": os.path.basename(filename).split('_')[-1].replace('.json', ''),
+            "available_dates": [os.path.basename(f).split('_')[-1].replace('.json', '') for f in files]
+        }
+
+    except FileNotFoundError:
+        return {
+            "status": "error",
+            "ticker": ticker,
+            "message": f"Flow data file not found for {ticker}. Please run the data fetching script."
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "ticker": ticker,
+            "message": f"Error reading flow data: {e}"
+        }
+
+flow_data_subagent = Agent(
+    name="FlowData_Agent",
+    model=llm,
+    tools=[get_flow_data],
+    description="Use to get institutional and retail flow data for stocks, including ownership changes, inflow/outflow tracking, and volume patterns.",
+    instruction=f"""
+    Your task is to retrieve and analyze institutional and retail flow data for specific tickers.
+
+    CAPABILITIES:
+    - Institutional ownership and holder information (use flow_type='institutional')
+    - Retail flow estimates based on volume patterns (use flow_type='retail')
+    - Combined institutional and retail analysis (use flow_type='combined')
+    - Institutional inflow/outflow tracking (use flow_type='changes')
+    - Historical flow data with date-based tracking
+    - Daily flow metrics and trends
+
+    INSTITUTIONAL CHANGE TRACKING:
+    - Compares current holdings with previous period
+    - Shows which institutions bought or sold shares
+    - Calculates net institutional inflow/outflow
+    - Identifies top 5 buyers and sellers
+    - Provides percentage changes for each holder
+
+    IMPORTANT:
+    - Always use exact ticker symbols: {TICKER_LIST_STR}
+    - For institutional data: Shows top holders, ownership percentages, and institutional changes
+    - For retail data: Provides estimated retail participation and flow direction
+    - For changes: Shows institutional buying/selling activity
+    - Include disclaimers that retail estimates are based on heuristics
+    - Explain the data in context of market sentiment and investor behavior
+    - Data files are saved daily with date suffixes (YYYYMMDD)
+
+    EXAMPLES:
+    - "What's the institutional ownership of NVDA?" → get_flow_data(ticker="NVDA", flow_type="institutional")
+    - "Show me retail flow for AVGO" → get_flow_data(ticker="AVGO", flow_type="retail")
+    - "Analyze flow data for TSLA" → get_flow_data(ticker="TSLA", flow_type="combined")
+    - "Did institutions buy or sell NVDA recently?" → get_flow_data(ticker="NVDA", flow_type="changes")
+    - "Show institutional changes for AMD" → get_flow_data(ticker="AMD", flow_type="changes")
+    """
+)
+
 
 # --- LinkedIn CEO Lookup Agent ---
 def query_ceo_info_by_ticker(ticker: str) -> dict:
@@ -956,8 +1248,8 @@ ceo_lookup_subagent = Agent(
 root_agent = Agent(
     name="Financial_Root_Agent",
     model=llm,
-    sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent],
-    description="The main financial assistant that analyzes user queries and delegates to specialized agents for financial data analysis and CEO information lookup.",
+    sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, sector_news_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent, market_indices_subagent, twitter_subagent, sector_metrics_subagent, token_usage_subagent, flow_data_subagent],
+    description="The main financial assistant that analyzes user queries and delegates to specialized agents for financial data analysis, CEO information lookup, and flow data analysis.",
     instruction=f"""
     You are a knowledgeable financial data assistant with access to data for {len(TARGET_TICKERS)} companies including: {', '.join(TARGET_TICKERS)}.
 
@@ -975,9 +1267,11 @@ root_agent = Agent(
       * Questions requiring reading through filing narratives
 
     - Use 'NewsSearch_Agent' for:
-      * Latest news headlines, press releases, and recent developments
-      * Market-moving events or breaking stories
-      * Context that requires up-to-date information prior to analysis
+      * Latest news headlines, press releases, and recent developments for a specific company
+      * Market-moving events or breaking stories for a specific company
+
+    - Use 'SectorNews_Agent' for:
+      * News and analysis related to a whole financial sector (e.g., 'semiconductors', 'energy')
 
     - Use 'MarketData_Agent' for:
       * Latest available (delayed) intraday price and percent change
@@ -999,6 +1293,30 @@ root_agent = Agent(
       * CEO name, title, and tenure duration queries
       * Executive leadership information for companies
       * CEO career history and time in position
+
+    - Use 'MarketIndices_Agent' for:
+      * Data on major market indices like VIX, NASDAQ, Dow Jones, and Russell 2000.
+
+    - Use 'Twitter_Agent' for:
+      * Real-time Twitter/X sentiment analysis and social media discussions about stocks.
+
+    - Use 'SectorMetrics_Agent' for:
+      * Calculated metrics for a specific financial sector (e.g., 'Technology', 'Energy').
+
+    - Use 'TokenUsage_Agent' for:
+      * Questions about AI token consumption and usage statistics
+      * Which AI models are being used in the system
+      * Token usage data for the last 3 months (90 days)
+      * Model consumption patterns and costs
+
+    - Use 'FlowData_Agent' for:
+      * Institutional ownership and holder information
+      * Institutional inflow/outflow tracking (which institutions bought or sold)
+      * Retail flow estimates and participation metrics
+      * Volume-based flow analysis and trends
+      * Inflow/outflow indicators and investor behavior patterns
+      * Questions about who owns a stock or how ownership is changing
+      * Questions about institutional buying or selling activity
 
     IMPORTANT NOTES:
     - Available companies: {len(TARGET_TICKERS)} tickers across semiconductor, energy, crypto-mining, and tech verticals ({TICKER_LIST_STR})

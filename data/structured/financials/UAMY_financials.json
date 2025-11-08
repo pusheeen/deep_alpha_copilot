@@ -1,6 +1,6 @@
 {
   "ticker": "UAMY",
-  "fetch_date": "2025-10-24T23:55:11.425570",
+  "fetch_date": "2025-11-07T19:45:50.569599",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -1934,12 +1934,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 1667929856,
-    "enterprise_value": 1443901568,
+    "market_cap": 1155468416,
+    "enterprise_value": 998432512,
     "trailing_pe": null,
-    "forward_pe": 21.446428,
-    "price_to_book": 38.126984,
-    "price_to_sales": 64.82925,
+    "forward_pe": 14.857142,
+    "price_to_book": 26.412697,
+    "price_to_sales": 44.91085,
+    "forward_ps": null,
     "profit_margins": -0.0343,
     "operating_margins": 0.0019,
     "roe": -0.02792,

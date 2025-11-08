@@ -1,6 +1,6 @@
 {
   "ticker": "NMG",
-  "fetch_date": "2025-10-24T23:55:46.106004",
+  "fetch_date": "2025-11-07T19:45:59.288079",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 1925100.0,
@@ -1882,12 +1882,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 448058080,
-    "enterprise_value": 393211072,
+    "market_cap": 394717824,
+    "enterprise_value": 339870816,
     "trailing_pe": null,
-    "forward_pe": -13.363637,
-    "price_to_book": 3.5985315,
+    "forward_pe": -11.772727,
+    "price_to_book": 3.1701345,
     "price_to_sales": null,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": 0.0,
     "roe": -0.53026,

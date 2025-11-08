@@ -1,6 +1,6 @@
 {
   "ticker": "CRML",
-  "fetch_date": "2025-10-26T22:25:54.570022",
+  "fetch_date": "2025-11-07T19:45:42.998114",
   "income_statement": {
     "2024-06-30 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -782,12 +782,13 @@
   },
   "quarterly_cash_flow": {},
   "key_metrics": {
-    "market_cap": 1769096960,
-    "enterprise_value": 1575423744,
+    "market_cap": 1268853376,
+    "enterprise_value": 1129544192,
     "trailing_pe": null,
     "forward_pe": null,
-    "price_to_book": 17.157534,
-    "price_to_sales": 3155.591,
+    "price_to_book": 12.305936,
+    "price_to_sales": 2263.2917,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": -130.28871,
     "roe": -1.28305,

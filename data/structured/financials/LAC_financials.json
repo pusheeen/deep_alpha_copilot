@@ -1,6 +1,6 @@
 {
   "ticker": "LAC",
-  "fetch_date": "2025-10-24T23:52:43.250942",
+  "fetch_date": "2025-11-07T19:45:35.182405",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -1796,12 +1796,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 1660979328,
-    "enterprise_value": 1618102400,
+    "market_cap": 1206708352,
+    "enterprise_value": 1207180800,
     "trailing_pe": null,
-    "forward_pe": -23.172413,
-    "price_to_book": 2.4347825,
+    "forward_pe": -16.827587,
+    "price_to_book": 1.768116,
     "price_to_sales": null,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": 0.0,
     "roe": -0.06509,

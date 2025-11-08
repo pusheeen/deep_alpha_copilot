@@ -1,6 +1,6 @@
 {
   "ticker": "NVA",
-  "fetch_date": "2025-10-26T22:25:58.071342",
+  "fetch_date": "2025-11-07T19:46:02.427683",
   "income_statement": {
     "2025-06-30 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -1200,12 +1200,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 217089984,
-    "enterprise_value": 12830595072,
+    "market_cap": 233390784,
+    "enterprise_value": 3559927296,
     "trailing_pe": null,
     "forward_pe": null,
-    "price_to_book": 101.13924,
-    "price_to_sales": -131.07034,
+    "price_to_book": 28.069618,
+    "price_to_sales": -140.91212,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": -0.93483,
     "roe": -0.1066,

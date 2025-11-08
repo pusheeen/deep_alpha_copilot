@@ -1,6 +1,6 @@
 {
   "ticker": "NB",
-  "fetch_date": "2025-10-24T23:54:02.750376",
+  "fetch_date": "2025-11-07T19:45:46.105604",
   "income_statement": {
     "2025-06-30 00:00:00": {
       "Tax Effect Of Unusual Items": 0.0,
@@ -1658,12 +1658,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 926323264,
-    "enterprise_value": 617766336,
+    "market_cap": 690817344,
+    "enterprise_value": 454398656,
     "trailing_pe": null,
-    "forward_pe": -82.6,
-    "price_to_book": 17.066116,
+    "forward_pe": -61.6,
+    "price_to_book": 12.727272,
     "price_to_sales": null,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": 0.0,
     "roe": -1.13469,

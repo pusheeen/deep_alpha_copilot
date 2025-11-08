@@ -1,6 +1,6 @@
 {
   "ticker": "NAK",
-  "fetch_date": "2025-10-24T23:53:20.980131",
+  "fetch_date": "2025-11-07T19:45:37.908866",
   "income_statement": {
     "2024-12-31 00:00:00": {
       "Tax Effect Of Unusual Items": -2620350.0,
@@ -1595,12 +1595,13 @@
     }
   },
   "key_metrics": {
-    "market_cap": 1125568128,
-    "enterprise_value": 1103824256,
+    "market_cap": 971078464,
+    "enterprise_value": 949334464,
     "trailing_pe": null,
-    "forward_pe": -102.0,
-    "price_to_book": 27.567566,
+    "forward_pe": -88.0,
+    "price_to_book": 23.783783,
     "price_to_sales": null,
+    "forward_ps": null,
     "profit_margins": 0.0,
     "operating_margins": 0.0,
     "roe": -1.00417,
