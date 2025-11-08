@@ -13,6 +13,76 @@
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-900">
+    <!-- Flow Data Help Modal -->
+    <div id="flowDataHelpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeFlowDataHelp(event)">
+        <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="bg-blue-600 text-white rounded-t-xl p-4 flex items-center justify-between sticky top-0">
+                <h3 class="text-lg font-bold flex items-center">
+                    <span class="mr-2">ℹ️</span> How to Read Flow Data
+                </h3>
+                <button onclick="closeFlowDataHelp()" class="text-white hover:text-blue-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4">
+                <div class="space-y-3">
+                    <!-- Institutional Data Section -->
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <h4 class="text-sm font-bold text-green-800 mb-2 flex items-center">
+                            ✅ Institutional Data (Factual)
+                        </h4>
+                        <ul class="space-y-1 text-xs text-slate-700">
+                            <li><strong>Source:</strong> SEC 13F filings via Yahoo Finance</li>
+                            <li><strong>Frequency:</strong> Quarterly</li>
+                            <li><strong>Accuracy:</strong> 100% factual - regulatory data</li>
+                        </ul>
+                    </div>
+
+                    <!-- Retail Data Section -->
+                    <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                        <h4 class="text-sm font-bold text-orange-800 mb-2 flex items-center">
+                            ⚠️ Daily Flow Split (Estimated)
+                        </h4>
+                        <ul class="space-y-1 text-xs text-slate-700">
+                            <li><strong>Source:</strong> Estimated using volume patterns</li>
+                            <li><strong>Method:</strong> Volume spikes, price moves, volatility</li>
+                            <li><strong>Accuracy:</strong> ⚠️ Estimated only</li>
+                        </ul>
+                    </div>
+
+                    <!-- Chart Guide Section -->
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                        <h4 class="text-sm font-bold text-blue-800 mb-2">📊 Chart Guide</h4>
+                        <ul class="space-y-1.5 text-xs text-slate-700">
+                            <li><strong>Blue Line:</strong> Retail volume (estimated daily)</li>
+                            <li><strong>Purple Line:</strong> Institutional volume (estimated daily)</li>
+                        </ul>
+                    </div>
+
+                    <!-- Key Takeaway -->
+                    <div class="bg-slate-100 rounded-lg p-3 border border-slate-300">
+                        <h4 class="text-xs font-bold text-slate-800 mb-1">💡 Key Takeaway</h4>
+                        <p class="text-xs text-slate-700">
+                            Use ✅ institutional data for fundamentals. Use ⚠️ daily estimates as indicators only.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 rounded-b-xl p-3 flex justify-end">
+                <button onclick="closeFlowDataHelp()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
         <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
             <!-- Market Conditions Bar -->
@@ -169,6 +239,50 @@
 
         <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
             <p class="text-sm text-slate-500">Loading scorecard...</p>
+        </section>
+
+        <!-- Latest News & AI Analysis Section (Standalone) -->
+        <section id="standalone-news-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <span class="mr-2">📰</span> Latest News & AI Investment Analysis
+            </h3>
+            <div id="standalone-news-content" class="text-slate-600 text-sm">
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <span class="ml-3 text-slate-500">Loading latest news...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Flow Data Section (Standalone) -->
+        <section id="standalone-flow-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="mr-2">💹</span> Institutional & Retail Flow Data
+                    <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-blue-600 hover:bg-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
+                        ?
+                    </button>
+                </div>
+            </h3>
+            <div id="standalone-flow-content" class="text-slate-600 text-sm">
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <span class="ml-3 text-slate-500">Loading flow data...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Token Usage Section (Standalone) -->
+        <section id="standalone-token-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <span class="mr-2">📊</span> AI Token Usage (Last Year)
+            </h3>
+            <div id="standalone-token-content" class="text-slate-600 text-sm">
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <span class="ml-3 text-slate-500">Loading token usage...</span>
+                </div>
+            </div>
         </section>
 
         <section id="score-table" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
@@ -851,148 +965,7 @@
             }
         }
 
-        // Load latest news and interpretation for a ticker
-        async function loadLatestNews(ticker) {
-            try {
-                const newsContent = document.getElementById('news-content');
-                newsContent.innerHTML = `
-                    <div class="flex items-center justify-center py-8">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-                    </div>
-                `;
-
-                const response = await fetch(`/api/latest-news/${ticker}`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    const data = result.data;
-                    renderNewsSection(data);
-                } else {
-                    newsContent.innerHTML = `
-                        <div class="text-slate-400 text-center py-4">
-                            ${result.message || 'No news available'}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading news:', error);
-                document.getElementById('news-content').innerHTML = `
-                    <div class="text-red-400 text-center py-4">
-                        Error loading news. Please try again later.
-                    </div>
-                `;
-            }
-        }
-
-        function renderNewsSection(data) {
-            const newsContent = document.getElementById('news-content');
-
-            if (!data.articles || data.articles.length === 0) {
-                newsContent.innerHTML = `
-                    <div class="text-slate-400 text-center py-4">
-                        No recent news available for ${data.ticker}
-                    </div>
-                `;
-                return;
-            }
-
-            // Parse interpretation for recommendation
-            let recommendation = 'N/A';
-            let recommendationClass = 'bg-slate-100 text-slate-800';
-            let reasoning = '';
-            let interpretationText = 'Analysis not available.';
-
-            if (data.interpretation) {
-                const recMatch = data.interpretation.match(/RECOMMENDATION:\s*(BUY|HOLD|SELL)/);
-                const reasonMatch = data.interpretation.match(/REASONING:\s*(.+?)(?:\n|$)/s);
-
-                if (recMatch) {
-                    recommendation = recMatch[1];
-                    if (recommendation === 'BUY') recommendationClass = 'bg-green-100 text-green-800';
-                    if (recommendation === 'HOLD') recommendationClass = 'bg-blue-100 text-blue-800';
-                    if (recommendation === 'SELL') recommendationClass = 'bg-red-100 text-red-800';
-                }
-                if (reasonMatch) {
-                    reasoning = reasonMatch[1].trim();
-                }
-                interpretationText = data.interpretation.replace(/INTERPRETATION:\s*/i, '').split(/RECOMMENDATION:|REASONING:/)[0].trim();
-            }
-
-            // Render articles with interpretation below
-            const articlesHtml = data.articles.map((article, index) => `
-                <div class="border border-slate-200 rounded-lg p-4 mb-3">
-                    <a href="${article.link}" target="_blank" class="text-slate-800 hover:text-blue-600 font-medium text-base block mb-2">
-                        ${article.title}
-                    </a>
-                    <div class="text-xs text-slate-500 flex items-center gap-2 mb-2">
-                        <span class="font-medium">${article.publisher}</span>
-                        <span>•</span>
-                        <span>${new Date(article.publish_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        ${article.filtered_by_llm ? '<span class="ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">✓ Verified</span>' : ''}
-                    </div>
-                    ${article.summary ? `<p class="text-sm text-slate-600 mb-2">${article.summary}</p>` : ''}
-                </div>
-            `).join('');
-
-            newsContent.innerHTML = `
-                <div class="space-y-3">
-                    <!-- News Articles -->
-                    <div>
-                        <div class="flex items-center justify-between mb-3">
-                            <h4 class="font-semibold text-slate-800 text-sm">Latest Headlines (${data.total_articles})</h4>
-                            ${data.fetch_timestamp ? `<span class="text-xs text-slate-400">Updated ${new Date(data.fetch_timestamp).toLocaleString()}</span>` : ''}
-                        </div>
-                        ${articlesHtml}
-                    </div>
-
-                    <!-- Foldable Interpretation Section -->
-                    <div class="border-t border-slate-300 pt-4">
-                        <button
-                            onclick="toggleInterpretation()"
-                            class="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
-                        >
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-semibold text-slate-800">🤖 AI Investment Analysis</span>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${recommendationClass}">
-                                    ${recommendation}
-                                </span>
-                            </div>
-                            <svg id="interpretation-arrow" class="w-5 h-5 text-slate-600 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-
-                        <div id="interpretation-content" class="hidden mt-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
-                            <p class="text-sm text-slate-700 leading-relaxed mb-3">${interpretationText}</p>
-                            ${reasoning ? `
-                                <div class="border-t border-slate-200 pt-3">
-                                    <p class="text-xs font-semibold text-slate-600 mb-1">Key Reasoning:</p>
-                                    <p class="text-xs text-slate-600 italic">${reasoning}</p>
-                                </div>
-                            ` : ''}
-                            ${data.interpretation_timestamp ? `
-                                <div class="mt-3 text-xs text-slate-400">
-                                    Analysis generated ${new Date(data.interpretation_timestamp).toLocaleString()}
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleInterpretation() {
-            const content = document.getElementById('interpretation-content');
-            const arrow = document.getElementById('interpretation-arrow');
-
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-            } else {
-                content.classList.add('hidden');
-                arrow.style.transform = 'rotate(0deg)';
-            }
-        }
+        // News is now loaded in standalone section only (loadStandaloneNews function)
 
         function renderValuationCharts(data) {
             // Update current metrics
@@ -1425,6 +1398,231 @@
             });
         }
 
+        function renderRetailFlowCharts(dailyFlows, institutionalOwnershipPct) {
+            // Prepare data
+            const dates = dailyFlows.map(d => d.date);
+            const retailPct = dailyFlows.map(d => d.estimated_retail_participation_pct);
+            const institutionalPct = dailyFlows.map(d => d.estimated_institutional_participation_pct);
+            const volumes = dailyFlows.map(d => d.volume);
+            const priceChanges = dailyFlows.map(d => d.price_change_pct);
+
+            // Calculate estimated daily share volumes
+            const retailShares = dailyFlows.map(d => (d.volume * d.estimated_retail_participation_pct / 100) / 1e6);
+            const institutionalShares = dailyFlows.map(d => (d.volume * d.estimated_institutional_participation_pct / 100) / 1e6);
+
+            // Chart 1: Daily Share Volume (Institutional vs Retail)
+            const shareVolumeCtx = document.getElementById('shareVolumeChart');
+            if (shareVolumeCtx) {
+                new Chart(shareVolumeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Institutional Share Volume (M)',
+                                data: institutionalShares,
+                                backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                                borderColor: 'rgb(236, 72, 153)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Retail Share Volume (M)',
+                                data: retailShares,
+                                backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                                borderColor: 'rgb(99, 102, 241)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + 'M shares';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Share Volume (M shares)'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 2: Volume & Price Change
+            const volumePriceCtx = document.getElementById('volumePriceChart');
+            if (volumePriceCtx) {
+                new Chart(volumePriceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Volume (M shares)',
+                                data: volumes.map(v => v / 1e6),
+                                backgroundColor: priceChanges.map(p =>
+                                    p > 0 ? 'rgba(34, 197, 94, 0.6)' : 'rgba(239, 68, 68, 0.6)'
+                                ),
+                                borderColor: priceChanges.map(p =>
+                                    p > 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'
+                                ),
+                                borderWidth: 1,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Price Change %',
+                                data: priceChanges,
+                                type: 'line',
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.3,
+                                yAxisID: 'y1',
+                                pointRadius: 3,
+                                pointHoverRadius: 5
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.dataset.label.includes('Volume')) {
+                                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + 'M';
+                                        } else {
+                                            return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Volume (M shares)'
+                                },
+                                beginAtZero: true
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Price Change %'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function toggleMetricHelp(elementId) {
+            const element = document.getElementById(elementId);
+            const arrow = document.getElementById(elementId + 'Arrow');
+
+            if (element) {
+                if (element.classList.contains('hidden')) {
+                    element.classList.remove('hidden');
+                    if (arrow) {
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                } else {
+                    element.classList.add('hidden');
+                    if (arrow) {
+                        arrow.style.transform = 'rotate(0deg)';
+                    }
+                }
+            }
+        }
+
+        function toggleFlowDataHelp() {
+            const modal = document.getElementById('flowDataHelpModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                // Prevent body scroll when modal is open
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeFlowDataHelp(event) {
+            // If event is provided and it's clicking the backdrop, close
+            // Or if no event (called from button), close
+            if (!event || event.target === event.currentTarget) {
+                const modal = document.getElementById('flowDataHelpModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    // Restore body scroll
+                    document.body.style.overflow = 'auto';
+                }
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFlowDataHelp();
+            }
+        });
+
         function setupPriceChartControls(ticker) {
             const timePeriodButtons = document.querySelectorAll('.time-period-btn');
             const refreshButton = document.getElementById('refreshPriceChart');
@@ -1683,18 +1881,6 @@
                             <span id="ps-benchmark">Industry: --</span>
                             <span id="ps-assessment" class="px-2 py-0.5 rounded"></span>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Latest News & Interpretation Section -->
-            <div id="latest-news-section" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <span class="mr-2">📰</span> Latest News & Investment Analysis
-                </h3>
-                <div id="news-content" class="text-slate-600 text-sm">
-                    <div class="flex items-center justify-center py-8">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
                     </div>
                 </div>
             </div>
@@ -2033,8 +2219,7 @@
                     refreshPriceChartData(ticker, activePeriod);
                     // Load valuation metrics
                     loadValuationMetrics(ticker);
-                    // Load latest news and interpretation
-                    loadLatestNews(ticker);
+                    // News is shown in standalone section at top of page
                 } else {
                     scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
@@ -2048,13 +2233,16 @@
             event.preventDefault();
             const ticker = scoreTickerInput.value.trim().toUpperCase();
             if (!ticker) return;
-            
+
             // Hide comparison section and show single stock sections
             document.getElementById('comparison-section').classList.add('hidden');
             document.getElementById('scoreboard').classList.remove('hidden');
             document.getElementById('score-table').classList.remove('hidden');
-            
+
             loadScoreboard(ticker);
+            // Reload standalone sections with new ticker
+            loadStandaloneNews(ticker);
+            loadStandaloneFlowData(ticker);
         });
 
         async function refreshCoverageTable() {
@@ -2508,13 +2696,552 @@
             }
         });
 
+        // Load standalone news section
+        async function loadStandaloneNews(ticker) {
+            const container = document.getElementById('standalone-news-content');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`/api/latest-news/${ticker}`);
+                const result = await response.json();
+
+                if (result.status === 'success' && result.data) {
+                    const data = JSON.parse(result.data.answer);
+                    const interpretation = data.interpretation;
+                    const results = data.results || [];
+
+                    let html = '';
+
+                    // AI Investment Analysis
+                    if (interpretation) {
+                        const sentimentClass = interpretation.sentiment === 'bullish' ? 'text-green-600' :
+                                             interpretation.sentiment === 'bearish' ? 'text-red-600' : 'text-slate-600';
+                        html += `
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-blue-200">
+                                <h4 class="text-md font-semibold text-slate-800 mb-3 flex items-center">
+                                    <span class="mr-2">🤖</span> AI Investment Analysis
+                                </h4>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-slate-700">Sentiment:</span>
+                                        <span class="${sentimentClass} font-bold">${interpretation.sentiment.toUpperCase()}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-slate-700">Recommendation:</span>
+                                        <span class="font-bold text-slate-800">${interpretation.recommendation}</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-medium text-slate-700 mb-1">Summary:</div>
+                                        <p class="text-sm text-slate-600">${interpretation.summary}</p>
+                                    </div>
+                                    ${interpretation.reasoning ? `
+                                        <div>
+                                            <div class="text-sm font-medium text-slate-700 mb-1">Reasoning:</div>
+                                            <p class="text-sm text-slate-600">${interpretation.reasoning}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Latest News Articles
+                    html += `
+                        <div>
+                            <h4 class="text-md font-semibold text-slate-700 mb-3">Latest News (${results.length} articles)</h4>
+                            <div class="space-y-3">
+                    `;
+
+                    results.slice(0, 10).forEach(article => {
+                        html += `
+                            <div class="border-l-4 border-blue-500 pl-3 py-2 hover:bg-slate-50 transition">
+                                <a href="${article.link}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                    ${article.title}
+                                </a>
+                                <p class="text-xs text-slate-500 mt-1">${article.source} • ${article.published ? new Date(article.published).toLocaleDateString() : 'Recent'}</p>
+                                ${article.snippet ? `<p class="text-xs text-slate-600 mt-1">${article.snippet.substring(0, 150)}...</p>` : ''}
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="text-sm text-red-600">Failed to load news. Please try again later.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading standalone news:', error);
+                container.innerHTML = '<p class="text-sm text-red-600">Error loading news data.</p>';
+            }
+        }
+
+        // Load standalone flow data section
+        async function loadStandaloneFlowData(ticker) {
+            const container = document.getElementById('standalone-flow-content');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`/api/flow-data/${ticker}?flow_type=combined`);
+                const result = await response.json();
+
+                if (result.status === 'success' && result.data) {
+                    const flowData = result.data.data;
+                    const fileDate = result.data.file_date || 'Latest';
+
+                    let html = '';
+
+                    // Institutional Summary (Overview)
+                    if (flowData.institutional) {
+                        const inst = flowData.institutional;
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Ownership Summary</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                        <div class="text-xs text-blue-700 mb-1">Total Institutions</div>
+                                        <div class="text-2xl font-bold text-blue-600">${inst.number_of_institutions || 'N/A'}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Holding shares</div>
+                                    </div>
+                                    <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                                        <div class="text-xs text-purple-700 mb-1">Total Shares Held</div>
+                                        <div class="text-2xl font-bold text-purple-600">${inst.total_institutional_shares ? (inst.total_institutional_shares / 1e9).toFixed(2) + 'B' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Institutional shares</div>
+                                    </div>
+                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                        <div class="text-xs text-green-700 mb-1">Total Value Held</div>
+                                        <div class="text-2xl font-bold text-green-600">${inst.total_institutional_value ? '$' + (inst.total_institutional_value / 1e9).toFixed(2) + 'B' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Market value</div>
+                                    </div>
+                                    <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                                        <div class="text-xs text-orange-700 mb-1">Ownership % ✅</div>
+                                        <div class="text-2xl font-bold text-orange-600">${inst.institutional_ownership_pct ? inst.institutional_ownership_pct.toFixed(1) + '%' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Of total shares</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
+                                    <strong>✅ Factual Data:</strong> Institutional ownership from SEC 13F filings via Yahoo Finance. Updates quarterly (45 days after quarter end).
+                                    Latest filing: ${inst.top_10_holders && inst.top_10_holders[0] ? inst.top_10_holders[0].date_reported.split(' ')[0] : 'N/A'}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Institutional Quarterly Changes from Yahoo Finance (Factual SEC Data)
+                    if (flowData.institutional_changes && flowData.institutional_changes.has_data) {
+                        const changes = flowData.institutional_changes;
+                        const isPositive = changes.net_change_pct >= 0;
+
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Flow Changes (Recent Quarter) ✅</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                        <div class="text-xs text-green-700 mb-1">Institutions Increased</div>
+                                        <div class="text-2xl font-bold text-green-600">${changes.institutions_increased || 0}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Bought more shares</div>
+                                    </div>
+                                    <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                                        <div class="text-xs text-red-700 mb-1">Institutions Decreased</div>
+                                        <div class="text-2xl font-bold text-red-600">${changes.institutions_decreased || 0}</div>
+                                        <div class="text-xs text-slate-600 mt-1">Sold shares</div>
+                                    </div>
+                                    <div class="bg-${isPositive ? 'green' : 'red'}-50 rounded-lg p-4 border border-${isPositive ? 'green' : 'red'}-200">
+                                        <div class="text-xs text-${isPositive ? 'green' : 'red'}-700 mb-1">Net Change</div>
+                                        <div class="text-2xl font-bold text-${isPositive ? 'green' : 'red'}-600">
+                                            ${changes.net_change_pct >= 0 ? '+' : ''}${changes.net_change_pct}%
+                                        </div>
+                                        <div class="text-xs text-slate-600 mt-1">${isPositive ? 'Net buying ↑' : 'Net selling ↓'}</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
+                                    <strong>✅ Factual Data:</strong> ${changes.note}${changes.filing_quarter ? ` | Filing Period: <strong>${changes.filing_quarter}</strong>` : ''}
+                                </div>
+                            </div>
+                        `;
+
+                        // Add Top Buyers and Sellers details
+                        if (holderChanges.length > 0) {
+                            const topBuyers = buyers.sort((a, b) => b.value_change - a.value_change).slice(0, 3);
+                            const topSellers = sellers.sort((a, b) => a.value_change - b.value_change).slice(0, 3);
+
+                            html += `
+                                <div class="mb-6">
+                                    <h4 class="text-md font-semibold text-slate-700 mb-3">Top Institutional Changes</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        ${topBuyers.length > 0 ? `
+                                            <div>
+                                                <div class="text-sm font-medium text-green-700 mb-2">Top Buyers</div>
+                                                <div class="space-y-2">
+                                                    ${topBuyers.map(buyer => `
+                                                        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                                                            <div class="text-sm font-medium text-slate-800">${buyer.holder}</div>
+                                                            <div class="text-xs text-slate-600 mt-1">
+                                                                +${(buyer.shares_change / 1e6).toFixed(1)}M shares (+${buyer.pct_change.toFixed(1)}%)
+                                                            </div>
+                                                            <div class="text-xs text-green-600 font-semibold mt-1">
+                                                                +$${(buyer.value_change / 1e9).toFixed(2)}B
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        ${topSellers.length > 0 ? `
+                                            <div>
+                                                <div class="text-sm font-medium text-red-700 mb-2">Top Sellers</div>
+                                                <div class="space-y-2">
+                                                    ${topSellers.map(seller => `
+                                                        <div class="bg-red-50 rounded-lg p-3 border border-red-200">
+                                                            <div class="text-sm font-medium text-slate-800">${seller.holder}</div>
+                                                            <div class="text-xs text-slate-600 mt-1">
+                                                                ${(seller.shares_change / 1e6).toFixed(1)}M shares (${seller.pct_change.toFixed(1)}%)
+                                                            </div>
+                                                            <div class="text-xs text-red-600 font-semibold mt-1">
+                                                                $${(seller.value_change / 1e9).toFixed(2)}B
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Retail Flow Data
+                    if (flowData.retail && flowData.retail.metrics) {
+                        const retail = flowData.retail;
+                        const metrics = retail.metrics;
+
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Retail Flow Metrics (${retail.period_analyzed || '3mo'}) ⚠️ ESTIMATED</h4>
+                                <div class="mb-3 text-xs text-orange-700 bg-orange-50 p-3 rounded border border-orange-200">
+                                    <strong>⚠️ Estimated Data:</strong> Daily retail/institutional split is estimated using volume pattern heuristics. Yahoo Finance only provides factual quarterly institutional ownership (see above). For real-time order flow data, professional terminals like Bloomberg or Refinitiv are required.
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div class="bg-cyan-50 rounded-lg p-4 border border-cyan-200">
+                                        <div class="text-xs text-cyan-700 mb-1">Avg Daily Volume ✅</div>
+                                        <div class="text-xl font-bold text-cyan-600">${(metrics.average_daily_volume / 1e6).toFixed(1)}M</div>
+                                        <div class="text-xs text-slate-600 mt-1">Shares per day (factual)</div>
+                                    </div>
+                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                                        <div class="text-xs text-indigo-700 mb-1">Retail Participation ⚠️</div>
+                                        <div class="text-xl font-bold text-indigo-600">${metrics.estimated_avg_retail_participation_pct?.toFixed(1) || 'N/A'}%</div>
+                                        <div class="text-xs text-slate-600 mt-1">Estimated average</div>
+                                    </div>
+                                    <div class="bg-teal-50 rounded-lg p-4 border border-teal-200">
+                                        <div class="text-xs text-teal-700 mb-1 flex items-center justify-between">
+                                            <span>Net Flow Indicator ⚠️</span>
+                                            <button onclick="toggleMetricHelp('netFlowHelp')" class="ml-1 text-white bg-teal-600 hover:bg-teal-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
+                                        </div>
+                                        <div class="text-xl font-bold ${
+                                            metrics.net_flow_indicator_pct > 5 ? 'text-green-600' :
+                                            metrics.net_flow_indicator_pct < -5 ? 'text-red-600' :
+                                            'text-blue-600'
+                                        }">
+                                            ${metrics.net_flow_indicator_pct?.toFixed(1) || 'N/A'}%
+                                        </div>
+                                        <div class="text-xs text-slate-600 mt-1">${
+                                            metrics.net_flow_indicator_pct > 5 ? 'Buying Pressure' :
+                                            metrics.net_flow_indicator_pct < -5 ? 'Selling Pressure' :
+                                            'Balanced'
+                                        }</div>
+                                        <div id="netFlowHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-teal-300">
+                                            <strong>Formula:</strong> (Avg Inflow Volume - Avg Outflow Volume) / Avg Daily Volume × 100<br>
+                                            <strong>Positive (>5%):</strong> Buying pressure (bullish)<br>
+                                            <strong>Negative (<-5%):</strong> Selling pressure (bearish)<br>
+                                            <strong>Balanced (-5% to 5%):</strong> Neutral (no clear pressure)
+                                        </div>
+                                    </div>
+                                    <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                                        <div class="text-xs text-amber-700 mb-1 flex items-center justify-between">
+                                            <span>Flow Pattern ⚠️</span>
+                                            <button onclick="toggleMetricHelp('flowPatternHelp')" class="ml-1 text-white bg-amber-600 hover:bg-amber-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
+                                        </div>
+                                        <div class="text-lg font-bold text-amber-600">
+                                            ${metrics.inflow_days_count || 0} / ${metrics.outflow_days_count || 0}
+                                        </div>
+                                        <div class="text-xs text-slate-600 mt-1">Inflow / Outflow days</div>
+                                        <div id="flowPatternHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-amber-300">
+                                            <strong>What it means:</strong> Count of positive vs negative price change days (last 30 days)<br>
+                                            <strong>Example:</strong> 13/17 = 13 up days, 17 down days<br>
+                                            <strong>More inflow days:</strong> Bullish sentiment<br>
+                                            <strong>More outflow days:</strong> Bearish sentiment
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Daily Flow Charts (if daily data available)
+                        if (retail.daily_flows && retail.daily_flows.length > 0) {
+                            html += `
+                                <div class="mb-6">
+                                    <h4 class="text-md font-semibold text-slate-700 mb-3">Daily Flow Trends (Last 60 Days)</h4>
+
+                                    <!-- Flow Time Series Plot -->
+                                    <div class="bg-white rounded-lg p-4 border border-slate-200 mb-4">
+                                        <img src="/api/flow-plot/${ticker}" alt="Retail and Institutional Volume Time Series" class="w-full h-auto rounded-lg" />
+                                    </div>
+
+                                </div>
+                            `;
+                        }
+
+                        // Retail Flow Interpretation
+                        if (retail.interpretation) {
+                            const interp = retail.interpretation;
+                            const trendColor = interp.retail_trend === 'increasing' ? 'green' :
+                                             interp.retail_trend === 'decreasing' ? 'red' : 'blue';
+                            const flowColor = interp.flow_direction === 'buying' ? 'green' :
+                                            interp.flow_direction === 'selling' ? 'red' : 'blue';
+
+                            html += `
+                                <div class="mb-6">
+                                    <h4 class="text-md font-semibold text-slate-700 mb-3">Retail Flow Analysis</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="bg-${trendColor}-50 rounded-lg p-4 border border-${trendColor}-200">
+                                            <div class="text-xs text-${trendColor}-700 mb-1">Retail Trend</div>
+                                            <div class="text-lg font-bold text-${trendColor}-600 capitalize">${interp.retail_trend || 'N/A'}</div>
+                                            <div class="text-xs text-slate-600 mt-1">Activity level</div>
+                                        </div>
+                                        <div class="bg-${flowColor}-50 rounded-lg p-4 border border-${flowColor}-200">
+                                            <div class="text-xs text-${flowColor}-700 mb-1">Flow Direction</div>
+                                            <div class="text-lg font-bold text-${flowColor}-600 capitalize">${interp.flow_direction || 'N/A'}</div>
+                                            <div class="text-xs text-slate-600 mt-1">Sentiment</div>
+                                        </div>
+                                        <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                            <div class="text-xs text-slate-700 mb-1">Volume Pattern</div>
+                                            <div class="text-lg font-bold text-slate-600 capitalize">${interp.volume_pattern || 'N/A'}</div>
+                                            <div class="text-xs text-slate-600 mt-1">Volatility</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 text-xs text-slate-500 italic">
+                                        ${retail.disclaimer || 'Retail flow estimates are based on volume patterns and heuristics.'}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Top Institutional Holders
+                    if (flowData.institutional && flowData.institutional.top_10_holders) {
+                        const holders = flowData.institutional.top_10_holders.slice(0, 5);
+                        html += `
+                            <div class="mb-6">
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Top 5 Institutional Holders ✅</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-slate-200">
+                                        <thead class="bg-slate-50">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-slate-500">Institution</th>
+                                                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Shares</th>
+                                                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500">% Out</th>
+                                                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Value</th>
+                                                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-200">
+                        `;
+
+                        holders.forEach((holder, idx) => {
+                            html += `
+                                <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+                                    <td class="px-4 py-2 text-sm text-slate-800">${holder.holder}</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">${(holder.shares / 1e6).toFixed(2)}M</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">${holder.pct_out ? holder.pct_out.toFixed(1) + '%' : 'N/A'}</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">$${(holder.value / 1e9).toFixed(2)}B</td>
+                                    <td class="px-4 py-2 text-sm text-slate-500 text-right">${holder.date_reported ? holder.date_reported.split(' ')[0] : 'N/A'}</td>
+                                </tr>
+                            `;
+                        });
+
+                        html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
+                                    <strong>✅ Factual Data:</strong> Top institutional holders from Yahoo Finance (SEC 13F filings), reported quarterly.
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    container.innerHTML = html;
+
+                    // Flow charts now rendered as time series plot images via /api/flow-plot/{ticker}
+                    // No need to call renderRetailFlowCharts - the image is loaded directly in the HTML
+                } else {
+                    container.innerHTML = '<p class="text-sm text-slate-500">No flow data available for this ticker.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading standalone flow data:', error);
+                container.innerHTML = '<p class="text-sm text-red-600">Error loading flow data.</p>';
+            }
+        }
+
+        // Load standalone token usage section
+        async function loadStandaloneTokenUsage() {
+            const container = document.getElementById('standalone-token-content');
+            if (!container) return;
+
+            try {
+                const response = await fetch('/api/token-usage');
+                const result = await response.json();
+
+                if (result.status === 'success' && result.data) {
+                    const data = result.data;
+
+                    let html = '';
+
+                    // Handle actual_measured_data format (from OpenRouter rankings)
+                    if (data.data_type === 'actual_measured_data') {
+                        const currentStats = data.current_stats || {};
+
+                        // Summary statistics
+                        html += `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                                    <div class="text-xs text-purple-700 mb-1">Current Daily Usage</div>
+                                    <div class="text-2xl font-bold text-purple-600">${(currentStats.tokens_per_day / 1e9).toFixed(1)}B</div>
+                                    <div class="text-xs text-slate-600 mt-1">Tokens per day</div>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                    <div class="text-xs text-blue-700 mb-1">Weekly Usage</div>
+                                    <div class="text-2xl font-bold text-blue-600">${(currentStats.tokens_per_week / 1e12).toFixed(2)}T</div>
+                                    <div class="text-xs text-slate-600 mt-1">Tokens per week</div>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                    <div class="text-xs text-green-700 mb-1">YoY Growth</div>
+                                    <div class="text-2xl font-bold text-green-600">${currentStats.growth_yoy}x</div>
+                                    <div class="text-xs text-slate-600 mt-1">Year over year</div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Chart with actual data points
+                        if (data.data_points && data.data_points.length > 0) {
+                            html += `
+                                <div class="mb-6">
+                                    <h4 class="text-md font-semibold text-slate-700 mb-3">Token Usage Trend (Actual Measurements)</h4>
+                                    <div class="text-xs text-slate-500 mb-3">
+                                        ${data.data_points.length} actual data points from OpenRouter rankings chart
+                                    </div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <img src="/api/token-usage-plot" alt="Token Usage Time Series" class="w-full h-auto rounded-lg" />
+                                    </div>
+                                    <div class="mt-3 text-xs text-slate-500 italic">
+                                        Source: <a href="https://openrouter.ai/rankings" target="_blank" class="text-blue-600 hover:underline">OpenRouter Rankings</a> - TOP 3 models per data point
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                    // Handle old format
+                    } else {
+                        // Summary statistics
+                        html += `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                                    <div class="text-xs text-purple-700 mb-1">Total Tokens</div>
+                                    <div class="text-2xl font-bold text-purple-600">${(data.total_tokens / 1e9).toFixed(2)}B</div>
+                                    <div class="text-xs text-slate-600 mt-1">Last ${data.days || 365} days</div>
+                                </div>
+                                ${data.total_requests ? `
+                                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                        <div class="text-xs text-blue-700 mb-1">Total Requests</div>
+                                        <div class="text-2xl font-bold text-blue-600">${(data.total_requests / 1e6).toFixed(1)}M</div>
+                                        <div class="text-xs text-slate-600 mt-1">API calls made</div>
+                                    </div>
+                                ` : ''}
+                                ${data.total_cost ? `
+                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                        <div class="text-xs text-green-700 mb-1">Total Cost</div>
+                                        <div class="text-2xl font-bold text-green-600">$${(data.total_cost / 1000).toFixed(1)}K</div>
+                                        <div class="text-xs text-slate-600 mt-1">Estimated spend</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+
+                        // Daily usage chart (old format - show message)
+                        if (data.daily_usage && data.daily_usage.length > 0) {
+                            html += `
+                                <div class="mb-6">
+                                    <div class="text-sm text-slate-600 italic">
+                                        Legacy data format detected. Please regenerate token usage data to see the visualization.
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Top models by token consumption (if available)
+                    if (data.model_consumption && data.model_consumption.length > 0) {
+                        html += `
+                            <div>
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Top AI Models by Token Usage</h4>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-slate-200">
+                                        <thead class="bg-slate-50">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-slate-500">Model</th>
+                                                <th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Tokens</th>
+                                                ${data.model_consumption[0].requests ? '<th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Requests</th>' : ''}
+                                                ${data.model_consumption[0].cost ? '<th class="px-4 py-2 text-right text-xs font-medium text-slate-500">Cost</th>' : ''}
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-200">
+                        `;
+
+                        data.model_consumption.slice(0, 10).forEach((model, idx) => {
+                            html += `
+                                <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
+                                    <td class="px-4 py-2 text-sm text-slate-800">${model.model_name || model.model_id}</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">${(model.tokens / 1e6).toFixed(1)}M</td>
+                                    ${model.requests ? `<td class="px-4 py-2 text-sm text-slate-600 text-right">${model.requests.toLocaleString()}</td>` : ''}
+                                    ${model.cost ? `<td class="px-4 py-2 text-sm text-slate-600 text-right">$${model.cost.toFixed(2)}</td>` : ''}
+                                </tr>
+                            `;
+                        });
+
+                        html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="text-sm text-slate-500">No token usage data available.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading standalone token usage:', error);
+                container.innerHTML = '<p class="text-sm text-red-600">Error loading token usage data.</p>';
+            }
+        }
+
         // Load market conditions on page load
         loadMarketConditions();
         // Refresh market conditions every 5 minutes
         setInterval(loadMarketConditions, 300000);
-        
+
         loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
         refreshCoverageTable();
+
+        // Load standalone sections
+        loadStandaloneNews(scoreTickerInput.value.trim().toUpperCase());
+        loadStandaloneFlowData(scoreTickerInput.value.trim().toUpperCase());
+        loadStandaloneTokenUsage();
     </script>
 </body>
 </html>
