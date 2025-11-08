@@ -2868,6 +2868,16 @@
                         </div>
                     </section>
                 `;
+            } else if (legacyAnalysis) {
+                analysisHtml = `
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                        <div class="mb-3">
+                            <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Legacy Analysis</span>
+                        </div>
+                        <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(legacyAnalysis)}</p>
+                        <p class="text-xs text-slate-500 mt-3 italic">Note: This is an older analysis format. Deep Alpha Pillars Assessment coming soon.</p>
+                    </div>
+                `;
             } else {
                 analysisHtml = `
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">

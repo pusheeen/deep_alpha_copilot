@@ -1375,6 +1375,97 @@ async def get_latest_news(ticker: str):
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
 
+
+@app.get("/api/flow-data/{ticker}")
+async def get_flow_data(ticker: str, flow_type: str = "combined"):
+    """Return institutional and retail flow data for a ticker."""
+    try:
+        ticker = ticker.upper()
+        flow_dir = DATA_ROOT / "structured" / "flow_data"
+
+        # Find the latest flow data file
+        if flow_type == "combined":
+            pattern = f"{ticker}_combined_flow_*.json"
+        elif flow_type == "institutional":
+            pattern = f"{ticker}_institutional_flow_*.json"
+        elif flow_type == "retail":
+            pattern = f"{ticker}_retail_flow_*.json"
+        else:
+            return {"status": "error", "message": f"Invalid flow_type: {flow_type}"}
+
+        flow_files = sorted(flow_dir.glob(pattern))
+        if not flow_files:
+            return {"status": "error", "message": f"No flow data found for {ticker}"}
+
+        # Read the latest file
+        with flow_files[-1].open("r") as f:
+            flow_data = json.load(f)
+
+        # Extract the date from filename (e.g., NVDA_combined_flow_20251108.json)
+        file_date = flow_files[-1].stem.split("_")[-1]
+
+        return {
+            "status": "success",
+            "data": {
+                "data": flow_data,
+                "file_date": file_date,
+                "file_name": flow_files[-1].name
+            }
+        }
+    except Exception as exc:
+        logger.error(f"Error loading flow data for {ticker}: {exc}")
+        return {"status": "error", "message": f"Failed to fetch flow data: {exc}"}
+
+
+@app.get("/api/token-usage")
+async def get_token_usage():
+    """Return the latest token usage data."""
+    try:
+        token_usage_dir = DATA_ROOT / "unstructured" / "token_usage"
+
+        # Find the latest token usage file
+        token_files = sorted(token_usage_dir.glob("token_usage_*.json"))
+        if not token_files:
+            return {"status": "error", "message": "No token usage data found"}
+
+        # Read the latest file
+        with token_files[-1].open("r") as f:
+            token_data = json.load(f)
+
+        return {
+            "status": "success",
+            "data": token_data
+        }
+    except Exception as exc:
+        logger.error(f"Error loading token usage data: {exc}")
+        return {"status": "error", "message": f"Failed to fetch token usage: {exc}"}
+
+
+@app.get("/api/token-usage-plot")
+async def get_token_usage_plot():
+    """Return the token usage plot image."""
+    try:
+        from fastapi.responses import FileResponse
+
+        token_usage_dir = DATA_ROOT / "unstructured" / "token_usage"
+
+        # Find the latest plot file
+        plot_files = sorted(token_usage_dir.glob("token_usage_plot_*.png"))
+        if not plot_files:
+            # If no plot exists, return a placeholder message
+            return {"status": "error", "message": "No token usage plot found"}
+
+        # Return the latest plot image
+        return FileResponse(
+            plot_files[-1],
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=300"}  # Cache for 5 minutes
+        )
+    except Exception as exc:
+        logger.error(f"Error loading token usage plot: {exc}")
+        return {"status": "error", "message": f"Failed to fetch plot: {exc}"}
+
+
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
     """
