@@ -392,6 +392,18 @@
     </div>
 
     <script>
+        // Helper function to escape HTML for safe rendering
+        function escapeHtml(value) {
+            if (value === undefined || value === null) return '';
+            return String(value).replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            }[char] || char));
+        }
+
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const chatContainer = document.getElementById('chat-container');
@@ -2696,80 +2708,24 @@
             }
         });
 
-        // Load standalone news section
+        // Load standalone news section with Deep Alpha rendering
         async function loadStandaloneNews(ticker) {
             const container = document.getElementById('standalone-news-content');
             if (!container) return;
+
+            container.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <span class="ml-3 text-slate-500">Loading latest news...</span>
+                </div>
+            `;
 
             try {
                 const response = await fetch(`/api/latest-news/${ticker}`);
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
-                    const data = JSON.parse(result.data.answer);
-                    const interpretation = data.interpretation;
-                    const results = data.results || [];
-
-                    let html = '';
-
-                    // AI Investment Analysis
-                    if (interpretation) {
-                        const sentimentClass = interpretation.sentiment === 'bullish' ? 'text-green-600' :
-                                             interpretation.sentiment === 'bearish' ? 'text-red-600' : 'text-slate-600';
-                        html += `
-                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-blue-200">
-                                <h4 class="text-md font-semibold text-slate-800 mb-3 flex items-center">
-                                    <span class="mr-2">🤖</span> AI Investment Analysis
-                                </h4>
-                                <div class="space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium text-slate-700">Sentiment:</span>
-                                        <span class="${sentimentClass} font-bold">${interpretation.sentiment.toUpperCase()}</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-sm font-medium text-slate-700">Recommendation:</span>
-                                        <span class="font-bold text-slate-800">${interpretation.recommendation}</span>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm font-medium text-slate-700 mb-1">Summary:</div>
-                                        <p class="text-sm text-slate-600">${interpretation.summary}</p>
-                                    </div>
-                                    ${interpretation.reasoning ? `
-                                        <div>
-                                            <div class="text-sm font-medium text-slate-700 mb-1">Reasoning:</div>
-                                            <p class="text-sm text-slate-600">${interpretation.reasoning}</p>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    // Latest News Articles
-                    html += `
-                        <div>
-                            <h4 class="text-md font-semibold text-slate-700 mb-3">Latest News (${results.length} articles)</h4>
-                            <div class="space-y-3">
-                    `;
-
-                    results.slice(0, 10).forEach(article => {
-                        html += `
-                            <div class="border-l-4 border-blue-500 pl-3 py-2 hover:bg-slate-50 transition">
-                                <a href="${article.link}" target="_blank" class="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
-                                    ${article.title}
-                                </a>
-                                <p class="text-xs text-slate-500 mt-1">${article.source} • ${article.published ? new Date(article.published).toLocaleDateString() : 'Recent'}</p>
-                                ${article.snippet ? `<p class="text-xs text-slate-600 mt-1">${article.snippet.substring(0, 150)}...</p>` : ''}
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                            </div>
-                        </div>
-                    `;
-
-                    container.innerHTML = html;
+                    renderStandaloneNewsSection(result.data, ticker);
                 } else {
                     container.innerHTML = '<p class="text-sm text-red-600">Failed to load news. Please try again later.</p>';
                 }
@@ -2777,6 +2733,179 @@
                 console.error('Error loading standalone news:', error);
                 container.innerHTML = '<p class="text-sm text-red-600">Error loading news data.</p>';
             }
+        }
+
+        // Render standalone news with Deep Alpha Pillars Assessment
+        function renderStandaloneNewsSection(data, ticker) {
+            const newsContent = document.getElementById('standalone-news-content');
+            if (!newsContent) return;
+
+            const summary = data.summary || {};
+            const articles = Array.isArray(data.articles) ? data.articles : [];
+            const fetchedAt = data.fetched_at ? new Date(data.fetched_at) : null;
+            const deepAlphaCard = data.deep_alpha_analysis;
+            const analysisGeneratedAt = data.analysis_generated_at ? new Date(data.analysis_generated_at) : null;
+            const legacyAnalysis = data.legacy_analysis;
+
+            const formatRelativeTime = (date) => {
+                if (!date) return 'N/A';
+                const now = new Date();
+                const diffSeconds = Math.round((date.getTime() - now.getTime()) / 1000);
+                const absSeconds = Math.abs(diffSeconds);
+                const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+                const units = [
+                    { limit: 60, value: 1, unit: 'second' },
+                    { limit: 3600, value: 60, unit: 'minute' },
+                    { limit: 86400, value: 3600, unit: 'hour' },
+                    { limit: 604800, value: 86400, unit: 'day' },
+                    { limit: 2629800, value: 604800, unit: 'week' },
+                    { limit: 31557600, value: 2629800, unit: 'month' },
+                ];
+                for (const { limit, value, unit } of units) {
+                    if (absSeconds < limit) {
+                        const delta = Math.round(diffSeconds / value);
+                        return rtf.format(delta, unit);
+                    }
+                }
+                const years = Math.round(diffSeconds / 31557600);
+                return rtf.format(years, 'year');
+            };
+
+            const analysisGeneratedLabel = analysisGeneratedAt
+                ? `${analysisGeneratedAt.toLocaleString()} (${formatRelativeTime(analysisGeneratedAt)})`
+                : 'Awaiting refreshed interpretation.';
+
+            const sentimentBadgeClasses = {
+                Positive: "bg-emerald-100 text-emerald-700",
+                Negative: "bg-rose-100 text-rose-700",
+                Neutral: "bg-slate-200 text-slate-700"
+            };
+            const ratingColors = {
+                BUY: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+                HOLD: "bg-amber-100 text-amber-800 border border-amber-300",
+                SELL: "bg-rose-100 text-rose-800 border border-rose-300"
+            };
+            const confidenceColors = {
+                HIGH: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+                MEDIUM: "bg-amber-50 text-amber-700 border border-amber-200",
+                LOW: "bg-slate-100 text-slate-700 border border-slate-200"
+            };
+
+            let analysisHtml = '';
+            if (deepAlphaCard) {
+                const ratingLabel = (deepAlphaCard.rating_buy_hold_sell || 'HOLD').toString().toUpperCase();
+                const confidenceLabel = (deepAlphaCard.sentiment_confidence || 'Medium').toString().toUpperCase();
+                const keyTakeaways = Array.isArray(deepAlphaCard.key_takeaways) ? deepAlphaCard.key_takeaways : [];
+                const monitorPoints = Array.isArray(deepAlphaCard.next_step_focus?.monitor_points)
+                    ? deepAlphaCard.next_step_focus.monitor_points
+                    : [];
+                const keyTakeawaysHtml = keyTakeaways.length
+                    ? keyTakeaways.map(item => `
+                        <li class="rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
+                            <p class="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-semibold">${escapeHtml(item.type || 'Key Takeaway')}</p>
+                            <p class="text-sm text-slate-800 mt-2 leading-relaxed">${escapeHtml(item.summary || '')}</p>
+                        </li>
+                    `).join('')
+                    : '<li class="text-sm text-slate-400">Highlights will appear once analysis is refreshed.</li>';
+                const monitorHtml = monitorPoints.length
+                    ? monitorPoints.map((point, index) => `
+                        <li class="flex items-start gap-3">
+                            <span class="mt-[2px] inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">${index + 1}</span>
+                            <span class="text-sm text-slate-100 leading-relaxed">${escapeHtml(point)}</span>
+                        </li>
+                    `).join('')
+                    : '<li class="text-sm text-slate-300">Monitoring guidance will appear when new catalysts emerge.</li>';
+                const conclusionParagraph = deepAlphaCard.investment_conclusion?.paragraph;
+                const reasoningText = deepAlphaCard.investment_conclusion?.reasoning_justification;
+                const nextStepTitle = deepAlphaCard.next_step_focus?.title || 'Next Step: Monitoring Key Drivers';
+                const sentimentLabel = ratingLabel === 'BUY' ? 'Positive' : ratingLabel === 'SELL' ? 'Negative' : 'Neutral';
+                const sentimentBadge = sentimentBadgeClasses[sentimentLabel] || sentimentBadgeClasses.Neutral;
+                const confidenceBadge = confidenceColors[confidenceLabel] || confidenceColors.MEDIUM;
+
+                const reasoningHtml = (conclusionParagraph || reasoningText) ? `
+                    <details class="bg-slate-900 text-slate-100 border border-slate-700 rounded-xl px-5 py-4">
+                        <summary class="flex items-center justify-between cursor-pointer text-sm font-semibold">
+                            Deep-dive reasoning
+                            <span class="text-xs text-slate-300">${escapeHtml(analysisGeneratedLabel)}</span>
+                        </summary>
+                        <div class="mt-3 space-y-3 text-sm leading-relaxed">
+                            ${conclusionParagraph ? `<p>${escapeHtml(conclusionParagraph)}</p>` : ''}
+                            ${reasoningText ? `<p class="text-slate-300">Reasoning: ${escapeHtml(reasoningText)}</p>` : ''}
+                        </div>
+                    </details>
+                ` : '';
+
+                analysisHtml = `
+                    <section class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 shadow-lg text-slate-100 space-y-6">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Deep Alpha Pillars Assessment</p>
+                                <h4 class="text-2xl font-semibold mt-2">${escapeHtml(ticker)}</h4>
+                                <p class="text-xs text-slate-400 mt-1">${escapeHtml(analysisGeneratedLabel)}</p>
+                            </div>
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full ${ratingColors[ratingLabel] || ratingColors.HOLD}">
+                                    <span class="text-xs font-semibold uppercase tracking-wide">Rating</span>
+                                    <span class="text-lg font-bold">${ratingLabel}</span>
+                                </span>
+                                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${sentimentBadge}">
+                                    ${sentimentLabel}
+                                </span>
+                                <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${confidenceBadge}">
+                                    Confidence: ${confidenceLabel}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            ${keyTakeawaysHtml}
+                        </div>
+                        ${reasoningHtml}
+                        <div class="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
+                            <h5 class="text-xs uppercase tracking-[0.25em] text-slate-300 mb-3">${escapeHtml(nextStepTitle)}</h5>
+                            <ul class="space-y-2">
+                                ${monitorHtml}
+                            </ul>
+                        </div>
+                    </section>
+                `;
+            } else {
+                analysisHtml = `
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+                        Deep Alpha interpretation is not available yet. Showing latest news coverage.
+                    </div>
+                `;
+            }
+
+            // Render articles if available
+            const articlesHtml = articles.length > 0 ? articles.slice(0, 10).map(article => {
+                const publishedDate = article.published ? new Date(article.published) : null;
+                const link = article.link ? escapeHtml(article.link) : '#';
+                const sourceLine = [
+                    article.source || 'Unknown source',
+                    publishedDate ? `${publishedDate.toLocaleDateString()} • ${formatRelativeTime(publishedDate)}` : null,
+                ].filter(Boolean).join(' • ');
+
+                return `
+                    <article class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm hover:shadow-md transition">
+                        <a href="${link}" target="_blank" rel="noopener"
+                           class="text-sm md:text-base font-semibold text-slate-800 hover:text-blue-600">
+                            ${escapeHtml(article.title || 'Untitled article')}
+                        </a>
+                        <div class="mt-2 text-xs text-slate-500">${escapeHtml(sourceLine)}</div>
+                        ${article.snippet ? `<p class="text-xs text-slate-600 mt-2">${escapeHtml(article.snippet.substring(0, 200))}...</p>` : ''}
+                    </article>
+                `;
+            }).join('') : '<p class="text-slate-500 text-sm">No recent articles available.</p>';
+
+            newsContent.innerHTML = `
+                <div class="space-y-6">
+                    ${analysisHtml}
+                    <section class="space-y-4">
+                        <h4 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Latest News Coverage</h4>
+                        ${articlesHtml}
+                    </section>
+                </div>
+            `;
         }
 
         // Load standalone flow data section
