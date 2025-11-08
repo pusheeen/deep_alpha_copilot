@@ -4,6 +4,8 @@
 Main FastAPI application file, adapted to use the Google ADK agent system.
 """
 import asyncio
+import json
+import re
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from starlette.responses import FileResponse
@@ -25,7 +27,10 @@ except ImportError:
 # Add this import
 from fastapi.middleware.cors import CORSMiddleware 
 import os
-import stripe
+try:
+    import stripe
+except ImportError:
+    stripe = None
 import databases
 import sqlalchemy
 from passlib.context import CryptContext
@@ -36,23 +41,46 @@ from fastapi import Form, Depends, HTTPException
 
 app = FastAPI()
 
-origins = ["*"]
+# CORS configuration - environment aware
+# In production, set ALLOWED_ORIGINS env var to your domain
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"], # Allows all methods
-    allow_headers=["*"], # Allows all headers
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
 )
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
 if ADK_AVAILABLE:
     try:
-        from app.agents.agents import root_agent, search_latest_news
+        from app.agents.agents import root_agent
     except ImportError:
         ADK_AVAILABLE = False
         print("Warning: Could not import agents. Agent features will be disabled.")
+
+# Import news functions directly from fetch_data module
+try:
+    from fetch_data.news import fetch_news_for_ticker, interpret_news_with_gemini
+    from fetch_data.sector_news import fetch_sector_news
+    NEWS_AVAILABLE = True
+except ImportError as e:
+    fetch_news_for_ticker = None
+    interpret_news_with_gemini = None
+    fetch_sector_news = None
+    NEWS_AVAILABLE = False
+    print(f"Warning: Could not import news functions: {e}")
+
+# Directories for cached data
+from fetch_data.utils import DATA_ROOT, NEWS_DATA_DIR, NEWS_INTERPRETATION_DIR
+import os
+
+# Cached valuation metrics directory
+VALUATION_METRICS_DIR = os.path.join(DATA_ROOT, "unstructured", "valuation_metrics")
+os.makedirs(VALUATION_METRICS_DIR, exist_ok=True)
+
 from app.scoring import compute_company_scores, ScoreComputationError
 load_dotenv()
 import math
@@ -72,13 +100,13 @@ def sanitize_for_json(obj):
 
 # --- Configuration ---
 APP_DIR = Path(__file__).resolve().parent
-# Stripe configuration
+# Stripe configuration (optional)
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-stripe.api_key = STRIPE_SECRET_KEY or None
-DOMAIN = os.getenv("DOMAIN", "http://localhost:8000")
 PRICE_ID = os.getenv("STRIPE_PRICE_ID")
+if stripe:
+    stripe.api_key = STRIPE_SECRET_KEY or None
 # Flag whether Stripe is configured
-HAS_STRIPE = bool(STRIPE_SECRET_KEY and PRICE_ID)
+HAS_STRIPE = bool(stripe and STRIPE_SECRET_KEY and PRICE_ID)
 
 # Database setup
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db")
@@ -236,6 +264,10 @@ class QueryRequest(BaseModel):
     question: str
     include_reasoning: bool = False
 
+import os
+import json
+from fastapi import HTTPException
+
 @app.get("/", response_class=HTMLResponse)
 async def get_index(request: Request):
     """Serves the main index.html file."""
@@ -243,8 +275,7 @@ async def get_index(request: Request):
     user_id = request.session.get("user")
     if user_id:
         user = await get_user_by_id(user_id)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user})
-
+    return templates.TemplateResponse("index.html", {"request": request, "user": user, "hide_sector_news": True})
 
 @app.get("/api/scores/{ticker}")
 async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] = None):
@@ -252,9 +283,22 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
     loop = asyncio.get_event_loop()
     if news_only:
         try:
+            # Determine ticker for lookup
             search_query = query or ticker
-            data = await loop.run_in_executor(None, search_latest_news, search_query)
-            results = data.get("results", []) if isinstance(data, dict) else []
+            safe_ticker = search_query.upper()
+            # Attempt to load cached news JSON (try timestamped files first)
+            news_file = find_latest_timestamped_file(NEWS_DATA_DIR, f"{safe_ticker}_news")
+            if news_file and os.path.exists(news_file):
+                with open(news_file, "r") as f:
+                    news_json = json.load(f)
+                results = news_json.get("articles", [])
+            elif NEWS_AVAILABLE and fetch_news_for_ticker:
+                # Fetch and cache news via fetch_data.news
+                results = await loop.run_in_executor(None, fetch_news_for_ticker, safe_ticker, safe_ticker)
+                if results is None:
+                    results = []
+            else:
+                results = []
             return {"status": "success", "data": {"latest_news": results}}
         except Exception as exc:  # pragma: no cover - network failures
             return {"status": "error", "message": f"Failed to fetch news: {exc}"}
@@ -267,6 +311,19 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
         return {"status": "error", "message": str(exc)}
     except Exception as exc:  # pragma: no cover - unexpected errors bubbled to client
         return {"status": "error", "message": f"Unexpected error: {exc}"}
+
+@app.get("/api/news-interpretation/{ticker}")
+async def get_news_interpretation(ticker: str):
+    """Return precomputed AI analysis for news interpretation from cache."""
+    safe_ticker = ticker.upper()
+    # Try to find latest timestamped file first
+    interp_file = find_latest_timestamped_file(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation")
+    if interp_file and os.path.exists(interp_file):
+        with open(interp_file, "r") as f:
+            data = json.load(f)
+        return {"status": "success", "data": data}
+    else:
+        return {"status": "error", "message": f"No precomputed news interpretation for {ticker}. Please run the news interpretation job."}
 
 @app.get("/api/price-history/{ticker}")
 async def get_price_history(ticker: str, period: str = "1m"):
@@ -285,13 +342,23 @@ async def get_price_history(ticker: str, period: str = "1m"):
 
 @app.get("/api/valuation-metrics/{ticker}")
 async def get_valuation_metrics(ticker: str):
-    """Return historical P/E and P/S ratios with industry benchmarks."""
-    from app.scoring.engine import get_valuation_metrics
+    """Return historical P/E and P/S ratios with industry benchmarks (cached or live)."""
+    from app.scoring.engine import get_valuation_metrics as compute_metrics
 
+    safe_ticker = ticker.upper()
+    # Attempt to load cached valuation metrics JSON if available
+    metrics_file = os.path.join(VALUATION_METRICS_DIR, f"{safe_ticker}_valuation_metrics.json")
     try:
-        loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
-        data = sanitize_for_json(data)
+        if os.path.exists(metrics_file):
+            with open(metrics_file, "r") as f:
+                data = json.load(f)
+        else:
+            # Compute metrics and cache to file
+            loop = asyncio.get_event_loop()
+            data = await loop.run_in_executor(None, compute_metrics, safe_ticker)
+            data = sanitize_for_json(data)
+            with open(metrics_file, "w") as f:
+                json.dump(data, f)
         return {"status": "success", "data": data}
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
@@ -308,97 +375,473 @@ async def get_market_conditions():
     except Exception as exc:
         return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
 
-@app.get("/api/latest-news/{ticker}")
-async def get_latest_news(ticker: str):
-    """Return the latest news and interpretation for a ticker."""
-    import json
-    from fetch_data import get_latest_news_file, save_news_interpretation
+@app.get("/api/sector-news/{sector}")
+async def get_sector_news_endpoint(sector: str):
+    """Return the latest news for a sector from cached JSON files."""
+    print(f"--- Getting sector news for {sector} ---")
 
     try:
-        ticker = ticker.upper()
+        # Sanitize sector name for filename (same as in fetch script)
+        import re
+        safe_sector_name = re.sub(r'[^a-zA-Z0-9_]', '_', sector)
+        sector_news_dir = "data/unstructured/sector_news"
 
-        # Get latest news file
-        news_file = get_latest_news_file(ticker)
-        if not news_file:
-            return {"status": "success", "data": {"ticker": ticker, "articles": [], "interpretation": None}}
+        # Find latest timestamped file
+        sector_file = find_latest_timestamped_file(sector_news_dir, f"{safe_sector_name}_news")
 
-        # Load news data
-        with open(news_file, 'r') as f:
-            news_data = json.load(f)
-        # Deduplicate articles by link or title
-        raw_articles = news_data.get('articles', [])
-        seen = set()
-        unique_articles = []
-        for art in raw_articles:
-            # Use link as primary dedupe key, fallback to title
-            key = art.get('link') or art.get('title', '').strip()
-            if not key:
-                # skip if no identifier
-                continue
-            if key in seen:
-                continue
-            seen.add(key)
-            unique_articles.append(art)
-        # Replace with deduplicated list (by link/title)
-        news_articles = unique_articles
-        # Further deduplicate semantically similar articles (e.g., same story phrased differently)
-        try:
-            import difflib
-            sem_seen = []
-            sem_unique = []
-            for art in news_articles:
-                # Normalize title for similarity check
-                title = art.get('title', '').strip().lower()
-                if not title:
-                    sem_unique.append(art)
-                    continue
-                # Check against previously seen titles
-                is_dup = False
-                for prev in sem_seen:
-                    if difflib.SequenceMatcher(None, title, prev).ratio() > 0.85:
-                        is_dup = True
-                        break
-                if not is_dup:
-                    sem_seen.append(title)
-                    sem_unique.append(art)
-            news_articles = sem_unique
-        except Exception:
-            # Fallback: skip semantic dedupe on error
-            pass
-
-        # Get or generate interpretation
-        interpretation_files = sorted([
-            f for f in os.listdir('data/unstructured/news_interpretation')
-            if f.startswith(f"{ticker}_news_interpretation_") and f.endswith('.json')
-        ])
-
-        interpretation_data = None
-        if interpretation_files:
-            # Load latest interpretation
-            latest_interpretation_file = os.path.join('data/unstructured/news_interpretation', interpretation_files[-1])
-            with open(latest_interpretation_file, 'r') as f:
-                interpretation_data = json.load(f)
-        else:
-            # Generate new interpretation
-            loop = asyncio.get_event_loop()
-            interpretation_path = await loop.run_in_executor(None, save_news_interpretation, ticker, news_file)
-            if interpretation_path:
-                with open(interpretation_path, 'r') as f:
-                    interpretation_data = json.load(f)
-
-        return {
-            "status": "success",
-            "data": {
-                "ticker": ticker,
-                "articles": news_articles,
-                "total_articles": len(news_articles),
-                "fetch_timestamp": news_data.get('fetch_timestamp'),
-                "interpretation": interpretation_data.get('interpretation') if interpretation_data else None,
-                "interpretation_timestamp": interpretation_data.get('timestamp') if interpretation_data else None
+        # Check if sector file exists
+        if not sector_file or not os.path.exists(sector_file):
+            return {
+                "status": "error",
+                "message": f"No cached news found for {sector} sector. Please run news update script."
             }
+
+        # Load sector news
+        with open(sector_file, 'r') as f:
+            sector_data = json.load(f)
+
+        articles = sector_data.get('articles', [])
+
+        if not articles:
+            return {"status": "error", "message": "No articles found for this sector"}
+
+        # Normalize article structure to match frontend expectations
+        normalized_articles = []
+        for article in articles:
+            normalized_articles.append({
+                'title': article.get('title'),
+                'link': article.get('link'),
+                'snippet': article.get('summary', article.get('snippet', '')),
+                'source': article.get('publisher', article.get('source', 'Unknown')),
+                'published': article.get('publish_time', article.get('published', ''))
+            })
+
+        # Convert to expected format with results
+        news_data = {
+            "answer": json.dumps({"results": normalized_articles}),
+            "status": "success"
         }
+        return {"status": "success", "data": news_data}
     except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch news: {exc}"}
+        print(f"Error loading cached sector news: {exc}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": f"Failed to load cached sector news: {exc}"}
+
+@app.get("/api/token-usage")
+async def get_token_usage():
+    """Return AI token consumption data by model from the latest token usage file."""
+    try:
+        # Try to find actual token usage file first
+        token_usage_dir = "data/unstructured/token_usage"
+        token_file = find_latest_timestamped_file(token_usage_dir, "token_usage")
+        
+        # Fallback to rankings file if usage file doesn't exist
+        if not token_file:
+            token_file = find_latest_timestamped_file(token_usage_dir, "openrouter_rankings")
+        
+        if not token_file:
+            return {
+                "status": "error",
+                "message": "No token usage data found. Please run fetch_data/fetch_token_usage.py to generate data."
+            }
+        
+        # Load token usage data
+        with open(token_file, 'r') as f:
+            token_data = json.load(f)
+        
+        # Check if we have actual measured data (newest format - from rankings chart)
+        if 'data_type' in token_data and token_data['data_type'] == 'actual_measured_data':
+            # ACTUAL measurements from OpenRouter rankings chart
+            response_data = {
+                "fetch_timestamp": token_data.get('fetch_timestamp'),
+                "data_type": "actual_measured_data",
+                "platform": token_data.get('platform', 'OpenRouter'),
+                "current_stats": token_data.get('current_stats', {}),
+                "data_points": token_data.get('data_points', []),
+                "source": token_data.get('source', 'OpenRouter rankings chart'),
+                "note": token_data.get('note', 'Actual measurements only')
+            }
+
+            return {
+                "status": "success",
+                "data": response_data
+            }
+        # Check if we have actual published statistics (new format)
+        elif 'data_type' in token_data and token_data['data_type'] == 'actual_published_statistics':
+            # ACTUAL OpenRouter platform statistics
+            response_data = {
+                "fetch_timestamp": token_data.get('fetch_timestamp'),
+                "data_type": "actual_published_statistics",
+                "platform": token_data.get('platform', 'OpenRouter'),
+                "current_usage": token_data.get('current_usage', {}),
+                "growth_metrics": token_data.get('growth_metrics', {}),
+                "daily_usage": token_data.get('data_points', []),  # Use data_points as daily_usage for frontend
+                "sources": token_data.get('sources', []),
+                "note": token_data.get('note', 'Actual published statistics')
+            }
+
+            return {
+                "status": "success",
+                "data": response_data
+            }
+        # Check if we have daily usage data (old synthesized format)
+        elif 'daily_usage' in token_data:
+            # Old format: synthesized daily totals
+            response_data = {
+                "fetch_timestamp": token_data.get('fetch_timestamp'),
+                "days": token_data.get('days', 90),
+                "total_tokens": token_data.get('total_tokens', 0),
+                "total_requests": token_data.get('total_requests', 0),
+                "total_cost": token_data.get('total_cost', 0),
+                "daily_usage": token_data['daily_usage'],
+                "source": token_data.get('source', 'estimated')
+            }
+
+            return {
+                "status": "success",
+                "data": response_data
+            }
+        # Check if we have aggregated_by_model (old format with model-specific data)
+        elif 'aggregated_by_model' in token_data:
+            # Use actual aggregated usage data
+            model_consumption = token_data['aggregated_by_model'][:15]
+            # Format for frontend
+            formatted_consumption = []
+            for model in model_consumption:
+                formatted_consumption.append({
+                    "model_id": model.get('model_id', ''),
+                    "model_name": model.get('model_name', model.get('model_id', '')),
+                    "tokens": model.get('total_tokens', 0),
+                    "prompt_price": model.get('prompt_price', 0),
+                    "completion_price": model.get('completion_price', 0),
+                    "requests": model.get('total_requests', 0),
+                    "cost": model.get('total_cost', 0)
+                })
+            
+            response_data = {
+                "fetch_timestamp": token_data.get('fetch_timestamp'),
+                "days": token_data.get('days', 90),
+                "total_models": len(token_data.get('aggregated_by_model', [])),
+                "total_tokens": token_data.get('total_tokens', 0),
+                "total_requests": token_data.get('total_requests', 0),
+                "model_consumption": formatted_consumption,
+                "source": token_data.get('source', 'estimated')
+            }
+            
+            # Include daily usage if available
+            if 'daily_usage' in token_data:
+                response_data['daily_usage'] = token_data['daily_usage']
+            
+            return {
+                "status": "success",
+                "data": response_data
+            }
+        else:
+            # Fallback: use rankings data to estimate
+            rankings = token_data.get('rankings', [])
+            
+            model_consumption = []
+            for model in rankings[:20]:  # Top 20 models
+                model_id = model.get('id', '')
+                model_name = model.get('name', model_id)
+                pricing = model.get('pricing', {})
+                
+                prompt_price = float(pricing.get('prompt', 0))
+                completion_price = float(pricing.get('completion', 0))
+                
+                # Estimate tokens: inverse relationship with price
+                base_tokens = 1000000
+                if prompt_price > 0:
+                    estimated_tokens = int(base_tokens / (prompt_price * 1000000 + 1))
+                else:
+                    estimated_tokens = base_tokens
+                
+                model_consumption.append({
+                    "model_id": model_id,
+                    "model_name": model_name,
+                    "tokens": estimated_tokens,
+                    "prompt_price": prompt_price,
+                    "completion_price": completion_price
+                })
+            
+            model_consumption.sort(key=lambda x: x['tokens'], reverse=True)
+            
+            return {
+                "status": "success",
+                "data": {
+                    "fetch_timestamp": token_data.get('fetch_timestamp'),
+                    "days": token_data.get('days', 90),
+                    "total_models": token_data.get('total_models', len(rankings)),
+                    "model_consumption": model_consumption[:15],
+                    "source": "estimated"
+                }
+            }
+    except Exception as exc:
+        print(f"Error loading token usage: {exc}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": f"Failed to load token usage: {exc}"}
+
+@app.get("/api/token-usage-plot")
+async def get_token_usage_plot():
+    """Serve the latest token usage plot image."""
+    try:
+        token_usage_dir = "data/unstructured/token_usage"
+        plot_file = find_latest_timestamped_file(token_usage_dir, "token_usage_plot", extension=".png")
+
+        if not plot_file:
+            # Return a placeholder or error
+            return {"status": "error", "message": "No token usage plot found. Please run fetch_data/token_usage.py to generate the plot."}
+
+        return FileResponse(plot_file, media_type="image/png")
+    except Exception as exc:
+        print(f"Error loading token usage plot: {exc}")
+        return {"status": "error", "message": f"Failed to load token usage plot: {exc}"}
+
+@app.get("/api/flow-plot/{ticker}")
+async def get_flow_plot(ticker: str):
+    """Serve the latest flow plot image for a given ticker."""
+    try:
+        flow_dir = "data/structured/flow_data"
+        plot_file = find_latest_timestamped_file(flow_dir, f"{ticker}_flow_plot", extension=".png")
+
+        if not plot_file:
+            return {"status": "error", "message": f"No flow plot found for {ticker}. Please run fetch_data.py to generate the plot."}
+
+        return FileResponse(plot_file, media_type="image/png")
+    except Exception as exc:
+        print(f"Error loading flow plot for {ticker}: {exc}")
+        return {"status": "error", "message": f"Failed to load flow plot: {exc}"}
+
+def find_latest_timestamped_file(directory: str, prefix: str, extension: str = ".json") -> Optional[str]:
+    """Find the latest timestamped file matching the prefix pattern.
+
+    Supports two timestamp formats:
+    - {prefix}_YYYYMMDD_HHMMSS.{extension} (news files, plots)
+    - {prefix}_YYYYMMDD.{extension} (flow data files)
+    Returns the file with the latest timestamp.
+    """
+    import glob
+    from datetime import datetime
+
+    # Pattern to match only timestamped files
+    pattern = os.path.join(directory, f"{prefix}_*{extension}")
+    matching_files = glob.glob(pattern)
+
+    if not matching_files:
+        return None
+
+    # Extract timestamp from filename and find the latest
+    latest_file = None
+    latest_timestamp = None
+
+    for file_path in matching_files:
+        filename = os.path.basename(file_path)
+        # Remove prefix and extension to get timestamp
+        if filename.startswith(prefix + "_") and filename.endswith(extension):
+            timestamp_str = filename[len(prefix) + 1:-len(extension)]  # Remove prefix_ and extension
+
+            # Try both timestamp formats
+            timestamp = None
+
+            # Try YYYYMMDD_HHMMSS format first
+            try:
+                timestamp = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+            except ValueError:
+                # Try YYYYMMDD format (for flow data files)
+                try:
+                    timestamp = datetime.strptime(timestamp_str, "%Y%m%d")
+                except ValueError:
+                    # Skip files that don't match either format
+                    continue
+
+            if timestamp and (latest_timestamp is None or timestamp > latest_timestamp):
+                latest_timestamp = timestamp
+                latest_file = file_path
+
+    return latest_file
+
+@app.get("/api/flow-data/{ticker}")
+async def get_flow_data_endpoint(ticker: str, flow_type: str = "combined"):
+    """Return the latest flow data (institutional and retail) for a ticker.
+
+    Args:
+        ticker: Stock ticker symbol
+        flow_type: Type of flow data ('institutional', 'retail', 'combined', 'changes')
+    """
+    print(f"--- Getting flow data for {ticker} (type: {flow_type}) ---")
+
+    try:
+        ticker = ticker.upper().strip()
+
+        # Find the latest flow data file
+        flow_dir = "data/structured/flow_data"
+
+        # Determine file pattern based on flow_type
+        if flow_type == "institutional":
+            pattern_prefix = f"{ticker}_institutional_flow"
+        elif flow_type == "retail":
+            pattern_prefix = f"{ticker}_retail_flow"
+        else:  # combined or changes
+            pattern_prefix = f"{ticker}_combined_flow"
+
+        flow_file = find_latest_timestamped_file(flow_dir, pattern_prefix)
+
+        if not flow_file:
+            return {
+                "status": "error",
+                "message": f"No flow data found for {ticker}. Please run the data fetching script to generate flow data."
+            }
+
+        print(f"Loading flow data from: {flow_file}")
+
+        # Load flow data
+        with open(flow_file, 'r') as f:
+            flow_data = json.load(f)
+
+        # If requesting changes only, extract just the changes section
+        if flow_type == "changes":
+            if "institutional_changes" in flow_data:
+                response_data = {
+                    "ticker": ticker,
+                    "flow_type": flow_type,
+                    "data": flow_data["institutional_changes"],
+                    "file_date": os.path.basename(flow_file).split('_')[-1].replace('.json', '')
+                }
+            else:
+                return {
+                    "status": "error",
+                    "message": "Institutional changes data not available in this file"
+                }
+        else:
+            response_data = {
+                "ticker": ticker,
+                "flow_type": flow_type,
+                "data": flow_data,
+                "file_date": os.path.basename(flow_file).split('_')[-1].replace('.json', '')
+            }
+
+        return {"status": "success", "data": response_data}
+
+    except Exception as exc:
+        print(f"Error loading flow data: {exc}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": f"Failed to load flow data: {exc}"}
+
+@app.get("/api/latest-news/{ticker}")
+async def get_latest_news_endpoint(ticker: str):
+    """Return the latest news for a ticker from the most recent timestamped JSON file.
+
+    Only uses files with timestamp format: {ticker}_news_YYYYMMDD_HHMMSS.json
+    Automatically selects the file with the latest timestamp.
+    """
+    print(f"--- Getting latest news for {ticker} ---")
+
+    try:
+        ticker = ticker.upper().strip()
+
+        # Find the latest timestamped news file
+        news_dir = "data/unstructured/news"
+        news_file = find_latest_timestamped_file(news_dir, f"{ticker}_news")
+        
+        if not news_file:
+            return {
+                "status": "error",
+                "message": f"No timestamped news files found for {ticker}. Please run news update script to generate timestamped files."
+            }
+
+        print(f"Loading news from: {news_file}")
+
+        # Load news articles
+        with open(news_file, 'r') as f:
+            news_data_raw = json.load(f)
+
+        articles = news_data_raw.get('articles', [])
+        company_name = news_data_raw.get('company_name', ticker)
+
+        if not articles:
+            return {
+                "status": "error",
+                "message": "No recent news found for this ticker."
+            }
+
+        # Convert to frontend format
+        results = []
+        for article in articles:
+            results.append({
+                "title": article.get('title', 'No title'),
+                "link": article.get('link', ''),
+                "snippet": article.get('summary', ''),
+                "published": article.get('publish_time'),
+                "source": article.get('publisher', 'Unknown'),
+                "type": article.get('type', 'article')
+            })
+
+        # Load precomputed AI interpretation from cache
+        safe_ticker = ticker.upper()
+        # Look for static precomputed file first, then timestamped variants
+        static_file = os.path.join(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation.json")
+        if os.path.exists(static_file):
+            interp_file = static_file
+        else:
+            interp_file = find_latest_timestamped_file(NEWS_INTERPRETATION_DIR, f"{safe_ticker}_news_interpretation")
+        if interp_file and os.path.exists(interp_file):
+            with open(interp_file, 'r') as f:
+                interpretation_result = json.load(f)
+            # Map to frontend structure
+            rec = interpretation_result.get('recommendation', '').upper()
+            sentiment = 'neutral'
+            sentiment_score = 50
+            if rec == 'BUY':
+                sentiment = 'bullish'
+                sentiment_score = 75
+            elif rec == 'SELL':
+                sentiment = 'bearish'
+                sentiment_score = 25
+            interpretation = {
+                'ticker': ticker,
+                'sentiment': sentiment,
+                'sentiment_score': sentiment_score,
+                'summary': interpretation_result.get('interpretation', ''),
+                'recommendation': rec or 'N/A',
+                'reasoning': interpretation_result.get('reasoning', ''),
+                'investment_impact': interpretation_result.get('reasoning', ''),
+                'short_term_outlook': interpretation_result.get('reasoning', ''),
+            }
+        else:
+            interpretation = {
+                'ticker': ticker,
+                'sentiment': 'neutral',
+                'sentiment_score': 50,
+                'summary': 'No precomputed AI analysis available.',
+                'recommendation': 'N/A',
+                'reasoning': '',
+                'investment_impact': '',
+                'short_term_outlook': '',
+            }
+
+        data = {
+            "query": ticker,
+            "company_name": company_name,
+            "results": results,
+            "interpretation": interpretation,
+            "total_articles": len(results)
+        }
+
+        # Format as expected by frontend (wrap in answer field as JSON string)
+        news_data = {
+            "answer": json.dumps(data),
+            "status": "success"
+        }
+        return {"status": "success", "data": news_data}
+    except Exception as exc:
+        print(f"Error loading cached news: {exc}")
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": f"Failed to load cached news: {exc}"}
+
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):

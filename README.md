@@ -18,8 +18,9 @@ An AI-powered financial analysis platform that provides comprehensive stock scor
   - Live market condition indicators (VIX, Fear & Greed Index, Put/Call Ratio)
 
 - **AI-Powered News Analysis**:
-  - Automated news fetching and filtering using Google Gemini 2.5 Flash
-  - Intelligent news interpretation with actionable insights
+  - Automated news fetching from the last 24 hours (current date only)
+  - AI filtering for company-specific and factual news using Google Gemini 2.5 Pro
+  - Intelligent deduplication and news interpretation with actionable insights
   - News sentiment analysis integrated into overall scoring
 
 - **Interactive Visualizations**:
@@ -39,7 +40,7 @@ An AI-powered financial analysis platform that provides comprehensive stock scor
 - **FastAPI**: Modern Python web framework
 - **Google Cloud Run**: Serverless deployment platform
 - **BigQuery**: Data warehouse for structured financial data
-- **Google Gemini 2.5 Flash**: LLM for news analysis and chat
+- **Google Gemini 2.5 Pro**: LLM for news analysis and chat
 - **Google ADK**: Agentic framework for intelligent chat assistant
 
 ### Data Sources

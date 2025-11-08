@@ -24,9 +24,19 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import requests
 from datetime import datetime, timedelta
 import logging
+import os
 
 # Logger for this module
 logger = logging.getLogger(__name__)
+
+
+# Cache for valuation metrics
+_valuation_metrics_cache = {}
+_VALUATION_METRICS_CACHE_TTL = 3600  # 1 hour in seconds
+
+# Cache for company scores
+_scores_cache = {}
+_SCORES_CACHE_TTL = 3600  # 1 hour in seconds
 
 
 def safe_json_serialize(obj):
@@ -53,15 +63,55 @@ class ScoreComputationError(Exception):
     """Raised when score computation fails for a ticker."""
 
 
-DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
-# Fix for Docker container deployment
-if not DATA_ROOT.exists():
-    DATA_ROOT = Path("/app/data")
+# ============================================================================
+# ENVIRONMENT-BASED DATA DIRECTORY CONFIGURATION
+# ============================================================================
+
+def get_data_root() -> Path:
+    """
+    Get data directory based on environment.
+
+    Environments:
+    - Local development: ./data/
+    - Production (Cloud Run): /tmp/data/ (cached from Cloud Storage)
+    - Docker (local): /app/data/ (for local Docker testing)
+    """
+    # 1. Check environment variable (highest priority)
+    if data_root_env := os.getenv("DATA_ROOT"):
+        path = Path(data_root_env)
+        logger.info(f"📁 Using DATA_ROOT from environment: {path}")
+        return path
+
+    # 2. Check if running in Cloud Run (production)
+    if os.getenv("K_SERVICE"):  # Cloud Run sets this automatically
+        path = Path("/tmp/data")
+        logger.info(f"☁️ Detected Cloud Run environment, using: {path}")
+        return path
+
+    # 3. Check if running in Docker (local testing)
+    if Path("/app/data").exists():
+        path = Path("/app/data")
+        logger.info(f"🐳 Detected Docker environment, using: {path}")
+        return path
+
+    # 4. Default to local development
+    path = Path(__file__).resolve().parents[2] / "data"
+    logger.info(f"💻 Using local development data directory: {path}")
+    return path
+
+
+# Initialize data directories
+DATA_ROOT = get_data_root()
 FINANCIALS_DIR = DATA_ROOT / "structured" / "financials"
 EARNINGS_DIR = DATA_ROOT / "structured" / "earnings"
 PRICES_DIR = DATA_ROOT / "structured" / "prices"
 REPORTS_DIR = DATA_ROOT / "reports"
 REDDIT_DIR = DATA_ROOT / "unstructured" / "reddit"
+
+logger.info(f"📂 Data directories initialized:")
+logger.info(f"   FINANCIALS_DIR: {FINANCIALS_DIR}")
+logger.info(f"   EARNINGS_DIR: {EARNINGS_DIR}")
+logger.info(f"   PRICES_DIR: {PRICES_DIR}")
 
 CRITICAL_PATH_MAP: Dict[str, float] = {
     "NVDA": 10.0,
@@ -138,10 +188,9 @@ def load_industry_benchmarks() -> Dict[str, Dict[str, float]]:
     Returns:
         Dictionary mapping industry names to benchmark metrics (pe, ps)
     """
-    benchmark_file = Path("data/structured/industry_benchmarks.json")
+    benchmark_dir = Path(DATA_ROOT) / "structured" / "industry_benchmark"
 
-    # Hardcoded fallback benchmarks (will be used if file doesn't exist)
-    # Note: No default fallback - if industry not found, returns None
+    # Hardcoded fallback benchmarks
     fallback_benchmarks = {
         'Semiconductors': {'pe': 28.5, 'ps': 6.2},
         'Software': {'pe': 35.2, 'ps': 8.5},
@@ -160,24 +209,23 @@ def load_industry_benchmarks() -> Dict[str, Dict[str, float]]:
         'Specialty Chemicals': {'pe': 18.5, 'ps': 2.5}
     }
 
-    if not benchmark_file.exists():
-        logger.warning(f"Industry benchmarks file not found at {benchmark_file}, using fallback values")
-        return fallback_benchmarks
+    if benchmark_dir.exists():
+        benchmark_files = sorted(benchmark_dir.glob("industry_benchmark_*.json"), reverse=True)
+        if benchmark_files:
+            benchmark_file = benchmark_files[0]
+            logger.info(f"Loading latest industry benchmarks from {benchmark_file}")
+            try:
+                with open(benchmark_file, 'r') as f:
+                    data = json.load(f)
+                    benchmarks = data.get('benchmarks', {})
+                generated_at = data.get('generated_at', 'unknown')
+                logger.info(f"Loaded industry benchmarks generated at {generated_at}")
+                return benchmarks
+            except Exception as e:
+                logger.error(f"Failed to load industry benchmarks from {benchmark_file}: {e}")
 
-    try:
-        with open(benchmark_file, 'r') as f:
-            data = json.load(f)
-            benchmarks = data.get('benchmarks', {})
-
-        # Log when benchmarks were generated
-        generated_at = data.get('generated_at', 'unknown')
-        logger.info(f"Loaded industry benchmarks generated at {generated_at}")
-
-        return benchmarks
-
-    except Exception as e:
-        logger.error(f"Failed to load industry benchmarks from {benchmark_file}: {e}")
-        return fallback_benchmarks
+    logger.warning(f"Using hardcoded fallback industry benchmarks.")
+    return fallback_benchmarks
 
 
 _reddit_sentiment_cache = {}
@@ -1665,76 +1713,55 @@ def get_score_benchmarks(component_scores: dict, info: dict) -> dict:
 def get_price_history_with_events(ticker: str, news_items: List[dict], period: str = "1m") -> dict:
     """
     Fetch historical price data and annotate with major events.
-    For intraday periods (1d, 1w), fetches live minute/hour data from yfinance.
-    For longer periods, uses local CSV data.
+    Uses yfinance to fetch data for the given period.
     Returns time series data suitable for charting with event markers.
     """
     try:
-        # For intraday data (1d, 1w), fetch from yfinance with appropriate interval
-        if period in ["1d", "1w"]:
-            try:
-                import yfinance as yf
-
-                # Set appropriate interval
-                if period == "1d":
-                    yf_period = "1d"
-                    interval = "5m"  # 5-minute intervals for 1 day
-                else:  # 1w
-                    yf_period = "5d"
-                    interval = "30m"  # 30-minute intervals for 1 week
-
-                stock = yf.Ticker(ticker)
-                hist = stock.history(period=yf_period, interval=interval)
-
-                if hist.empty:
-                    logger.warning(f"No intraday data available for {ticker} period {period}")
-                    return {"price_data": [], "events": [], "error": "No intraday data available"}
-
-                # Strip timezone info
-                if isinstance(hist.index, pd.DatetimeIndex) and hist.index.tz is not None:
-                    hist.index = hist.index.tz_convert('UTC').tz_localize(None)
-
-            except Exception as e:
-                logger.error(f"Error fetching intraday data for {ticker}: {e}")
-                return {"price_data": [], "events": [], "error": str(e)}
+        if period == "1d":
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period=period)
         else:
-            # For longer periods, use local CSV data
-            try:
-                price_df = load_price_history(ticker)
-            except ScoreComputationError:
-                return {"price_data": [], "events": []}
-
-            if price_df.empty:
-                return {"price_data": [], "events": []}
-
-            # Strip timezone info from the index to avoid comparison issues
-            if isinstance(price_df.index, pd.DatetimeIndex) and price_df.index.tz is not None:
-                # Convert to UTC first, then remove timezone info
-                price_df.index = price_df.index.tz_convert('UTC').tz_localize(None)
-
-            # Filter by period - convert period to number of days
-            period_days_map = {
-                "5d": 5, "1m": 30, "1mo": 30, "3m": 90, "3mo": 90,
-                "6m": 180, "6mo": 180, "1y": 365, "2y": 730, "5y": 1825,
-                "10y": 3650, "ytd": None, "max": None
+            price_df = load_price_history(ticker)
+            
+            # Map period string to timedelta
+            period_map = {
+                "5d": timedelta(days=5),
+                "1mo": timedelta(days=30),
+                "3mo": timedelta(days=90),
+                "6mo": timedelta(days=180),
+                "1y": timedelta(days=365),
+                "2y": timedelta(days=730),
+                "5y": timedelta(days=1825),
+                "10y": timedelta(days=3650),
+                "ytd": None, # Special case
+                "max": None # Special case
             }
+            
+            # Handle "1m" as "1mo"
+            if period == "1m":
+                period = "1mo"
 
-            days = period_days_map.get(period, 30)  # Default to 30 days if unknown period
+            if period in period_map:
+                delta = period_map.get(period)
+                if delta:
+                    start_date = datetime.now() - delta
+                    hist = price_df[price_df.index >= start_date]
+                elif period == "ytd":
+                    start_date = datetime(datetime.now().year, 1, 1)
+                    hist = price_df[price_df.index >= start_date]
+                else: # max
+                    hist = price_df
+            else: # default to 1 month
+                start_date = datetime.now() - timedelta(days=30)
+                hist = price_df[price_df.index >= start_date]
 
-            # Use timezone-naive datetime for filtering
-            if days:
-                cutoff_date = datetime.now() - timedelta(days=days)
-                hist = price_df[price_df.index >= cutoff_date]
-            elif period == "ytd":
-                # Year to date
-                current_year = datetime.now().year
-                cutoff_date = datetime(current_year, 1, 1)
-                hist = price_df[price_df.index >= cutoff_date]
-            else:  # max
-                hist = price_df
+        if hist.empty:
+            logger.warning(f"No price data available for {ticker} period {period}")
+            return {"price_data": [], "events": [], "error": "No price data available"}
 
-            if hist.empty:
-                return {"price_data": [], "events": []}
+        # Strip timezone info
+        if isinstance(hist.index, pd.DatetimeIndex) and hist.index.tz is not None:
+            hist.index = hist.index.tz_convert('UTC').tz_localize(None)
         
         # Prepare price data and identify significant movements
         price_data = []
@@ -1908,6 +1935,15 @@ def get_price_history_with_events(ticker: str, news_items: List[dict], period: s
 
 def compute_company_scores(ticker: str) -> Dict[str, object]:
     ticker = ticker.upper()
+
+    now_ts = datetime.now(timezone.utc).timestamp()
+    if ticker in _scores_cache:
+        cached_data, timestamp = _scores_cache[ticker]
+        if now_ts - timestamp < _SCORES_CACHE_TTL:
+            logger.info(f"Cache hit for company scores for {ticker}")
+            return cached_data
+
+    logger.info(f"Cache miss for company scores for {ticker}, fetching new data")
     
     # Load data with error handling
     try:
@@ -2103,7 +2139,9 @@ def compute_company_scores(ticker: str) -> Dict[str, object]:
     }
     
     # Apply safe JSON serialization to handle NaN/infinity values
-    return safe_json_serialize(result)
+    result = safe_json_serialize(result)
+    _scores_cache[ticker] = (result, now_ts)
+    return result
 
 
 def get_valuation_metrics(ticker: str) -> dict:
@@ -2207,7 +2245,8 @@ def get_valuation_metrics(ticker: str) -> dict:
         current_pe = info.get('trailingPE')
         current_ps = info.get('priceToSalesTrailing12Months')
         forward_pe = info.get('forwardPE')
-        
+        forward_ps = info.get('forwardPS')
+
         return {
             'ticker': ticker,
             'sector': sector,
@@ -2216,6 +2255,7 @@ def get_valuation_metrics(ticker: str) -> dict:
                 'pe_ratio': round(current_pe, 2) if current_pe else None,
                 'ps_ratio': round(current_ps, 2) if current_ps else None,
                 'forward_pe': round(forward_pe, 2) if forward_pe else None,
+                'forward_ps': round(forward_ps, 2) if forward_ps else None,
                 'benchmark_pe': benchmark['pe'],
                 'benchmark_ps': benchmark['ps']
             },
