@@ -14,8 +14,15 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
 import random
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
+    plt = None
+    mdates = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
