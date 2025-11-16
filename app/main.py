@@ -33,6 +33,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import FileResponse
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+from fetch_data import token_usage as token_usage_module
+from fetch_data.token_usage import fetch_and_save_token_usage
+
 try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
@@ -121,17 +124,18 @@ metadata.create_all(engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+DATA_ROOT = Path(os.getenv("DATA_ROOT", str(Path(__file__).resolve().parents[1] / "data")))
 STRUCTURED_DIR = DATA_ROOT / "structured"
 SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
 FLOW_DATA_DIR = STRUCTURED_DIR / "flow_data"
+TOKEN_USAGE_DIR = DATA_ROOT / "unstructured" / "token_usage"
 RUNTIME_DIR = DATA_ROOT / "runtime"
 PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
 REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
 COMPANY_STATIC_DIR = DATA_ROOT / "company"
 COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
 
-for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR, FLOW_DATA_DIR]:
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR, FLOW_DATA_DIR, TOKEN_USAGE_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
@@ -147,6 +151,9 @@ if GENAI_AVAILABLE and GEMINI_API_KEY:
         logger.warning("Gemini configuration failed: %s", exc)
 else:
     GENAI_AVAILABLE = False
+
+token_usage_module.TOKEN_USAGE_DIR = str(TOKEN_USAGE_DIR)
+TOKEN_USAGE_LOCK = asyncio.Lock()
 
 SUPPORTED_TICKERS_CACHE: List[str] = []
 SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
@@ -1623,6 +1630,32 @@ def _generate_flow_summary(ticker: str, flow_payload: Dict[str, Any]) -> Dict[st
     return fallback
 
 
+def _latest_token_usage_files():
+    token_files = sorted(TOKEN_USAGE_DIR.glob("token_usage_*.json"))
+    plot_files = sorted(TOKEN_USAGE_DIR.glob("token_usage_plot_*.png"))
+    return (token_files[-1] if token_files else None, plot_files[-1] if plot_files else None)
+
+
+async def _ensure_token_usage_assets():
+    token_file, plot_file = _latest_token_usage_files()
+    if token_file and plot_file:
+        return token_file, plot_file
+
+    async with TOKEN_USAGE_LOCK:
+        token_file, plot_file = _latest_token_usage_files()
+        if token_file and plot_file:
+            return token_file, plot_file
+
+        loop = asyncio.get_event_loop()
+        logger.info("No token usage data found. Generating snapshot from OpenRouter rankings...")
+        await loop.run_in_executor(None, fetch_and_save_token_usage, 365)
+        token_file, plot_file = _latest_token_usage_files()
+        if not token_file or not plot_file:
+            raise RuntimeError("Token usage generation failed to produce artifacts.")
+        logger.info("Token usage snapshot generated: %s", token_file.name)
+        return token_file, plot_file
+
+
 @app.get("/api/flow-data/{ticker}")
 async def get_flow_data(ticker: str, flow_type: str = "combined"):
     """Return institutional and retail flow data for a ticker."""
@@ -1642,15 +1675,8 @@ async def get_flow_data(ticker: str, flow_type: str = "combined"):
 async def get_token_usage():
     """Return the latest token usage data."""
     try:
-        token_usage_dir = DATA_ROOT / "unstructured" / "token_usage"
-
-        # Find the latest token usage file
-        token_files = sorted(token_usage_dir.glob("token_usage_*.json"))
-        if not token_files:
-            return {"status": "error", "message": "No token usage data found"}
-
-        # Read the latest file
-        with token_files[-1].open("r") as f:
+        token_file, _ = await _ensure_token_usage_assets()
+        with token_file.open("r") as f:
             token_data = json.load(f)
 
         return {
@@ -1668,19 +1694,11 @@ async def get_token_usage_plot():
     try:
         from fastapi.responses import FileResponse
 
-        token_usage_dir = DATA_ROOT / "unstructured" / "token_usage"
-
-        # Find the latest plot file
-        plot_files = sorted(token_usage_dir.glob("token_usage_plot_*.png"))
-        if not plot_files:
-            # If no plot exists, return a placeholder message
-            return {"status": "error", "message": "No token usage plot found"}
-
-        # Return the latest plot image
+        _, plot_file = await _ensure_token_usage_assets()
         return FileResponse(
-            plot_files[-1],
+            plot_file,
             media_type="image/png",
-            headers={"Cache-Control": "public, max-age=300"}  # Cache for 5 minutes
+            headers={"Cache-Control": "public, max-age=300"}
         )
     except Exception as exc:
         logger.error(f"Error loading token usage plot: {exc}")

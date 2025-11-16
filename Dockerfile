@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
+COPY fetch_data ./fetch_data
 COPY target_tickers.py ./
 COPY fetch_data.py ./
 COPY storage_helper.py ./
