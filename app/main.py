@@ -129,6 +129,7 @@ STRUCTURED_DIR = DATA_ROOT / "structured"
 SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
 FLOW_DATA_DIR = STRUCTURED_DIR / "flow_data"
 TOKEN_USAGE_DIR = DATA_ROOT / "unstructured" / "token_usage"
+LEGACY_TOKEN_USAGE_DIR = Path(__file__).resolve().parents[1] / "data" / "unstructured" / "token_usage"
 RUNTIME_DIR = DATA_ROOT / "runtime"
 PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
 REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
@@ -1630,6 +1631,26 @@ def _generate_flow_summary(ticker: str, flow_payload: Dict[str, Any]) -> Dict[st
     return fallback
 
 
+def _sync_token_usage_outputs():
+    """Move any legacy-generated files under /app/data into DATA_ROOT."""
+    try:
+        if LEGACY_TOKEN_USAGE_DIR.resolve() == TOKEN_USAGE_DIR.resolve():
+            return
+    except FileNotFoundError:
+        return
+
+    if not LEGACY_TOKEN_USAGE_DIR.exists():
+        return
+
+    for artifact in LEGACY_TOKEN_USAGE_DIR.glob("token_usage_*"):
+        target = TOKEN_USAGE_DIR / artifact.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            artifact.replace(target)
+        except Exception as exc:  # pragma: no cover - best effort
+            logger.warning("Unable to move %s to %s: %s", artifact, target, exc)
+
+
 def _latest_token_usage_files():
     token_files = sorted(TOKEN_USAGE_DIR.glob("token_usage_*.json"))
     plot_files = sorted(TOKEN_USAGE_DIR.glob("token_usage_plot_*.png"))
@@ -1649,6 +1670,7 @@ async def _ensure_token_usage_assets():
         loop = asyncio.get_event_loop()
         logger.info("No token usage data found. Generating snapshot from OpenRouter rankings...")
         await loop.run_in_executor(None, fetch_and_save_token_usage, 365)
+        _sync_token_usage_outputs()
         token_file, plot_file = _latest_token_usage_files()
         if not token_file or not plot_file:
             raise RuntimeError("Token usage generation failed to produce artifacts.")
