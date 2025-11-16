@@ -30,6 +30,5 @@ ENV PORT=8080
 ENV DATA_ROOT=/tmp/data
 ENV PYTHONUNBUFFERED=1
 
-# Run the Flask application (for Cloud Run with /fetch endpoint)
-# For local FastAPI development, use: uvicorn app.main:app --reload
-CMD ["python", "main.py"]
+# Run the FastAPI application via Uvicorn (serves UI + APIs)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
