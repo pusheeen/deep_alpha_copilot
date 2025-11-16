@@ -194,48 +194,62 @@
 
             <!-- Comparison Results -->
             <div id="comparison-results" class="hidden">
-                <!-- Overall Scores Comparison -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Overall Scores</h3>
-                    <div id="overall-scores-chart" class="bg-slate-50 rounded-xl p-4">
-                        <canvas id="overallChart" width="400" height="200"></canvas>
+                <div id="comparison-loading" class="hidden text-center py-10">
+                    <div class="flex flex-col items-center space-y-3">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <p class="text-slate-600">Loading comparison data...</p>
                     </div>
                 </div>
-
-                <!-- Individual Scores Comparison -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
-                    <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
-                        <canvas id="individualChart" width="400" height="300"></canvas>
+                <div id="comparison-note" class="hidden mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm"></div>
+                <div id="comparison-content">
+                    <!-- Overall Scores Comparison -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Overall Scores</h3>
+                        <div id="overall-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                            <canvas id="overallChart" width="400" height="200"></canvas>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Price Comparison -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Price Performance Comparison</h3>
-                    <div class="flex items-center gap-4 mb-4">
-                        <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="1d">1 Day</option>
-                            <option value="5d">5 Days</option>
-                            <option value="1w">1 Week</option>
-                            <option value="1mo">1 Month</option>
-                            <option value="3mo">3 Months</option>
-                            <option value="6mo">6 Months</option>
-                            <option value="ytd">Year to Date</option>
-                            <option value="1y">1 Year</option>
-                            <option value="5y">5 Years</option>
-                            <option value="max" selected>Max</option>
-                        </select>
-                        <button id="refresh-price-comparison" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
-                            Refresh
-                        </button>
+                    <!-- Individual Scores Comparison -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Individual Score Breakdown</h3>
+                        <div id="individual-scores-chart" class="bg-slate-50 rounded-xl p-4">
+                            <canvas id="individualChart" width="400" height="300"></canvas>
+                        </div>
                     </div>
-                    <div id="price-comparison-chart" class="bg-slate-50 rounded-xl p-4">
-                        <canvas id="priceComparisonChart" width="400" height="250"></canvas>
+
+                    <!-- Price Comparison -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-4">Price Performance Comparison</h3>
+                        <div class="flex items-center gap-4 mb-4">
+                            <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="1d">1 Day</option>
+                                <option value="5d">5 Days</option>
+                                <option value="1w">1 Week</option>
+                                <option value="1mo">1 Month</option>
+                                <option value="3mo">3 Months</option>
+                                <option value="6mo">6 Months</option>
+                                <option value="ytd">Year to Date</option>
+                                <option value="1y">1 Year</option>
+                                <option value="5y">5 Years</option>
+                                <option value="max" selected>Max</option>
+                            </select>
+                            <button id="refresh-price-comparison" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                                Refresh
+                            </button>
+                        </div>
+                        <div id="price-comparison-chart" class="bg-slate-50 rounded-xl p-4">
+                            <canvas id="priceComparisonChart" width="400" height="250"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <div id="coming-soon-banner" class="hidden bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-2xl mb-4">
+            <strong class="font-semibold">Preview notice:</strong>
+            Analysis for <span id="coming-soon-ticker" class="font-mono font-semibold"></span> is coming soon. Data will continue to fill in as we finalize coverage.
+        </div>
 
         <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
             <p class="text-sm text-slate-500">Loading scorecard...</p>
@@ -256,18 +270,30 @@
 
         <!-- Flow Data Section (Standalone) -->
         <section id="standalone-flow-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center justify-between">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                     <span class="mr-2">💹</span> Institutional & Retail Flow Data
                     <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-blue-600 hover:bg-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
                         ?
                     </button>
                 </div>
-            </h3>
-            <div id="standalone-flow-content" class="text-slate-600 text-sm">
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-                    <span class="ml-3 text-slate-500">Loading flow data...</span>
+                <button id="flow-details-toggle" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                    Expand full flow view
+                </button>
+            </div>
+            <div id="flow-summary-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p id="flow-summary-headline" class="text-sm font-semibold text-slate-800">Generating flow summary...</p>
+                <p id="flow-summary-body" class="text-sm text-slate-600 mt-2">
+                    Please wait while we interpret institutional and retail flow signals.
+                </p>
+                <ul id="flow-summary-highlights" class="mt-3 space-y-1 text-sm text-slate-600 list-disc list-inside"></ul>
+            </div>
+            <div id="flow-details-container" class="hidden mt-4">
+                <div id="standalone-flow-content" class="text-slate-600 text-sm">
+                    <div class="flex items-center justify-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                        <span class="ml-3 text-slate-500">Loading flow data...</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -420,7 +446,25 @@
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
         const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
+        const previewTickerSet = new Set(supportedTickers);
+        const comingSoonBanner = document.getElementById('coming-soon-banner');
+        const comingSoonTicker = document.getElementById('coming-soon-ticker');
+        const flowSummaryHeadline = document.getElementById('flow-summary-headline');
+        const flowSummaryBody = document.getElementById('flow-summary-body');
+        const flowSummaryHighlights = document.getElementById('flow-summary-highlights');
+        const flowDetailsContainer = document.getElementById('flow-details-container');
+        const flowDetailsToggle = document.getElementById('flow-details-toggle');
+        const comparisonLoading = document.getElementById('comparison-loading');
+        const comparisonContent = document.getElementById('comparison-content');
+        const comparisonNote = document.getElementById('comparison-note');
         
+        if (flowDetailsToggle && flowDetailsContainer) {
+            flowDetailsToggle.addEventListener('click', () => {
+                const isHidden = flowDetailsContainer.classList.toggle('hidden');
+                flowDetailsToggle.textContent = isHidden ? 'Expand full flow view' : 'Hide detailed flow data';
+            });
+        }
+
         // Company metadata for enhanced display
         const companyMetadata = {
             "NVDA": { name: "NVIDIA Corp", industry: "Semiconductors" },
@@ -2220,18 +2264,29 @@
 
 
         async function loadScoreboard(ticker) {
+            if (!ticker) return false;
+
+            const isPreview = previewTickerSet.has(ticker);
+            if (comingSoonBanner && comingSoonTicker) {
+                if (isPreview) {
+                    comingSoonTicker.textContent = ticker;
+                    comingSoonBanner.classList.remove('hidden');
+                } else {
+                    comingSoonBanner.classList.add('hidden');
+                }
+            }
+
             scoreboard.innerHTML = '<p class="text-sm text-slate-500">Loading scorecard...</p>';
+            let loadSucceeded = false;
             try {
                 const response = await fetch(scoreApiUrl(ticker));
                 const data = await response.json();
                 if (data.status === 'success') {
                     renderScoreboard(data.data);
-                    // Also render the price chart for single stock view
                     const activePeriod = document.querySelector('.period-btn.active')?.dataset.period || '1m';
                     refreshPriceChartData(ticker, activePeriod);
-                    // Load valuation metrics
                     loadValuationMetrics(ticker);
-                    // News is shown in standalone section at top of page
+                    loadSucceeded = true;
                 } else {
                     scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
@@ -2239,22 +2294,66 @@
                 console.error('Error fetching scores:', error);
                 scoreboard.innerHTML = '<p class="text-sm text-red-600">Failed to load scorecard. Please try again later.</p>';
             }
+
+            if (isPreview) {
+                scoreboard.insertAdjacentHTML(
+                    'afterbegin',
+                    `<div class="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm">
+                        ${ticker} is part of our upcoming coverage. Data may be limited while we finalize the model.
+                    </div>`
+                );
+            }
+
+            return loadSucceeded;
         }
 
-        scoreForm.addEventListener('submit', (event) => {
+        function showComingSoonPlaceholders(ticker) {
+            const placeholder = `<p class="text-sm text-slate-500">Analysis for ${ticker} is coming soon. Please check back for the full breakdown.</p>`;
+            const newsContainer = document.getElementById('standalone-news-content');
+            if (newsContainer) newsContainer.innerHTML = placeholder;
+            const flowContainer = document.getElementById('standalone-flow-content');
+            if (flowContainer) flowContainer.innerHTML = placeholder;
+            if (flowSummaryHeadline) {
+                flowSummaryHeadline.textContent = `${ticker} flow coverage is on the way`;
+            }
+            if (flowSummaryBody) {
+                flowSummaryBody.textContent = 'We will publish institutional and retail flow intelligence once data collection is complete.';
+            }
+            if (flowSummaryHighlights) {
+                flowSummaryHighlights.innerHTML = '';
+            }
+            if (flowDetailsContainer) {
+                flowDetailsContainer.classList.add('hidden');
+            }
+        }
+
+        async function handleTickerSelection(ticker) {
+            if (!ticker) return;
+            const loaded = await loadScoreboard(ticker);
+            if (loaded) {
+                loadStandaloneNews(ticker);
+                loadStandaloneFlowData(ticker);
+            } else if (previewTickerSet.has(ticker)) {
+                showComingSoonPlaceholders(ticker);
+            } else {
+                const placeholder = '<p class="text-sm text-red-600">Unable to load this ticker right now.</p>';
+                const newsContainer = document.getElementById('standalone-news-content');
+                if (newsContainer) newsContainer.innerHTML = placeholder;
+                const flowContainer = document.getElementById('standalone-flow-content');
+                if (flowContainer) flowContainer.innerHTML = placeholder;
+            }
+        }
+
+        scoreForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const ticker = scoreTickerInput.value.trim().toUpperCase();
             if (!ticker) return;
 
-            // Hide comparison section and show single stock sections
             document.getElementById('comparison-section').classList.add('hidden');
             document.getElementById('scoreboard').classList.remove('hidden');
             document.getElementById('score-table').classList.remove('hidden');
 
-            loadScoreboard(ticker);
-            // Reload standalone sections with new ticker
-            loadStandaloneNews(ticker);
-            loadStandaloneFlowData(ticker);
+            await handleTickerSelection(ticker);
         });
 
         async function refreshCoverageTable() {
@@ -2334,11 +2433,11 @@
         });
         
         // Ticker card click handlers
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', async (e) => {
             if (e.target.closest('.ticker-card')) {
                 const ticker = e.target.closest('.ticker-card').dataset.ticker;
                 scoreTickerInput.value = ticker;
-                loadScoreboard(ticker);
+                await handleTickerSelection(ticker);
             }
         });
 
@@ -2379,7 +2478,12 @@
             const resultsDiv = document.getElementById('comparison-results');
             if (resultsDiv) {
                 resultsDiv.classList.add('hidden');
-                resultsDiv.innerHTML = '';
+            }
+            if (comparisonLoading) comparisonLoading.classList.add('hidden');
+            if (comparisonContent) comparisonContent.classList.add('hidden');
+            if (comparisonNote) {
+                comparisonNote.classList.add('hidden');
+                comparisonNote.textContent = '';
             }
         });
 
@@ -2410,16 +2514,12 @@
         async function performComparison(tickers) {
             const resultsDiv = document.getElementById('comparison-results');
             resultsDiv.classList.remove('hidden');
-            
-            // Show loading state
-            resultsDiv.innerHTML = `
-                <div class="flex items-center justify-center py-12">
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p class="text-slate-600">Loading comparison data...</p>
-                    </div>
-                </div>
-            `;
+            if (comparisonLoading) comparisonLoading.classList.remove('hidden');
+            if (comparisonContent) comparisonContent.classList.add('hidden');
+            if (comparisonNote) {
+                comparisonNote.classList.add('hidden');
+                comparisonNote.textContent = '';
+            }
 
             try {
                 // Fetch data for all tickers with proper error handling
@@ -2452,33 +2552,41 @@
                 // Check if we have any successful data
                 const successfulTickers = Object.keys(comparisonData);
                 if (successfulTickers.length === 0) {
-                    resultsDiv.innerHTML = `
-                        <div class="text-center py-12">
-                            <p class="text-red-600">Failed to load data for any of the selected stocks. Please try again.</p>
-                        </div>
-                    `;
+                    if (comparisonLoading) comparisonLoading.classList.add('hidden');
+                    comparisonContent.classList.add('hidden');
+                    if (comparisonNote) {
+                        comparisonNote.textContent = 'Comparison data is unavailable for the selected tickers. Please try a different set.';
+                        comparisonNote.classList.remove('hidden');
+                    }
                     return;
                 }
 
-                // Render comparison charts with successful data
+                if (comparisonLoading) comparisonLoading.classList.add('hidden');
+                comparisonContent.classList.remove('hidden');
+
                 renderOverallScoresChart(successfulTickers);
                 renderIndividualScoresChart(successfulTickers);
                 renderPriceComparisonChart(successfulTickers);
 
-                // Show success message if some tickers failed
                 if (successfulTickers.length < tickers.length) {
                     const failedTickers = tickers.filter(t => !successfulTickers.includes(t));
                     console.warn(`Failed to load data for: ${failedTickers.join(', ')}`);
+                    if (comparisonNote) {
+                        comparisonNote.textContent = `Unable to load data for: ${failedTickers.join(', ')}.`;
+                        comparisonNote.classList.remove('hidden');
+                    }
+                } else if (comparisonNote) {
+                    comparisonNote.classList.add('hidden');
                 }
 
             } catch (error) {
                 console.error('Error performing comparison:', error);
-                resultsDiv.innerHTML = `
-                    <div class="text-center py-12">
-                        <p class="text-red-600">Failed to load comparison data. Please try again.</p>
-                        <p class="text-sm text-slate-500 mt-2">Error: ${error.message}</p>
-                    </div>
-                `;
+                if (comparisonLoading) comparisonLoading.classList.add('hidden');
+                comparisonContent.classList.add('hidden');
+                if (comparisonNote) {
+                    comparisonNote.textContent = `Failed to load comparison data: ${error.message}`;
+                    comparisonNote.classList.remove('hidden');
+                }
             }
         }
 
@@ -2923,17 +3031,69 @@
             const container = document.getElementById('standalone-flow-content');
             if (!container) return;
 
-            try {
-                const response = await fetch(`/api/flow-data/${ticker}?flow_type=combined`);
-                const result = await response.json();
+            const wasExpanded = flowDetailsContainer ? !flowDetailsContainer.classList.contains('hidden') : false;
+            if (flowSummaryHeadline) {
+                flowSummaryHeadline.textContent = 'Generating flow summary...';
+            }
+            if (flowSummaryBody) {
+                flowSummaryBody.textContent = 'We are preparing a quick take on institutional and retail signals.';
+            }
+            if (flowSummaryHighlights) {
+                flowSummaryHighlights.innerHTML = '';
+            }
+            if (flowDetailsContainer) {
+                flowDetailsContainer.classList.add('hidden');
+            }
+            if (flowDetailsToggle) {
+                flowDetailsToggle.textContent = 'Expand full flow view';
+            }
 
-                if (result.status === 'success' && result.data) {
-                    const flowData = result.data.data;
-                    const fileDate = result.data.file_date || 'Latest';
+            container.innerHTML = `
+                <div class="flex items-center justify-center py-8">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
+                    <span class="ml-3 text-slate-500">Loading flow data...</span>
+                </div>
+            `;
+
+            try {
+                const [detailResponse, summaryResponse] = await Promise.all([
+                    fetch(`/api/flow-data/${ticker}?flow_type=combined`),
+                    fetch(`/api/flow-summary/${ticker}`)
+                ]);
+                const [detailResult, summaryResult] = await Promise.all([detailResponse.json(), summaryResponse.json()]);
+
+                if (summaryResult.status === 'success' && summaryResult.summary) {
+                    const summary = summaryResult.summary;
+                    if (flowSummaryHeadline) {
+                        flowSummaryHeadline.textContent = summary.headline || `${ticker} flow update`;
+                    }
+                    if (flowSummaryBody) {
+                        flowSummaryBody.textContent = summary.summary || 'Flow summary unavailable.';
+                    }
+                    if (flowSummaryHighlights) {
+                        const callouts = Array.isArray(summary.callouts) ? summary.callouts : [];
+                        flowSummaryHighlights.innerHTML = callouts.length
+                            ? callouts.map(point => `<li>${escapeHtml(point)}</li>`).join('')
+                            : '';
+                    }
+                } else {
+                    if (flowSummaryHeadline) {
+                        flowSummaryHeadline.textContent = `${ticker} flow snapshot`;
+                    }
+                    if (flowSummaryBody) {
+                        flowSummaryBody.textContent = 'Expand the section below to inspect the detailed flow data.';
+                    }
+                    if (flowSummaryHighlights) {
+                        flowSummaryHighlights.innerHTML = '';
+                    }
+                }
+
+                if (detailResult.status === 'success' && detailResult.data) {
+                    const flowData = detailResult.data.data;
+                    const fileDate = detailResult.data.file_date || 'Latest';
 
                     let html = '';
 
-                    // Institutional Summary (Overview)
                     if (flowData.institutional) {
                         const inst = flowData.institutional;
                         html += `
@@ -2973,6 +3133,9 @@
                     if (flowData.institutional_changes && flowData.institutional_changes.has_data) {
                         const changes = flowData.institutional_changes;
                         const isPositive = changes.net_change_pct >= 0;
+                        const holderChanges = Array.isArray(changes.holder_changes) ? changes.holder_changes : [];
+                        const buyers = holderChanges.filter(change => (change.action || '').toLowerCase() === 'bought');
+                        const sellers = holderChanges.filter(change => (change.action || '').toLowerCase() === 'sold');
 
                         html += `
                             <div class="mb-6">
@@ -3214,15 +3377,26 @@
                     }
 
                     container.innerHTML = html;
-
-                    // Flow charts now rendered as time series plot images via /api/flow-plot/{ticker}
-                    // No need to call renderRetailFlowCharts - the image is loaded directly in the HTML
+                    if (flowDetailsContainer) {
+                        if (wasExpanded) {
+                            flowDetailsContainer.classList.remove('hidden');
+                            if (flowDetailsToggle) {
+                                flowDetailsToggle.textContent = 'Hide detailed flow data';
+                            }
+                        }
+                    }
                 } else {
                     container.innerHTML = '<p class="text-sm text-slate-500">No flow data available for this ticker.</p>';
                 }
             } catch (error) {
                 console.error('Error loading standalone flow data:', error);
                 container.innerHTML = '<p class="text-sm text-red-600">Error loading flow data.</p>';
+                if (flowSummaryHeadline) {
+                    flowSummaryHeadline.textContent = 'Flow summary unavailable';
+                }
+                if (flowSummaryBody) {
+                    flowSummaryBody.textContent = 'We could not retrieve the latest flow files.';
+                }
             }
         }
 
@@ -3374,13 +3548,13 @@
         // Refresh market conditions every 5 minutes
         setInterval(loadMarketConditions, 300000);
 
-        loadScoreboard(scoreTickerInput.value.trim().toUpperCase());
         refreshCoverageTable();
 
-        // Load standalone sections
-        loadStandaloneNews(scoreTickerInput.value.trim().toUpperCase());
-        loadStandaloneFlowData(scoreTickerInput.value.trim().toUpperCase());
-        loadStandaloneTokenUsage();
+        (async () => {
+            const initialTicker = scoreTickerInput.value.trim().toUpperCase();
+            await handleTickerSelection(initialTicker);
+            loadStandaloneTokenUsage();
+        })();
     </script>
 </body>
 </html>

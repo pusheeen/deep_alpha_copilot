@@ -11,6 +11,7 @@ import math
 import os
 import re
 import ssl
+from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
@@ -31,6 +32,13 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import FileResponse
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    GENAI_AVAILABLE = False
 
 # --- ADK Imports (Optional) ---
 try:
@@ -116,16 +124,29 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
 STRUCTURED_DIR = DATA_ROOT / "structured"
 SECTOR_METRICS_DIR = STRUCTURED_DIR / "sector_metrics"
+FLOW_DATA_DIR = STRUCTURED_DIR / "flow_data"
 RUNTIME_DIR = DATA_ROOT / "runtime"
 PRICE_SNAPSHOT_DIR = RUNTIME_DIR / "price_snapshots"
 REALTIME_NEWS_DIR = RUNTIME_DIR / "news"
 COMPANY_STATIC_DIR = DATA_ROOT / "company"
 COMPANY_RUNTIME_DIR = RUNTIME_DIR / "company"
 
-for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR]:
+for directory in [RUNTIME_DIR, PRICE_SNAPSHOT_DIR, REALTIME_NEWS_DIR, COMPANY_STATIC_DIR, COMPANY_RUNTIME_DIR, FLOW_DATA_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+FLOW_SUMMARY_MODEL = os.getenv("FLOW_SUMMARY_MODEL", "gemini-1.5-flash")
+
+if GENAI_AVAILABLE and GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+    except Exception as exc:  # pragma: no cover - configuration edge cases
+        GENAI_AVAILABLE = False
+        logger.warning("Gemini configuration failed: %s", exc)
+else:
+    GENAI_AVAILABLE = False
 
 SUPPORTED_TICKERS_CACHE: List[str] = []
 SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
@@ -667,6 +688,29 @@ def _article_identity(link: Optional[str], title: Optional[str]) -> Optional[str
     return _normalize_link(link) or _normalize_title(title)
 
 
+def _article_matches_company(article: Dict[str, Any], ticker: str, company_name: Optional[str]) -> bool:
+    text = " ".join(
+        filter(
+            None,
+            [
+                article.get("title"),
+                article.get("summary"),
+                article.get("snippet"),
+                article.get("description"),
+            ],
+        )
+    ).lower()
+    if not text.strip():
+        return False
+    ticker_token = re.escape(ticker.lower())
+    if re.search(rf"\b{ticker_token}\b", text):
+        return True
+    name_token = (company_name or "").strip().lower()
+    if name_token and name_token in text:
+        return True
+    return False
+
+
 def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
     if not value:
         return None
@@ -881,7 +925,15 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
     if not articles:
         return None
 
+    metadata = load_company_metadata()
+    company_profile = metadata.get(ticker.upper(), {})
+    company_name = company_profile.get("name", ticker)
+
     articles = _sort_articles_descending(articles)
+    relevant_articles = [a for a in articles if _article_matches_company(a, ticker, company_name)]
+    if relevant_articles:
+        articles = relevant_articles
+
     avg_score = sum(a["sentiment"]["score"] for a in articles) / len(articles)
     if avg_score >= 0.2:
         sentiment = "Positive"
@@ -898,6 +950,34 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
         prefix = {"Positive": "✅", "Negative": "⚠️", "Neutral": "ℹ️"}.get(entry["sentiment"]["label"], "ℹ️")
         key_points.append(f"{prefix} {entry['title']}")
 
+    origin_counter = Counter(a.get("origin", "cached") for a in articles)
+    origin_breakdown = []
+    if origin_counter.get("live"):
+        origin_breakdown.append(f"{origin_counter['live']} live")
+    if origin_counter.get("cached"):
+        origin_breakdown.append(f"{origin_counter['cached']} cached")
+
+    headlines = [
+        {
+            "title": art.get("title"),
+            "source": art.get("source"),
+            "link": art.get("link"),
+            "origin": art.get("origin", "cached"),
+            "published": art.get("published"),
+            "snippet": art.get("snippet"),
+        }
+        for art in articles[:3]
+    ]
+
+    extended_commentary = (
+        f"Snapshot built from {len(articles)} cached article(s). "
+        + " ".join(
+            f"{headline.get('source', 'Source')} on \"{headline.get('title')}\""
+            for headline in headlines[:2]
+            if headline.get("title")
+        )
+    ).strip()
+
     payload = {
         "ticker": ticker.upper(),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -909,6 +989,9 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
             "key_points": key_points,
             "rationale": "Derived from cached news files.",
             "conclusion": "Supplement with live data for the freshest read.",
+            "headlines": headlines,
+            "source_note": "Derived from cached news files",
+            "extended_commentary": extended_commentary,
         },
         "articles": articles,
     }
@@ -918,6 +1001,9 @@ def _load_offline_news_summary(ticker: str) -> Optional[dict]:
 
 def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 8) -> dict:
     ticker = ticker.upper()
+    metadata = load_company_metadata()
+    company_profile = metadata.get(ticker, {})
+    company_name = company_profile.get("name", ticker)
     offline_articles = _load_offline_articles(ticker)
     offline_lookup = _build_article_lookup(offline_articles) if offline_articles else {"by_link": {}, "by_title": {}}
 
@@ -998,6 +1084,10 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
 
         articles.append(article)
 
+    relevant_articles = [a for a in articles if _article_matches_company(a, ticker, company_name)]
+    if relevant_articles:
+        articles = relevant_articles
+
     if window_hours and articles:
         filtered: List[dict] = []
         for art in articles:
@@ -1075,6 +1165,46 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
     else:
         rationale_parts.append("Live headlines sourced within the last 72 hours.")
 
+    origin_counter = Counter(a.get("origin", "live") for a in articles)
+    origin_breakdown = []
+    if origin_counter.get("live"):
+        origin_breakdown.append(f"{origin_counter['live']} live")
+    if origin_counter.get("cached"):
+        origin_breakdown.append(f"{origin_counter['cached']} cached")
+    source_note = (
+        f"Derived from {len(articles)} ticker-specific headline(s)"
+        + (f" ({', '.join(origin_breakdown)})" if origin_breakdown else "")
+    )
+
+    headlines = [
+        {
+            "title": art.get("title"),
+            "source": art.get("source"),
+            "link": art.get("link"),
+            "origin": art.get("origin", "live"),
+            "published": art.get("published"),
+            "snippet": art.get("snippet"),
+        }
+        for art in articles[:3]
+    ]
+    key_points = [
+        f"{headline.get('source', 'Source')}: {headline.get('title')}"
+        for headline in headlines
+        if headline.get("title")
+    ]
+
+    drivers = [
+        f"{headline.get('source', 'Source')} on \"{headline.get('title')}\""
+        for headline in headlines[:2]
+        if headline.get("title")
+    ]
+    extended_commentary = (
+        f"Snapshot built from {len(articles)} {ticker} article(s) ({', '.join(origin_breakdown) or 'mixed sources'}). "
+        f"{' • '.join(drivers)}"
+        if articles
+        else "No recent coverage matched the ticker filters."
+    )
+
     payload = {
         "ticker": ticker,
         "fetched_at": datetime.now(timezone.utc).isoformat(),
@@ -1084,6 +1214,7 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
             "confidence": "Medium" if len(articles) >= 3 else "Low",
             "headline": f"Latest coverage skews {overall_sentiment.lower()}",
             "key_points": key_points,
+            "headlines": headlines,
             "rationale": " ".join(rationale_parts),
             "conclusion": (
                 "Momentum favors accumulation on strength."
@@ -1092,6 +1223,8 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
                 if rating == "Hold"
                 else "Consider trimming positions or tightening stops."
             ),
+            "source_note": source_note,
+            "extended_commentary": extended_commentary,
         },
         "articles": articles,
     }
@@ -1376,42 +1509,130 @@ async def get_latest_news(ticker: str):
         return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
 
 
+def _load_flow_snapshot(ticker: str, flow_type: str = "combined") -> Dict[str, Any]:
+    """Load the most recent flow file for a ticker and flow type."""
+    ticker = ticker.upper()
+    if flow_type == "combined":
+        pattern = f"{ticker}_combined_flow_*.json"
+    elif flow_type == "institutional":
+        pattern = f"{ticker}_institutional_flow_*.json"
+    elif flow_type == "retail":
+        pattern = f"{ticker}_retail_flow_*.json"
+    else:
+        raise ValueError(f"Invalid flow_type: {flow_type}")
+
+    flow_files = sorted(FLOW_DATA_DIR.glob(pattern))
+    if not flow_files:
+        raise FileNotFoundError(f"No flow data found for {ticker}")
+
+    latest_file = flow_files[-1]
+    with latest_file.open("r") as fh:
+        payload = json.load(fh)
+
+    file_date = latest_file.stem.split("_")[-1]
+    return {
+        "data": payload,
+        "file_date": file_date,
+        "file_name": latest_file.name,
+    }
+
+
+def _generate_flow_summary(ticker: str, flow_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Use Gemini (if available) to summarize flow data."""
+    fallback = {
+        "headline": f"{ticker} flow update",
+        "summary": "Detailed flow summary is unavailable. Please expand to review the underlying data.",
+        "callouts": [],
+    }
+    if not flow_payload:
+        return fallback
+
+    institutional = flow_payload.get("institutional", {}) or {}
+    retail = flow_payload.get("retail", {}) or {}
+    changes = flow_payload.get("institutional_changes", {}) or {}
+    retail_metrics = retail.get("metrics", {}) or {}
+    retail_interpretation = retail.get("interpretation", {}) or {}
+
+    summary_context = {
+        "ticker": ticker,
+        "institutional": {
+            "ownership_pct": institutional.get("institutional_ownership_pct"),
+            "top_holder": (institutional.get("top_10_holders") or [{}])[0:3],
+            "total_value": institutional.get("total_institutional_value"),
+        },
+        "changes": {
+            "net_change_pct": changes.get("net_change_pct"),
+            "institutions_increased": changes.get("institutions_increased"),
+            "institutions_decreased": changes.get("institutions_decreased"),
+        },
+        "retail": {
+            "estimated_participation": retail_metrics.get("estimated_avg_retail_participation_pct"),
+            "net_flow_indicator": retail_metrics.get("net_flow_indicator_pct"),
+            "trend": retail_interpretation.get("retail_trend"),
+            "flow_direction": retail_interpretation.get("flow_direction"),
+        },
+    }
+
+    if GENAI_AVAILABLE:
+        prompt = (
+            "You are a sell-side analyst summarizing institutional and retail flow data for investors.\n"
+            "Given the JSON context below, respond strictly in JSON with keys "
+            "`headline` (<=120 characters), `summary` (2 concise sentences), "
+            "and `callouts` (list of up to 3 short bullet strings highlighting notable stats).\n"
+            f"Context: {json.dumps(summary_context)}"
+        )
+        try:
+            model = genai.GenerativeModel(FLOW_SUMMARY_MODEL)
+            response = model.generate_content(prompt)
+            text = (response.text or "").strip()
+            if text.startswith("```"):
+                text = text.strip("`")
+                text = re.sub(r"^json", "", text, flags=re.IGNORECASE).strip()
+            parsed = json.loads(text)
+            return {
+                "headline": parsed.get("headline", fallback["headline"]),
+                "summary": parsed.get("summary", fallback["summary"]),
+                "callouts": parsed.get("callouts", fallback["callouts"]),
+            }
+        except Exception as exc:  # pragma: no cover - graceful degradation
+            logger.warning("Flow summary generation failed: %s", exc)
+
+    # Fallback summary built from available metrics
+    ownership_pct = institutional.get("institutional_ownership_pct")
+    net_flow = changes.get("net_change_pct")
+    retail_trend = retail_interpretation.get("retail_trend") or "stable"
+    fallback["headline"] = (
+        f"{ticker} institutional ownership {ownership_pct:.1f}%"
+        if isinstance(ownership_pct, (int, float))
+        else f"{ticker} flow snapshot"
+    )
+    change_text = (
+        f"Net institutional { 'inflows' if (net_flow or 0) >= 0 else 'outflows' } of {abs(net_flow):.1f}%"
+        if isinstance(net_flow, (int, float))
+        else "Institutional activity mixed across recent filings"
+    )
+    retail_text = (
+        f"Retail participation trend appears {retail_trend} with estimated share "
+        f"{retail_metrics.get('estimated_avg_retail_participation_pct', 'n/a')}%."
+    )
+    fallback["summary"] = f"{change_text}. {retail_text}"
+    fallback["callouts"] = [
+        change_text,
+        retail_text,
+    ]
+    return fallback
+
+
 @app.get("/api/flow-data/{ticker}")
 async def get_flow_data(ticker: str, flow_type: str = "combined"):
     """Return institutional and retail flow data for a ticker."""
     try:
-        ticker = ticker.upper()
-        flow_dir = DATA_ROOT / "structured" / "flow_data"
-
-        # Find the latest flow data file
-        if flow_type == "combined":
-            pattern = f"{ticker}_combined_flow_*.json"
-        elif flow_type == "institutional":
-            pattern = f"{ticker}_institutional_flow_*.json"
-        elif flow_type == "retail":
-            pattern = f"{ticker}_retail_flow_*.json"
-        else:
-            return {"status": "error", "message": f"Invalid flow_type: {flow_type}"}
-
-        flow_files = sorted(flow_dir.glob(pattern))
-        if not flow_files:
-            return {"status": "error", "message": f"No flow data found for {ticker}"}
-
-        # Read the latest file
-        with flow_files[-1].open("r") as f:
-            flow_data = json.load(f)
-
-        # Extract the date from filename (e.g., NVDA_combined_flow_20251108.json)
-        file_date = flow_files[-1].stem.split("_")[-1]
-
-        return {
-            "status": "success",
-            "data": {
-                "data": flow_data,
-                "file_date": file_date,
-                "file_name": flow_files[-1].name
-            }
-        }
+        snapshot = _load_flow_snapshot(ticker, flow_type)
+        return {"status": "success", "data": snapshot}
+    except ValueError as ve:
+        return {"status": "error", "message": str(ve)}
+    except FileNotFoundError:
+        return {"status": "error", "message": f"No flow data found for {ticker.upper()}"}
     except Exception as exc:
         logger.error(f"Error loading flow data for {ticker}: {exc}")
         return {"status": "error", "message": f"Failed to fetch flow data: {exc}"}
@@ -1464,6 +1685,45 @@ async def get_token_usage_plot():
     except Exception as exc:
         logger.error(f"Error loading token usage plot: {exc}")
         return {"status": "error", "message": f"Failed to fetch plot: {exc}"}
+
+
+@app.get("/api/flow-plot/{ticker}")
+async def get_flow_plot(ticker: str):
+    """Return the generated flow time-series plot for a ticker."""
+    try:
+        from fastapi.responses import FileResponse
+
+        ticker = ticker.upper()
+        flow_dir = DATA_ROOT / "structured" / "flow_data"
+        flow_dir.mkdir(parents=True, exist_ok=True)
+
+        plot_files = sorted(flow_dir.glob(f"{ticker}_flow_plot_*.png"))
+        if not plot_files:
+            return {"status": "error", "message": f"No flow plot found for {ticker}"}
+
+        return FileResponse(
+            plot_files[-1],
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=300"},
+        )
+    except Exception as exc:
+        logger.error(f"Error loading flow plot for {ticker}: {exc}")
+        return {"status": "error", "message": f"Failed to fetch flow plot: {exc}"}
+
+
+@app.get("/api/flow-summary/{ticker}")
+async def flow_summary_endpoint(ticker: str):
+    """Return a language-model generated summary of the latest flow data."""
+    try:
+        snapshot = _load_flow_snapshot(ticker, "combined")
+    except FileNotFoundError:
+        return {"status": "error", "message": f"No flow data found for {ticker.upper()}"}
+    except Exception as exc:
+        logger.error("Failed to load flow data for summary: %s", exc)
+        return {"status": "error", "message": f"Failed to build summary for {ticker.upper()}"}
+
+    summary = _generate_flow_summary(ticker.upper(), snapshot.get("data", {}))
+    return {"status": "success", "summary": summary}
 
 
 @app.post("/chat")

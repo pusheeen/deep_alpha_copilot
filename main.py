@@ -295,10 +295,8 @@ def setup_bigquery():
         return jsonify({"status": "error", "error": str(e)}), 500
 
 
-# Startup: Download data from Cloud Storage on container start (production only)
-@app.before_first_request
-def startup():
-    """Download data from Cloud Storage when container starts."""
+def _startup_handler():
+    """Download cached data once the service is ready to accept requests."""
     try:
         logger.info("🚀 Application startup: Downloading data from Cloud Storage...")
         count = storage_manager.download_all_data()
@@ -309,6 +307,28 @@ def startup():
     except Exception as e:
         logger.warning(f"⚠️ Could not download data on startup: {e}")
         logger.info("Will fetch fresh data on first /fetch request")
+
+
+def _register_startup_hook():
+    """Attach the startup handler regardless of Flask version."""
+    if hasattr(app, "before_serving"):
+        app.before_serving(_startup_handler)
+        return
+    if hasattr(app, "before_first_request"):
+        app.before_first_request(_startup_handler)
+        return
+
+    # Fallback for environments where the above hooks are missing.
+    startup_state = {"ran": False}
+
+    @app.before_request
+    def _run_startup_once():
+        if not startup_state["ran"]:
+            startup_state["ran"] = True
+            _startup_handler()
+
+
+_register_startup_hook()
 
 
 if __name__ == "__main__":
