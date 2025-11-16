@@ -10,6 +10,7 @@ import json
 import math
 import os
 import re
+import shutil
 import ssl
 from collections import Counter
 from contextlib import asynccontextmanager
@@ -1646,9 +1647,16 @@ def _sync_token_usage_outputs():
         target = TOKEN_USAGE_DIR / artifact.name
         target.parent.mkdir(parents=True, exist_ok=True)
         try:
-            artifact.replace(target)
+            if artifact.resolve() == target.resolve():
+                continue
+        except FileNotFoundError:
+            continue
+
+        try:
+            shutil.copy2(artifact, target)
+            artifact.unlink(missing_ok=True)
         except Exception as exc:  # pragma: no cover - best effort
-            logger.warning("Unable to move %s to %s: %s", artifact, target, exc)
+            logger.warning("Unable to sync %s to %s: %s", artifact, target, exc)
 
 
 def _latest_token_usage_files():
@@ -1659,12 +1667,13 @@ def _latest_token_usage_files():
 
 async def _ensure_token_usage_assets():
     token_file, plot_file = _latest_token_usage_files()
-    if token_file and plot_file:
+    plot_required = getattr(token_usage_module, "MATPLOTLIB_AVAILABLE", True)
+    if token_file and (plot_file or not plot_required):
         return token_file, plot_file
 
     async with TOKEN_USAGE_LOCK:
         token_file, plot_file = _latest_token_usage_files()
-        if token_file and plot_file:
+        if token_file and (plot_file or not plot_required):
             return token_file, plot_file
 
         loop = asyncio.get_event_loop()
@@ -1672,8 +1681,12 @@ async def _ensure_token_usage_assets():
         await loop.run_in_executor(None, fetch_and_save_token_usage, 365)
         _sync_token_usage_outputs()
         token_file, plot_file = _latest_token_usage_files()
-        if not token_file or not plot_file:
+        if not token_file:
             raise RuntimeError("Token usage generation failed to produce artifacts.")
+        if not plot_file:
+            if plot_required:
+                raise RuntimeError("Token usage generation failed to produce plot artifacts.")
+            logger.warning("Token usage plot skipped because matplotlib is unavailable in this environment.")
         logger.info("Token usage snapshot generated: %s", token_file.name)
         return token_file, plot_file
 
@@ -1697,9 +1710,11 @@ async def get_flow_data(ticker: str, flow_type: str = "combined"):
 async def get_token_usage():
     """Return the latest token usage data."""
     try:
-        token_file, _ = await _ensure_token_usage_assets()
+        token_file, plot_file = await _ensure_token_usage_assets()
         with token_file.open("r") as f:
             token_data = json.load(f)
+
+        token_data["_has_plot"] = bool(plot_file)
 
         return {
             "status": "success",
@@ -1717,11 +1732,15 @@ async def get_token_usage_plot():
         from fastapi.responses import FileResponse
 
         _, plot_file = await _ensure_token_usage_assets()
+        if not plot_file:
+            raise HTTPException(status_code=503, detail="Token usage chart unavailable in this deployment.")
         return FileResponse(
             plot_file,
             media_type="image/png",
             headers={"Cache-Control": "public, max-age=300"}
         )
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error(f"Error loading token usage plot: {exc}")
         return {"status": "error", "message": f"Failed to fetch plot: {exc}"}

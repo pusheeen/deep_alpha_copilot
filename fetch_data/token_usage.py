@@ -485,7 +485,7 @@ def aggregate_usage_by_model(usage_data: List[Dict]) -> Dict:
     return result
 
 
-def plot_token_usage_time_series(data_points: List[Dict], output_dir: str = TOKEN_USAGE_DIR):
+def plot_token_usage_time_series(data_points: List[Dict], output_dir: Optional[str] = None):
     """
     Generate and save a time series plot of token usage with smoothing.
 
@@ -496,7 +496,14 @@ def plot_token_usage_time_series(data_points: List[Dict], output_dir: str = TOKE
     Returns:
         Path to saved plot file
     """
+    if not MATPLOTLIB_AVAILABLE or plt is None:
+        logger.warning("Matplotlib is not available; skipping token usage plot generation.")
+        return None
+
     import numpy as np
+
+    output_dir = output_dir or TOKEN_USAGE_DIR
+    os.makedirs(output_dir, exist_ok=True)
 
     if not data_points:
         logger.warning("No data points to plot")
@@ -660,4 +667,3 @@ if __name__ == "__main__":
     # Fetch and save token usage for last year (365 days)
     filepath = fetch_and_save_token_usage(days=365)
     print(f"Token usage data saved to: {filepath}")
-
