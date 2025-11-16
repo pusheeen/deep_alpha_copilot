@@ -446,7 +446,8 @@
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
         const supportedTickers = ["NVDA","MU","AVGO","TSM","VRT","SMCI","INOD","RR","IREN","CIFR","RIOT","OKLO","SMR","CCJ","VST","NXE","EOSE","QS"];
-        const previewTickerSet = new Set(supportedTickers);
+        const supportedTickerSet = new Set(supportedTickers);
+        const previewTickerSet = new Set([]);
         const comingSoonBanner = document.getElementById('coming-soon-banner');
         const comingSoonTicker = document.getElementById('coming-soon-ticker');
         const flowSummaryHeadline = document.getElementById('flow-summary-headline');
@@ -2265,6 +2266,9 @@
 
         async function loadScoreboard(ticker) {
             if (!ticker) return false;
+            if (!supportedTickerSet.has(ticker)) {
+                return false;
+            }
 
             const isPreview = previewTickerSet.has(ticker);
             if (comingSoonBanner && comingSoonTicker) {
@@ -2327,8 +2331,46 @@
             }
         }
 
+        function showUnsupportedTickerMessage(ticker) {
+            if (comingSoonBanner) comingSoonBanner.classList.add('hidden');
+            const message = `<p class="text-sm text-slate-500">We don’t have coverage for ${ticker} yet. Please try one of the tickers highlighted in the coverage grid.</p>`;
+            scoreboard.innerHTML = message;
+            const sections = [
+                document.getElementById('standalone-news-content'),
+                document.getElementById('standalone-flow-content'),
+            ];
+            sections.forEach(section => {
+                if (section) section.innerHTML = message;
+            });
+            if (flowSummaryHeadline) {
+                flowSummaryHeadline.textContent = `${ticker} coverage unavailable`;
+            }
+            if (flowSummaryBody) {
+                flowSummaryBody.textContent = 'Select one of the supported tickers to see institutional flows.';
+            }
+            if (flowSummaryHighlights) {
+                flowSummaryHighlights.innerHTML = '';
+            }
+            if (flowDetailsContainer) {
+                flowDetailsContainer.classList.add('hidden');
+                if (flowDetailsToggle) {
+                    flowDetailsToggle.textContent = 'Expand full flow view';
+                }
+            }
+            const tokenContainer = document.getElementById('standalone-token-content');
+            if (tokenContainer) {
+                tokenContainer.innerHTML = message;
+            }
+        }
+        }
+
         async function handleTickerSelection(ticker) {
             if (!ticker) return;
+            if (!supportedTickerSet.has(ticker)) {
+                showUnsupportedTickerMessage(ticker);
+                return;
+            }
+
             const loaded = await loadScoreboard(ticker);
             if (loaded) {
                 loadStandaloneNews(ticker);
