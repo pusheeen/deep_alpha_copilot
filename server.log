@@ -1,6 +1,6 @@
-INFO:     Will watch for changes in these directories: ['/Users/luying/Documents/deep_alpha_copilot']
+INFO:     Will watch for changes in these directories: ['/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [35007] using StatReload
+INFO:     Started reloader process [22501] using StatReload
 
 ============================================================
 🚀 Starting deepAlpha Copilot Server
@@ -13,78 +13,72 @@ Press CTRL+C to stop the server
 
 ============================================================
 
-INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
-INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
-INFO:app.scoring.engine:📂 Data directories initialized:
-INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
-INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
-INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
-INFO:     Started server process [35010]
+INFO:numexpr.utils:NumExpr defaulting to 10 threads.
+INFO:google_genai._api_client:The user provided project/location will take precedence over the Vertex AI API key from the environment variable.
+INFO:     Started server process [22503]
 INFO:     Waiting for application startup.
+WARNING:google_adk.google.adk.runners:App name mismatch detected. The runner is configured with app name "Financial_Root_Agent_app", but the root agent was loaded from "/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/myenv/lib/python3.13/site-packages/google/adk/agents", which implies app name "agents".
+INFO:databases:Connected to database sqlite:///./users.db
 INFO:     Application startup complete.
-Warning: Could not import agents. Agent features will be disabled.
-ADK not available. Agent features disabled.
---- Getting latest news for AAPL ---
-INFO:     127.0.0.1:55453 - "GET /api/latest-news/AAPL HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55463 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55489 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55546 - "GET /api/market-conditions HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'app/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [35010]
-INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
-INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
-INFO:app.scoring.engine:📂 Data directories initialized:
-INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
-INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
-INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
-INFO:     Started server process [36010]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Warning: Could not import agents. Agent features will be disabled.
-ADK not available. Agent features disabled.
-INFO:     127.0.0.1:55652 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55652 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55708 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55759 - "GET /api/market-conditions HTTP/1.1" 200 OK
---- Getting latest news for AAPL ---
-Loading news from: data/unstructured/news/AAPL_news_20250101_000000.json
-INFO:     127.0.0.1:55801 - "GET /api/latest-news/AAPL HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55984 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55984 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56126 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56226 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56280 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56637 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56781 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56916 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56939 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57015 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57127 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57127 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57184 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57237 - "GET /api/market-conditions HTTP/1.1" 200 OK
-WARNING:  StatReload detected changes in 'fetch_token_usage.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [36010]
-INFO:fetch_data.news:Google Generative AI initialized with model: gemini-2.5-flash
-INFO:app.scoring.engine:💻 Using local development data directory: /Users/luying/Documents/deep_alpha_copilot/data
-INFO:app.scoring.engine:📂 Data directories initialized:
-INFO:app.scoring.engine:   FINANCIALS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/financials
-INFO:app.scoring.engine:   EARNINGS_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/earnings
-INFO:app.scoring.engine:   PRICES_DIR: /Users/luying/Documents/deep_alpha_copilot/data/structured/prices
-INFO:     Started server process [43810]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-Warning: Could not import agents. Agent features will be disabled.
-ADK not available. Agent features disabled.
-INFO:     127.0.0.1:57626 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57626 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57906 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58039 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58130 - "GET /api/market-conditions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58549 - "GET /api/market-conditions HTTP/1.1" 200 OK
+Initializing ADK Agent...
+Agent is ready.
+INFO:     127.0.0.1:55143 - "GET /comparison HTTP/1.1" 200 OK
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/main.py:1807: FutureWarning: YF.download() has changed argument auto_adjust default to True
+  data = yf.download(tickers, period="2y", group_by='ticker', progress=False)
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/main.py:1823: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  closes = df['Close'].fillna(method='ffill')
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/main.py:1823: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  closes = df['Close'].fillna(method='ffill')
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/main.py:1823: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  closes = df['Close'].fillna(method='ffill')
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/main.py:1823: FutureWarning: Series.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  closes = df['Close'].fillna(method='ffill')
+INFO:     127.0.0.1:55143 - "POST /api/compare HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55170 - "GET /comparison HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/scores/URNM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55178 - "GET /api/scores/LAC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/MU HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55175 - "GET /api/scores/INTC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55182 - "GET /api/scores/CCJ HTTP/1.1" 200 OK
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: CFFP"}}}
+INFO:     127.0.0.1:55183 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET /api/scores/NUKZ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/price-history/NVDA?period=1m HTTP/1.1" 200 OK
+INFO:app.scoring.engine:Loaded industry benchmarks generated at 2025-11-22T07:23:48.435150
+INFO:     127.0.0.1:55183 - "GET /api/latest-news/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55178 - "GET /api/scores/URA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/NLR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55175 - "GET /api/scores/CFFP HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55182 - "GET /api/scores/XOM HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/flow-data/NVDA?flow_type=combined HTTP/1.1" 200 OK
+WARNING:app.main:Flow summary generation failed: 404 models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+INFO:     127.0.0.1:55178 - "GET /api/flow-summary/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/token-usage HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET /api/valuation-metrics/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET /api/flow-plot/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "GET /api/token-usage-plot HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/scores/NVDA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55178 - "GET /api/scores/IREN HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/CLS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55182 - "GET /api/scores/MSFT HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55175 - "GET /api/scores/LEU HTTP/1.1" 200 OK
+/Users/maggiechen/Documents/financial_agent/deep_alpha_copilot/app/scoring/engine.py:604: FutureWarning: In a future version of pandas, parsing datetimes with mixed time zones will raise an error unless `utc=True`. Please specify `utc=True` to opt in to the new behaviour and silence this warning. To create a `Series` with mixed offsets and `object` dtype, please use `apply` and `datetime.datetime.strptime`
+  df = pd.read_csv(path, parse_dates=["Date"])
+INFO:     127.0.0.1:55178 - "GET /api/scores/NAK HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/scores/SMAR HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55175 - "GET /api/scores/ANET HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/QBTS HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55182 - "GET /api/scores/OKLO HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/scores/ASST HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55175 - "GET /api/scores/FLNC HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55178 - "GET /api/scores/EOSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/RKLB HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55182 - "GET /api/scores/UNH HTTP/1.1" 200 OK
+ERROR:yfinance:HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: SNKE"}}}
+INFO:     127.0.0.1:55182 - "GET /api/scores/SNKE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55180 - "GET /api/scores/BE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55251 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55251 - "GET /api/market-conditions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55254 - "GET /api/market-conditions HTTP/1.1" 200 OK

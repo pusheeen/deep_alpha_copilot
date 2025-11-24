@@ -1,6 +1,14 @@
 [
   {
     "ticker": "NAK",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": -26000.0,
+    "net_income": -7945000.0,
+    "eps": -0.01
+  },
+  {
+    "ticker": "NAK",
     "period": "2025-06-30 00:00:00",
     "revenue": 0.0,
     "earnings": -27000.0,
@@ -22,13 +30,5 @@
     "earnings": -27000.0,
     "net_income": -22545000.0,
     "eps": null
-  },
-  {
-    "ticker": "NAK",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 0.0,
-    "earnings": -26000.0,
-    "net_income": -4618000.0,
-    "eps": -0.01
   }
 ]

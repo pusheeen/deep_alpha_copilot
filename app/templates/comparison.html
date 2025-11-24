@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deep Alpha Comparison</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-900">
+    <div class="max-w-7xl mx-auto py-6 px-4 space-y-6">
+        
+        <!-- Navigation -->
+        <nav class="flex space-x-4 bg-white p-4 rounded-xl shadow-sm">
+            <a href="/" class="px-4 py-2 text-slate-600 hover:text-blue-600 font-medium">Dashboard</a>
+            <a href="/comparison" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold">Comparison Tool</a>
+        </nav>
+
+        <!-- Comparison Controls -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Multi-Stock Momentum & Fundamental Comparison</h2>
+            <div class="flex flex-wrap gap-4 items-end">
+                <div class="flex-1 min-w-[300px]">
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Add Tickers (comma separated)</label>
+                    <input type="text" id="ticker-input" placeholder="NVDA, AMD, INTC, MU" value="NVDA, AMD, INTC, MU" 
+                           class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase">
+                </div>
+                <button id="compare-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
+                    Run Comparison
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Takeaways -->
+        <div id="key-takeaways" class="hidden bg-gradient-to-r from-indigo-50 to-blue-50 border border-blue-100 rounded-xl p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-2 flex items-center">
+                <span class="mr-2">💡</span> Key Takeaways
+            </h3>
+            <div id="takeaway-content" class="space-y-2 text-slate-700"></div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                        <tr>
+                            <th class="px-6 py-3">Ticker</th>
+                            <th class="px-6 py-3">Action</th>
+                            <th class="px-6 py-3">Price</th>
+                            <th class="px-6 py-3">Trend</th>
+                            <th class="px-6 py-3">Momentum (6M)</th>
+                            <th class="px-6 py-3">Momentum (12M)</th>
+                            <th class="px-6 py-3">RSI</th>
+                            <th class="px-6 py-3">Deep Alpha Score</th>
+                            <th class="px-6 py-3">Reasoning</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparison-body" class="divide-y divide-slate-100">
+                        <!-- Rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="loading" class="hidden text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="mt-2 text-slate-500">Analyzing market data & fundamentals...</p>
+        </div>
+
+    </div>
+
+    <script>
+        const compareBtn = document.getElementById('compare-btn');
+        const tickerInput = document.getElementById('ticker-input');
+        const tableBody = document.getElementById('comparison-body');
+        const loading = document.getElementById('loading');
+        const takeawaySection = document.getElementById('key-takeaways');
+        const takeawayContent = document.getElementById('takeaway-content');
+
+        async function runComparison() {
+            const tickers = tickerInput.value.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
+            if (tickers.length === 0) return;
+
+            // UI State
+            loading.classList.remove('hidden');
+            tableBody.innerHTML = '';
+            takeawaySection.classList.add('hidden');
+            compareBtn.disabled = true;
+            compareBtn.classList.add('opacity-50');
+
+            try {
+                const response = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tickers })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    renderTable(data.results);
+                    renderTakeaways(data.results);
+                } else {
+                    alert('Comparison failed: ' + data.message);
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Error connecting to server');
+            } finally {
+                loading.classList.add('hidden');
+                compareBtn.disabled = false;
+                compareBtn.classList.remove('opacity-50');
+            }
+        }
+
+        function renderTable(results) {
+            tableBody.innerHTML = results.map(row => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-6 py-4 font-bold text-slate-800">${row.ticker}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${getActionColor(row.action)}">
+                            ${row.action}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 font-mono">$${row.price}</td>
+                    <td class="px-6 py-4">
+                        <span class="${row.trend === 'Bullish' ? 'text-green-600' : 'text-red-600'} font-medium">
+                            ${row.trend}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 ${parseFloat(row.mom_6m) > 20 ? 'text-green-600 font-bold' : ''}">${row.mom_6m}</td>
+                    <td class="px-6 py-4 ${parseFloat(row.mom_12m) > 30 ? 'text-green-600 font-bold' : ''}">${row.mom_12m}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <span>${row.rsi}</span>
+                            <div class="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full ${getRSIColor(row.rsi)}" style="width: ${row.rsi}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-lg ${getScoreColor(row.da_score)}">${row.da_score}</div>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-500 max-w-xs">
+                        ${row.reasoning}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTakeaways(results) {
+            const buys = results.filter(r => r.action === 'BUY');
+            const sells = results.filter(r => r.action === 'SELL');
+            
+            let html = '';
+            
+            if (buys.length > 0) {
+                html += `<p>🚀 <strong>Top Picks:</strong> ${buys.map(b => b.ticker).join(', ')} are showing strong momentum and fundamentals.</p>`;
+            }
+            
+            if (sells.length > 0) {
+                html += `<p>⚠️ <strong>Caution:</strong> ${sells.map(s => s.ticker).join(', ')} are flagging sell signals due to weak trends or fundamentals.</p>`;
+            }
+            
+            const bestMomentum = results.reduce((prev, current) => (parseFloat(current.mom_6m) > parseFloat(prev.mom_6m) ? current : prev));
+            html += `<p>📈 <strong>Highest Velocity:</strong> ${bestMomentum.ticker} is leading the pack with ${bestMomentum.mom_6m} 6-month return.</p>`;
+
+            takeawayContent.innerHTML = html;
+            takeawaySection.classList.remove('hidden');
+        }
+
+        function getActionColor(action) {
+            if (action === 'BUY') return 'bg-green-100 text-green-800';
+            if (action === 'SELL') return 'bg-red-100 text-red-800';
+            return 'bg-yellow-100 text-yellow-800';
+        }
+
+        function getRSIColor(rsi) {
+            if (rsi > 70) return 'bg-red-500';
+            if (rsi < 30) return 'bg-green-500';
+            return 'bg-blue-500';
+        }
+
+        function getScoreColor(score) {
+            if (score === 'N/A') return 'text-slate-400';
+            const val = parseFloat(score);
+            if (val >= 7.0) return 'text-green-600';
+            if (val <= 4.0) return 'text-red-600';
+            return 'text-yellow-600';
+        }
+
+        compareBtn.addEventListener('click', runComparison);
+        
+        // Auto-run on load
+        runComparison();
+    </script>
+</body>
+</html>

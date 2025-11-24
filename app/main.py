@@ -24,10 +24,12 @@ from urllib.request import Request, urlopen
 import databases
 import sqlalchemy
 import stripe
-from fastapi import FastAPI, Request, Form, Depends, HTTPException
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
@@ -54,18 +56,6 @@ try:
 except ImportError:
     ADK_AVAILABLE = False
     print("Warning: Google ADK not available. Agent features will be disabled.")
-
-app = FastAPI()
-
-origins = ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # Allows all methods
-    allow_headers=["*"], # Allows all headers
-)
 
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
@@ -124,6 +114,33 @@ engine = sqlalchemy.create_engine(
 metadata.create_all(engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# --- Authentication Helpers ---
+SECRET_KEY = os.getenv("SECRET_KEY", "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    query = users.select().where(users.c.username == username)
+    user = await database.fetch_one(query)
+    if user is None:
+        raise credentials_exception
+    return user
 
 DATA_ROOT = Path(os.getenv("DATA_ROOT", str(Path(__file__).resolve().parents[1] / "data")))
 STRUCTURED_DIR = DATA_ROOT / "structured"
@@ -1240,283 +1257,6 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
     _update_company_runtime(ticker, "news", payload)
     return payload
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
-
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-async def get_user_by_email(email: str):
-    query = users.select().where(users.c.email == email)
-    return await database.fetch_one(query)
-
-async def get_user_by_id(user_id: int):
-    query = users.select().where(users.c.id == user_id)
-    return await database.fetch_one(query)
-
-async def authenticate_user(email: str, password: str):
-    user = await get_user_by_email(email)
-    if not user or not verify_password(password, user["hashed_password"]):
-        return None
-    return user
-
-async def get_current_user(request: Request):
-    user_id = request.session.get("user")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user = await get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
-
-# --- ADK Agent Runner Setup ---
-if ADK_AVAILABLE:
-    class AgentCaller:
-        """A simple wrapper class for interacting with an ADK agent."""
-        def __init__(self, agent: Agent, runner: Runner, user_id: str, session_id: str):
-            self.agent = agent
-            self.runner = runner
-            self.user_id = user_id
-            self.session_id = session_id
-
-        async def call(self, user_message: str, include_reasoning: bool = False) -> dict:
-            content = types.Content(role='user', parts=[types.Part(text=user_message)])
-
-            final_response = {
-                'answer': "Agent did not produce a final response.",
-                'status': 'error'
-            }
-
-            reasoning_steps = []
-            tools_used = set()
-
-            async for event in self.runner.run_async(user_id=self.user_id, session_id=self.session_id, new_message=content):
-                if include_reasoning and event.author != self.agent.name and not event.is_final_response():
-                     # Capture tool calls and observations as reasoning steps
-                     if event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_code'):
-                         tool_call = event.content.parts[0].tool_code
-                         reasoning_steps.append({
-                             'tool': tool_call.name,
-                             'input': str(tool_call.args),
-                             'output': "Pending..."
-                         })
-                         tools_used.add(tool_call.name)
-                     elif event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_result'):
-                         if reasoning_steps:
-                            reasoning_steps[-1]['output'] = str(event.content.parts[0].tool_result.result)
-
-                if event.is_final_response() and event.content and event.content.parts:
-                    final_response['answer'] = event.content.parts[0].text
-                    final_response['status'] = 'success'
-                    break
-
-            if include_reasoning:
-                final_response['reasoning_steps'] = reasoning_steps
-                final_response['tools_used'] = list(tools_used)
-
-            return final_response
-
-    async def make_agent_caller(agent: Agent) -> AgentCaller:
-        """Factory function to create an AgentCaller instance."""
-        app_name = agent.name + "_app"
-        user_id = agent.name + "_user"
-        session_id = agent.name + "_session_01"
-
-        session_service = InMemorySessionService()
-        await session_service.create_session(
-            app_name=app_name, user_id=user_id, session_id=session_id
-        )
-
-        runner = Runner(agent=agent, app_name=app_name, session_service=session_service)
-        return AgentCaller(agent, runner, user_id, session_id)
-
-
-# --- FastAPI Application ---
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # On startup, initialize the ADK AgentCaller (if available)
-    if ADK_AVAILABLE:
-        print("Initializing ADK Agent...")
-        app.state.agent_caller = await make_agent_caller(root_agent)
-        print("Agent is ready.")
-    else:
-        print("ADK not available. Agent features disabled.")
-        app.state.agent_caller = None
-    yield
-    # On shutdown (not essential for this example, but good practice)
-    print("Shutting down.")
-
-
-app = FastAPI(
-    title="Clinical Assistant API (ADK Version)",
-    description="An API for interacting with the Clinical AI Assistant, powered by Google ADK.",
-    version="2.0.0",
-    lifespan=lifespan
-)
-
-# Add session middleware and template rendering
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "changeme"))
-templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
-
-class QueryRequest(BaseModel):
-    """Defines the structure of the request body for the /chat endpoint."""
-    question: str
-    include_reasoning: bool = False
-
-@app.get("/", response_class=HTMLResponse)
-async def get_index(request: Request):
-    """Serves the main index.html file."""
-    user = None
-    user_id = request.session.get("user")
-    if user_id:
-        user = await get_user_by_id(user_id)
-    supported_tickers = load_supported_tickers()
-    company_metadata = load_company_metadata()
-    watchlist = build_deep_alpha_watchlist(company_metadata)
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "user": user,
-            "supported_tickers": supported_tickers,
-            "supported_tickers_json": json.dumps(supported_tickers),
-            "company_metadata_json": json.dumps(company_metadata),
-            "watchlist_json": json.dumps(watchlist),
-        },
-    )
-
-
-@app.get("/api/scores/{ticker}")
-async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] = None):
-    """Return the latest computed scorecard for a company or fetch news snippets for a query."""
-    loop = asyncio.get_event_loop()
-    if news_only:
-        try:
-            search_query = query or ticker
-            data = await loop.run_in_executor(None, search_latest_news, search_query)
-            results = data.get("results", []) if isinstance(data, dict) else []
-            return {"status": "success", "data": {"latest_news": results}}
-        except Exception as exc:  # pragma: no cover - network failures
-            return {"status": "error", "message": f"Failed to fetch news: {exc}"}
-    try:
-        data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
-        # Sanitize data to handle NaN/infinity values
-        data = sanitize_for_json(data)
-        return {"status": "success", "data": data}
-    except ScoreComputationError as exc:
-        return {"status": "error", "message": str(exc)}
-    except Exception as exc:  # pragma: no cover - unexpected errors bubbled to client
-        return {"status": "error", "message": f"Unexpected error: {exc}"}
-
-@app.get("/api/price-history/{ticker}")
-async def get_price_history(ticker: str, period: str = "1m"):
-    """Return price history with events for a specific time period."""
-    from app.scoring.engine import get_price_history_with_events
-
-    try:
-        # For now, we'll use empty news items since we're focusing on significant moves
-        news_items = []
-        loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, get_price_history_with_events, ticker.upper(), news_items, period)
-        data = sanitize_for_json(data)
-        return {"status": "success", "data": data}
-    except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch price history: {exc}"}
-
-@app.get("/api/valuation-metrics/{ticker}")
-async def get_valuation_metrics(ticker: str):
-    """Return historical P/E and P/S ratios with industry benchmarks."""
-    from app.scoring.engine import get_valuation_metrics
-
-    try:
-        loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
-        data = sanitize_for_json(data)
-        return {"status": "success", "data": data}
-    except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
-
-@app.get("/api/market-conditions")
-async def get_market_conditions():
-    """Return current market condition indicators."""
-    from app.scoring.engine import get_market_conditions
-
-    try:
-        loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, get_market_conditions)
-        return {"status": "success", "data": data}
-    except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
-
-@app.get("/api/latest-news/{ticker}")
-async def get_latest_news(ticker: str):
-    """Return the latest news and interpretation for a ticker."""
-    try:
-        ticker = ticker.upper()
-
-        payload = _load_cached_news(ticker)
-        if not payload:
-            payload = fetch_realtime_news(ticker)
-            _save_cached_news(ticker, payload)
-
-        # Attach Deep Alpha interpretation card (new structure) and legacy text fallback if available
-        deep_alpha_card: Optional[dict] = None
-        interpretation_summary: Optional[str] = None
-        card_generated_at: Optional[str] = None
-        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
-        interpretation_files = sorted(
-            [
-                file_path
-                for file_path in interpretation_dir.glob(f"{ticker}_news_interpretation_*.json")
-            ]
-        )
-        if interpretation_files:
-            try:
-                with interpretation_files[-1].open("r") as fh:
-                    interpretation_blob = json.load(fh)
-                card_generated_at = interpretation_blob.get("interpretation_timestamp")
-                raw_interpretation = (
-                    interpretation_blob.get("interpretation")
-                    or interpretation_blob.get("analysis")
-                )
-
-                if isinstance(raw_interpretation, dict):
-                    deep_alpha_card = raw_interpretation
-                elif isinstance(raw_interpretation, str):
-                    try:
-                        parsed = json.loads(raw_interpretation)
-                        if isinstance(parsed, dict):
-                            deep_alpha_card = parsed
-                        else:
-                            interpretation_summary = raw_interpretation
-                    except json.JSONDecodeError:
-                        interpretation_summary = raw_interpretation
-                elif raw_interpretation is not None:
-                    interpretation_summary = str(raw_interpretation)
-
-                # Preserve legacy analysis field if available separately
-                if not interpretation_summary:
-                    interpretation_summary = interpretation_blob.get("analysis")
-            except Exception:
-                interpretation_summary = None
-
-        payload["deep_alpha_analysis"] = deep_alpha_card
-        payload["legacy_analysis"] = interpretation_summary
-        payload["analysis_generated_at"] = card_generated_at
-
-        return {"status": "success", "data": payload}
-    except Exception as exc:
-        return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
-
 
 def _load_flow_snapshot(ticker: str, flow_type: str = "combined") -> Dict[str, Any]:
     """Load the most recent flow file for a ticker and flow type."""
@@ -1691,6 +1431,261 @@ async def _ensure_token_usage_assets():
         return token_file, plot_file
 
 
+# --- ADK Agent Runner Setup ---
+class AgentCaller:
+    """A simple wrapper class for interacting with an ADK agent."""
+    def __init__(self, agent: Agent, runner: Runner, user_id: str, session_id: str):
+        self.agent = agent
+        self.runner = runner
+        self.user_id = user_id
+        self.session_id = session_id
+
+    async def call(self, user_message: str, include_reasoning: bool = False) -> dict:
+        content = types.Content(role='user', parts=[types.Part(text=user_message)])
+
+        final_response = {
+            'answer': "Agent did not produce a final response.",
+            'status': 'error'
+        }
+
+        reasoning_steps = []
+        tools_used = set()
+
+        async for event in self.runner.run_async(user_id=self.user_id, session_id=self.session_id, new_message=content):
+            if include_reasoning and event.author != self.agent.name and not event.is_final_response():
+                 # Capture tool calls and observations as reasoning steps
+                 if event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_code'):
+                     tool_call = event.content.parts[0].tool_code
+                     reasoning_steps.append({
+                         'tool': tool_call.name,
+                         'input': str(tool_call.args),
+                         'output': "Pending..."
+                     })
+                     tools_used.add(tool_call.name)
+                 elif event.content and event.content.parts and hasattr(event.content.parts[0], 'tool_result'):
+                     if reasoning_steps:
+                        reasoning_steps[-1]['output'] = str(event.content.parts[0].tool_result.result)
+
+            if event.is_final_response() and event.content and event.content.parts:
+                final_response['answer'] = event.content.parts[0].text
+                final_response['status'] = 'success'
+                break
+
+        if include_reasoning:
+            final_response['reasoning_steps'] = reasoning_steps
+            final_response['tools_used'] = list(tools_used)
+
+        return final_response
+
+async def make_agent_caller(agent: Agent) -> AgentCaller:
+    """Factory function to create an AgentCaller instance."""
+    app_name = agent.name + "_app"
+    user_id = agent.name + "_user"
+    session_id = agent.name + "_session_01"
+
+    session_service = InMemorySessionService()
+    await session_service.create_session(
+        app_name=app_name, user_id=user_id, session_id=session_id
+    )
+
+    runner = Runner(agent=agent, app_name=app_name, session_service=session_service)
+    return AgentCaller(agent, runner, user_id, session_id)
+
+
+# --- FastAPI Application ---
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # On startup, initialize the ADK AgentCaller
+    if ADK_AVAILABLE:
+        print("Initializing ADK Agent...")
+        try:
+            app.state.agent_caller = await make_agent_caller(root_agent)
+            print("Agent is ready.")
+        except Exception as e:
+            print(f"Failed to initialize agent: {e}")
+            app.state.agent_caller = None
+    else:
+        print("ADK not available. Agent features disabled.")
+        app.state.agent_caller = None
+    
+    await database.connect()
+    yield
+    await database.disconnect()
+    print("Shutting down.")
+
+
+app = FastAPI(
+    title="Clinical Assistant API (ADK Version)",
+    description="An API for interacting with the Clinical AI Assistant, powered by Google ADK.",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+# Add session middleware and template rendering
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "changeme"))
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+templates = Jinja2Templates(directory=str(APP_DIR / "templates"))
+
+class QueryRequest(BaseModel):
+    """Defines the structure of the request body for the /chat endpoint."""
+    question: str
+    include_reasoning: bool = False
+
+@app.get("/", response_class=HTMLResponse)
+async def get_index(request: Request):
+    """Serves the main index.html file."""
+    user = None
+    user_id = request.session.get("user")
+    if user_id:
+        user = await get_user_by_id(user_id)
+    
+    supported_tickers = load_supported_tickers()
+    company_metadata = load_company_metadata()
+    watchlist = build_deep_alpha_watchlist(company_metadata)
+    
+    return templates.TemplateResponse(
+        "index.html", 
+        {
+        "request": request,
+        "user": user,
+        "supported_tickers": supported_tickers,
+        "supported_tickers_json": json.dumps(supported_tickers),
+        "company_metadata_json": json.dumps(company_metadata),
+        "watchlist_json": json.dumps(watchlist),
+        }
+    )
+
+
+@app.get("/api/scores/{ticker}")
+async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] = None):
+    """Return the latest computed scorecard for a company or fetch news snippets for a query."""
+    loop = asyncio.get_event_loop()
+    if news_only:
+        try:
+            search_query = query or ticker
+            data = await loop.run_in_executor(None, search_latest_news, search_query)
+            results = data.get("results", []) if isinstance(data, dict) else []
+            return {"status": "success", "data": {"latest_news": results}}
+        except Exception as exc:  # pragma: no cover - network failures
+            return {"status": "error", "message": f"Failed to fetch news: {exc}"}
+    try:
+        data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
+        # Sanitize data to handle NaN/infinity values
+        data = sanitize_for_json(data)
+        return {"status": "success", "data": data}
+    except ScoreComputationError as exc:
+        return {"status": "error", "message": str(exc)}
+    except Exception as exc:  # pragma: no cover - unexpected errors bubbled to client
+        return {"status": "error", "message": f"Unexpected error: {exc}"}
+
+@app.get("/api/price-history/{ticker}")
+async def get_price_history(ticker: str, period: str = "1m"):
+    """Return price history with events for a specific time period."""
+    from app.scoring.engine import get_price_history_with_events
+    
+    try:
+        # For now, we'll use empty news items since we're focusing on significant moves
+        news_items = []
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_price_history_with_events, ticker.upper(), news_items, period)
+        data = sanitize_for_json(data)
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch price history: {exc}"}
+
+@app.get("/api/valuation-metrics/{ticker}")
+async def get_valuation_metrics(ticker: str):
+    """Return historical P/E and P/S ratios with industry benchmarks."""
+    from app.scoring.engine import get_valuation_metrics
+
+    try:
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_valuation_metrics, ticker.upper())
+        data = sanitize_for_json(data)
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch valuation metrics: {exc}"}
+
+@app.get("/api/market-conditions")
+async def get_market_conditions():
+    """Return current market condition indicators."""
+    from app.scoring.engine import get_market_conditions
+
+    try:
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, get_market_conditions)
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch market conditions: {exc}"}
+
+@app.get("/api/latest-news/{ticker}")
+async def get_latest_news(ticker: str):
+    """Return the latest news and interpretation for a ticker."""
+    try:
+        ticker = ticker.upper()
+
+        payload = _load_cached_news(ticker)
+        if not payload:
+            payload = fetch_realtime_news(ticker)
+            _save_cached_news(ticker, payload)
+
+        # Attach Deep Alpha interpretation card (new structure) and legacy text fallback if available
+        deep_alpha_card: Optional[dict] = None
+        interpretation_summary: Optional[str] = None
+        card_generated_at: Optional[str] = None
+        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
+        interpretation_files = sorted(
+            [
+                file_path
+                for file_path in interpretation_dir.glob(f"{ticker}_news_interpretation_*.json")
+            ]
+        )
+        if interpretation_files:
+            try:
+                with interpretation_files[-1].open("r") as fh:
+                    interpretation_blob = json.load(fh)
+                card_generated_at = interpretation_blob.get("interpretation_timestamp")
+                raw_interpretation = (
+                    interpretation_blob.get("interpretation")
+                    or interpretation_blob.get("analysis")
+                )
+
+                if isinstance(raw_interpretation, dict):
+                    deep_alpha_card = raw_interpretation
+                elif isinstance(raw_interpretation, str):
+                    try:
+                        parsed = json.loads(raw_interpretation)
+                        if isinstance(parsed, dict):
+                            deep_alpha_card = parsed
+                        else:
+                            interpretation_summary = raw_interpretation
+                    except json.JSONDecodeError:
+                        interpretation_summary = raw_interpretation
+                elif raw_interpretation is not None:
+                    interpretation_summary = str(raw_interpretation)
+
+                # Preserve legacy analysis field if available separately
+                if not interpretation_summary:
+                    interpretation_summary = interpretation_blob.get("analysis")
+            except Exception:
+                interpretation_summary = None
+
+        payload["deep_alpha_analysis"] = deep_alpha_card
+        payload["legacy_analysis"] = interpretation_summary
+        payload["analysis_generated_at"] = card_generated_at
+
+        return {"status": "success", "data": payload}
+    except Exception as exc:
+        return {"status": "error", "message": f"Failed to fetch latest news: {exc}"}
+
+
 @app.get("/api/flow-data/{ticker}")
 async def get_flow_data(ticker: str, flow_type: str = "combined"):
     """Return institutional and retail flow data for a ticker."""
@@ -1784,6 +1779,135 @@ async def flow_summary_endpoint(ticker: str):
     summary = _generate_flow_summary(ticker.upper(), snapshot.get("data", {}))
     return {"status": "success", "summary": summary}
 
+# --- Comparison Routes ---
+
+@app.get("/comparison", response_class=HTMLResponse)
+async def get_comparison(request: Request):
+    """Serves the comparison tool page."""
+    return templates.TemplateResponse("comparison.html", {"request": request})
+
+class ComparisonRequest(BaseModel):
+    tickers: list[str]
+
+@app.post("/api/compare")
+async def compare_stocks(request: ComparisonRequest):
+    """
+    Compares a list of tickers using momentum and fundamental data.
+    Returns a list of comparison results suitable for the frontend.
+    """
+    try:
+        import yfinance as yf
+        import pandas as pd
+        import numpy as np
+        from app.scoring.engine import compute_company_scores
+
+        tickers = [t.upper() for t in request.tickers]
+        
+        # Fetch data
+        data = yf.download(tickers, period="2y", group_by='ticker', progress=False)
+        results = []
+
+        for ticker in tickers:
+            try:
+                # Handle yfinance data structure
+                if len(tickers) > 1:
+                    if ticker in data.columns.levels[0]:
+                        df = data[ticker].copy()
+                    else:
+                        continue
+                else:
+                    df = data.copy()
+                
+                if df.empty: continue
+                
+                closes = df['Close'].fillna(method='ffill')
+                if closes.empty: continue
+                
+                current_price = float(closes.iloc[-1])
+                
+                # Momentum Metrics
+                ma50 = float(closes.rolling(window=50).mean().iloc[-1])
+                ma200 = float(closes.rolling(window=200).mean().iloc[-1])
+                r6m = float((current_price / closes.iloc[-126] - 1) if len(closes) > 126 else 0)
+                r12m = float((current_price / closes.iloc[-252] - 1) if len(closes) > 252 else 0)
+                
+                # RSI
+                delta = closes.diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = float(100 - (100 / (1 + rs)).iloc[-1])
+                
+                # Deep Alpha Score
+                da_score = np.nan
+                try:
+                    scores = compute_company_scores(ticker)
+                    if scores and scores.get('overall'):
+                        sector = scores.get('company', {}).get('sector')
+                        comp_scores = scores.get('scores', {})
+                        
+                        # Count valid non-NaN inputs to ensure data quality
+                        valid_inputs_count = 0
+                        for c_name, c_data in comp_scores.items():
+                            if isinstance(c_data, dict) and 'inputs' in c_data:
+                                for k, v in c_data['inputs'].items():
+                                    # Check for None and NaN
+                                    if v is not None:
+                                        if isinstance(v, (int, float)):
+                                            if not np.isnan(v):
+                                                valid_inputs_count += 1
+                                        else:
+                                            # Strings or other types are considered valid
+                                            valid_inputs_count += 1
+
+                        # Require a minimum threshold of valid data points to show a score
+                        # (e.g., at least 3 valid metrics across all pillars)
+                        if valid_inputs_count >= 3:
+                            da_score = float(scores.get('overall', {}).get('score', 0))
+                except Exception:
+                    pass
+                
+                # Recommendation Logic
+                points = 0
+                reasons = []
+                if current_price > ma50 and ma50 > ma200: 
+                    points += 2
+                    reasons.append("Strong Uptrend")
+                elif current_price > ma50: 
+                    points += 1
+                
+                if r6m > 0.20: points += 1
+                if r12m > 0.30: points += 1
+                if 50 <= rsi <= 70: points += 1
+                
+                if pd.notnull(da_score) and da_score >= 6.5: 
+                    points += 2
+                    reasons.append("Strong Fundamentals")
+                elif pd.notnull(da_score) and da_score < 4.0: 
+                    points -= 2
+                    reasons.append("Weak Fundamentals")
+                
+                action = "BUY" if points >= 5 else "HOLD" if points >= 3 else "SELL"
+                
+                results.append({
+                    'ticker': ticker,
+                    'action': action,
+                    'price': f"{current_price:.2f}",
+                    'trend': "Bullish" if current_price > ma50 > ma200 else "Mixed/Bearish",
+                    'rsi': f"{rsi:.1f}",
+                    'mom_6m': f"{r6m * 100:.1f}%",
+                    'mom_12m': f"{r12m * 100:.1f}%",
+                    'da_score': f"{da_score:.1f}" if pd.notnull(da_score) else "N/A",
+                    'reasoning': "; ".join(reasons) if reasons else "Mixed signals"
+                })
+                
+            except Exception as e:
+                print(f"Error processing {ticker}: {e}")
+                
+        return {"status": "success", "results": results}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
@@ -1812,7 +1936,7 @@ async def chat(request: QueryRequest, http_request: Request):
         include_reasoning=request.include_reasoning
     )
     return response
-  
+
 # User authentication and subscription routes
 
 # Register

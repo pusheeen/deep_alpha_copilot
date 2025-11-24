@@ -1,6 +1,14 @@
 [
   {
     "ticker": "LAC",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": null,
+    "net_income": -197684000.0,
+    "eps": -0.83
+  },
+  {
+    "ticker": "LAC",
     "period": "2025-06-30 00:00:00",
     "revenue": 0.0,
     "earnings": -10000.0,
@@ -22,13 +30,5 @@
     "earnings": 119000.0,
     "net_income": -22180000.0,
     "eps": null
-  },
-  {
-    "ticker": "LAC",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 0.0,
-    "earnings": -78000.0,
-    "net_income": -8063000.0,
-    "eps": -0.04
   }
 ]
