@@ -21,15 +21,14 @@ COPY main.py ./
 COPY bigquery_uploader.py ./
 COPY bigquery_schemas.py ./
 COPY email_notifier.py ./
-# NOTE: Do NOT copy data/ folder - it will be downloaded from Cloud Storage
 
 # Create /tmp/data directory for Cloud Storage cache
-RUN mkdir -p /tmp/data
+RUN mkdir -p /tmp/data && ln -s /tmp/data /app/data
 
 # Set environment variables
-ENV PORT=8080
 ENV DATA_ROOT=/tmp/data
 ENV PYTHONUNBUFFERED=1
 
-# Run the FastAPI application via Uvicorn (serves UI + APIs)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Run the FastAPI application via Uvicorn
+# Cloud Run injects the PORT environment variable
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port $PORT

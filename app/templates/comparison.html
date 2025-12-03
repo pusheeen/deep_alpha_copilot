@@ -21,7 +21,7 @@
 
         <!-- Comparison Controls -->
         <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Multi-Stock Momentum & Fundamental Comparison</h2>
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Multi-Stock Comparison</h2>
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[300px]">
                     <label class="block text-sm font-medium text-slate-600 mb-1">Add Tickers (comma separated)</label>
@@ -31,6 +31,25 @@
                 <button id="compare-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">
                     Run Comparison
                 </button>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div id="charts-section" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Radar Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Deep Alpha Score Comparison</h3>
+                <div class="relative h-80">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Price History Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Price Performance (1 Year)</h3>
+                <div class="relative h-80">
+                    <canvas id="priceChart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -80,6 +99,26 @@
         const loading = document.getElementById('loading');
         const takeawaySection = document.getElementById('key-takeaways');
         const takeawayContent = document.getElementById('takeaway-content');
+        const chartsSection = document.getElementById('charts-section');
+        
+        let radarChart = null;
+        let priceChart = null;
+
+        const COLORS = [
+            'rgba(59, 130, 246, 1)',   // Blue
+            'rgba(16, 185, 129, 1)',   // Green
+            'rgba(249, 115, 22, 1)',   // Orange
+            'rgba(236, 72, 153, 1)',   // Pink
+            'rgba(139, 92, 246, 1)'    // Purple
+        ];
+
+        const BG_COLORS = [
+            'rgba(59, 130, 246, 0.2)',
+            'rgba(16, 185, 129, 0.2)',
+            'rgba(249, 115, 22, 0.2)',
+            'rgba(236, 72, 153, 0.2)',
+            'rgba(139, 92, 246, 0.2)'
+        ];
 
         async function runComparison() {
             const tickers = tickerInput.value.split(',').map(t => t.trim().toUpperCase()).filter(t => t);
@@ -89,24 +128,38 @@
             loading.classList.remove('hidden');
             tableBody.innerHTML = '';
             takeawaySection.classList.add('hidden');
+            chartsSection.classList.add('hidden');
             compareBtn.disabled = true;
             compareBtn.classList.add('opacity-50');
 
             try {
-                const response = await fetch('/api/compare', {
+                // 1. Fetch Comparison Table Data
+                const compareResponse = await fetch('/api/compare', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ tickers })
                 });
+                const compareData = await compareResponse.json();
                 
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    renderTable(data.results);
-                    renderTakeaways(data.results);
+                if (compareData.status === 'success') {
+                    renderTable(compareData.results);
+                    renderTakeaways(compareData.results);
                 } else {
-                    alert('Comparison failed: ' + data.message);
+                    alert('Comparison failed: ' + compareData.message);
                 }
+
+                // 2. Fetch Score Data for Radar Chart
+                const scorePromises = tickers.map(t => fetch(`/api/scores/${t}`).then(r => r.json()));
+                const scoreResults = await Promise.all(scorePromises);
+                renderRadarChart(tickers, scoreResults);
+
+                // 3. Fetch Price History for Line Chart
+                const pricePromises = tickers.map(t => fetch(`/api/price-history/${t}?period=1y`).then(r => r.json()));
+                const priceResults = await Promise.all(pricePromises);
+                renderPriceChart(tickers, priceResults);
+
+                chartsSection.classList.remove('hidden');
+
             } catch (e) {
                 console.error(e);
                 alert('Error connecting to server');
@@ -115,6 +168,136 @@
                 compareBtn.disabled = false;
                 compareBtn.classList.remove('opacity-50');
             }
+        }
+
+        function renderRadarChart(tickers, scoreData) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            if (radarChart) radarChart.destroy();
+
+            const datasets = tickers.map((ticker, index) => {
+                const data = scoreData[index].data;
+                const scores = data?.scores || {};
+                
+                // Map scores to radar axes
+                // Axes: Business, Financial, Sentiment, Critical, Leadership, Earnings, Technical
+                const axisValues = [
+                    scores.business?.score || 0,
+                    scores.financial?.score || 0,
+                    scores.sentiment?.score || 0,
+                    scores.critical?.score || 0,
+                    scores.leadership?.score || 0,
+                    scores.earnings?.score || 0,
+                    scores.technical?.score || 0
+                ];
+
+                return {
+                    label: ticker,
+                    data: axisValues,
+                    borderColor: COLORS[index % COLORS.length],
+                    backgroundColor: BG_COLORS[index % BG_COLORS.length],
+                    borderWidth: 2,
+                    pointRadius: 3
+                };
+            });
+
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Business', 'Financial', 'Sentiment', 'Critical', 'Leadership', 'Earnings', 'Technical'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 10,
+                            ticks: { stepSize: 2 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function renderPriceChart(tickers, priceData) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            
+            if (priceChart) priceChart.destroy();
+
+            const datasets = [];
+            let labels = [];
+
+            // Use the first valid dataset to set labels (dates)
+            // And normalize prices to percentage change
+            priceData.forEach((res, index) => {
+                if (res.status === 'success' && res.data.price_data && res.data.price_data.length > 0) {
+                    const prices = res.data.price_data;
+                    
+                    // Set labels if not set yet
+                    if (labels.length === 0) {
+                        labels = prices.map(p => p.date);
+                    }
+
+                    // Normalize to % change
+                    const startPrice = prices[0].close;
+                    const dataPoints = prices.map(p => ((p.close - startPrice) / startPrice) * 100);
+
+                    datasets.push({
+                        label: tickers[index],
+                        data: dataPoints,
+                        borderColor: COLORS[index % COLORS.length],
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 4
+                    });
+                }
+            });
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            ticks: { maxTicksLimit: 10 }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Performance (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function renderTable(results) {
@@ -153,21 +336,34 @@
         }
 
         function renderTakeaways(results) {
-            const buys = results.filter(r => r.action === 'BUY');
-            const sells = results.filter(r => r.action === 'SELL');
+            let html = '<h4 class="font-bold text-slate-800 mb-3 text-lg">Momentum Comparison Analysis</h4>';
+            html += '<ul class="space-y-3">';
             
-            let html = '';
+            results.forEach(r => {
+                let sentimentIcon = '⚪';
+                if (r.action === 'BUY') sentimentIcon = '🟢';
+                else if (r.action === 'SELL') sentimentIcon = '🔴';
+                else sentimentIcon = '🟡';
+                
+                html += `<li class="text-sm text-slate-700 bg-white/50 p-3 rounded-lg border border-blue-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-lg">${sentimentIcon}</span>
+                        <span class="font-bold text-slate-900">${r.ticker}</span>
+                        <span class="px-2 py-0.5 rounded text-xs font-bold ${getActionColor(r.action)}">${r.action}</span>
+                    </div>
+                    <p class="text-slate-600 pl-7">${r.reasoning}</p>
+                </li>`;
+            });
             
-            if (buys.length > 0) {
-                html += `<p>🚀 <strong>Top Picks:</strong> ${buys.map(b => b.ticker).join(', ')} are showing strong momentum and fundamentals.</p>`;
+            html += '</ul>';
+
+            // Add Highest Velocity highlight
+            if (results.length > 1) {
+                const bestMomentum = results.reduce((prev, current) => (parseFloat(current.mom_6m) > parseFloat(prev.mom_6m) ? current : prev));
+                html += `<div class="mt-4 pt-3 border-t border-blue-200">
+                    <p class="text-sm font-medium text-blue-800">🚀 <strong>Leader:</strong> ${bestMomentum.ticker} has the strongest 6-month velocity at ${bestMomentum.mom_6m}.</p>
+                </div>`;
             }
-            
-            if (sells.length > 0) {
-                html += `<p>⚠️ <strong>Caution:</strong> ${sells.map(s => s.ticker).join(', ')} are flagging sell signals due to weak trends or fundamentals.</p>`;
-            }
-            
-            const bestMomentum = results.reduce((prev, current) => (parseFloat(current.mom_6m) > parseFloat(prev.mom_6m) ? current : prev));
-            html += `<p>📈 <strong>Highest Velocity:</strong> ${bestMomentum.ticker} is leading the pack with ${bestMomentum.mom_6m} 6-month return.</p>`;
 
             takeawayContent.innerHTML = html;
             takeawaySection.classList.remove('hidden');

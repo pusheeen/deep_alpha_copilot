@@ -124,7 +124,8 @@ class EmailNotifier:
         # Summary
         report.append("=" * 70)
         report.append(f"Total new records: {self._count_total_new(stats)}")
-        report.append("Project: financial-agent-474022.deep_alpha_copilot")
+        project_id = os.getenv("GCP_PROJECT_ID", "unknown-project")
+        report.append(f"Project: {project_id}.deep_alpha_copilot")
         report.append("=" * 70)
 
         return "\n".join(report)
@@ -267,7 +268,7 @@ class EmailNotifier:
 
         html += f"""
                 <div class="footer">
-                    <p>BigQuery Project: <strong>financial-agent-474022.deep_alpha_copilot</strong></p>
+                    <p>BigQuery Project: <strong>{os.getenv('GCP_PROJECT_ID', 'unknown-project')}.deep_alpha_copilot</strong></p>
                     <p>This is an automated report from your deep_alpha_copilot data pipeline.</p>
                 </div>
             </div>

@@ -561,22 +561,27 @@ def load_financials_df(ticker: str) -> pd.DataFrame:
         'key_metrics'
     ]
     
-    for statement_type in statement_types:
-        if statement_type in data and isinstance(data[statement_type], dict):
-            for date_str, metrics in data[statement_type].items():
-                if not isinstance(metrics, dict):
-                    continue
-                # Find or create the record for this date
-                existing = next((r for r in records if r['date'] == date_str), None)
-                if existing:
-                    # Merge metrics, avoiding overwriting with None/NaN
-                    for key, value in metrics.items():
-                        if key not in existing or existing[key] is None:
-                            existing[key] = value
-                else:
-                    record = {'date': date_str}
-                    record.update(metrics)
-                    records.append(record)
+    # Check if data is a list (some files might be in list format)
+    if isinstance(data, list):
+        # If it's a list, assume it's already a list of records
+        records = data
+    else:
+        for statement_type in statement_types:
+            if statement_type in data and isinstance(data[statement_type], dict):
+                for date_str, metrics in data[statement_type].items():
+                    if not isinstance(metrics, dict):
+                        continue
+                    # Find or create the record for this date
+                    existing = next((r for r in records if r.get('date') == date_str), None)
+                    if existing:
+                        # Merge metrics, avoiding overwriting with None/NaN
+                        for key, value in metrics.items():
+                            if key not in existing or existing[key] is None:
+                                existing[key] = value
+                    else:
+                        record = {'date': date_str}
+                        record.update(metrics)
+                        records.append(record)
     
     if not records:
         raise ScoreComputationError(f"No financial data found for {ticker}")
@@ -644,7 +649,44 @@ def compute_business_score(ticker: str, fin_df: pd.DataFrame, info: dict) -> Com
     rnd_series_raw = safe_series(fin_df, "Research And Development")
     rnd_series = (rnd_series_raw / revenue_series).dropna() if not rnd_series_raw.empty else pd.Series(dtype=float)
 
-    revenue_cagr = calculate_cagr(revenue_series[-4:])
+    # Filter to annual data - try common fiscal year ends (Dec 31, Sep 30, Oct 31, Jan 31)
+    # Most companies use calendar year (Dec 31), but some use different fiscal years
+    annual_revenue = pd.Series(dtype=float)
+    
+    # Try Dec 31 (calendar year)
+    dec31 = revenue_series[
+        (revenue_series.index.month == 12) & (revenue_series.index.day == 31)
+    ]
+    if len(dec31) >= 2:
+        annual_revenue = dec31.sort_index()
+    else:
+        # Try Oct 31 (common fiscal year end, e.g., AVGO)
+        oct31 = revenue_series[
+            (revenue_series.index.month == 10) & (revenue_series.index.day == 31)
+        ]
+        if len(oct31) >= 2:
+            annual_revenue = oct31.sort_index()
+        else:
+            # Try Sep 30 (common fiscal year end)
+            sep30 = revenue_series[
+                (revenue_series.index.month == 9) & (revenue_series.index.day == 30)
+            ]
+            if len(sep30) >= 2:
+                annual_revenue = sep30.sort_index()
+            else:
+                # Try Jan 31 (some companies)
+                jan31 = revenue_series[
+                    (revenue_series.index.month == 1) & (revenue_series.index.day == 31)
+                ]
+                if len(jan31) >= 2:
+                    annual_revenue = jan31.sort_index()
+    
+    # Use annual data if available, otherwise fall back to last 4 periods
+    if len(annual_revenue) >= 2:
+        revenue_cagr = calculate_cagr(annual_revenue[-4:] if len(annual_revenue) >= 4 else annual_revenue)
+    else:
+        # Fallback: use all available data if no annual data found
+        revenue_cagr = calculate_cagr(revenue_series[-4:])
     gross_margin_latest = gross_margin_series.iloc[-1] if not gross_margin_series.empty else None
     rnd_intensity_latest = rnd_series.iloc[-1] if not rnd_series.empty else None
 
@@ -716,7 +758,44 @@ def compute_financial_score(fin_df: pd.DataFrame, info: dict) -> ComponentScore:
     if revenue_series.empty or net_income_series.empty:
         raise ScoreComputationError("Insufficient revenue/net income data for financial scoring.")
 
-    revenue_cagr = calculate_cagr(revenue_series[-4:])
+    # Filter to annual data - try common fiscal year ends (Dec 31, Sep 30, Oct 31, Jan 31)
+    # Most companies use calendar year (Dec 31), but some use different fiscal years
+    annual_revenue = pd.Series(dtype=float)
+    
+    # Try Dec 31 (calendar year)
+    dec31 = revenue_series[
+        (revenue_series.index.month == 12) & (revenue_series.index.day == 31)
+    ]
+    if len(dec31) >= 2:
+        annual_revenue = dec31.sort_index()
+    else:
+        # Try Oct 31 (common fiscal year end, e.g., AVGO)
+        oct31 = revenue_series[
+            (revenue_series.index.month == 10) & (revenue_series.index.day == 31)
+        ]
+        if len(oct31) >= 2:
+            annual_revenue = oct31.sort_index()
+        else:
+            # Try Sep 30 (common fiscal year end)
+            sep30 = revenue_series[
+                (revenue_series.index.month == 9) & (revenue_series.index.day == 30)
+            ]
+            if len(sep30) >= 2:
+                annual_revenue = sep30.sort_index()
+            else:
+                # Try Jan 31 (some companies)
+                jan31 = revenue_series[
+                    (revenue_series.index.month == 1) & (revenue_series.index.day == 31)
+                ]
+                if len(jan31) >= 2:
+                    annual_revenue = jan31.sort_index()
+    
+    # Use annual data if available, otherwise fall back to last 4 periods
+    if len(annual_revenue) >= 2:
+        revenue_cagr = calculate_cagr(annual_revenue[-4:] if len(annual_revenue) >= 4 else annual_revenue)
+    else:
+        # Fallback: use all available data if no annual data found
+        revenue_cagr = calculate_cagr(revenue_series[-4:])
     net_margin_series = (net_income_series / revenue_series).dropna()
     net_margin_latest = net_margin_series.iloc[-1] if not net_margin_series.empty else None
 

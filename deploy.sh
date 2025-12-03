@@ -64,11 +64,19 @@ gcloud services enable \
     cloudbuild.googleapis.com \
     run.googleapis.com \
     bigquery.googleapis.com \
+    storage.googleapis.com \
     secretmanager.googleapis.com \
-    cloudscheduler.googleapis.com
+    cloudscheduler.googleapis.com \
+    artifactregistry.googleapis.com
 
 echo -e "${GREEN}✓ APIs enabled${NC}"
 echo
+
+# Activate virtual environment if it exists
+if [ -d "myenv" ]; then
+    echo "Activating virtual environment..."
+    source myenv/bin/activate
+fi
 
 # Create BigQuery dataset and tables
 echo "Creating BigQuery dataset and tables..."
@@ -108,8 +116,9 @@ echo -e "${GREEN}✓ Health check passed${NC}"
 echo
 
 # Setup Cloud Scheduler (optional)
-read -p "Do you want to setup Cloud Scheduler for daily runs? (y/n) " -n 1 -r
-echo
+# read -p "Do you want to setup Cloud Scheduler for daily runs? (y/n) " -n 1 -r
+# echo
+REPLY="y"
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Setting up Cloud Scheduler..."
 

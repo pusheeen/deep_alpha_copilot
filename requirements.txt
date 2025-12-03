@@ -2,7 +2,7 @@ google-adk
 distro
 langchain
 langchain-community
-litellm
+# litellm  # Removed to avoid dependency hell
 google-cloud-aiplatform
 google-cloud-storage
 google-cloud-bigquery
@@ -21,7 +21,7 @@ langchain-google-vertexai
 fastapi
 uvicorn
 python-dotenv
-pydantic==2.11.7
+pydantic>=2.10.6
 # unstructured  # Temporarily disabled for deployment
 joblib
 yfinance
@@ -42,3 +42,4 @@ celery
 flask
 # redis  # Disabled - not needed for basic deployment
 matplotlib
+python-jose[cryptography]

@@ -4,8 +4,18 @@ Defines the ADK agent team for the financial data application.
 This includes a root agent for orchestration and specialized sub-agents
 for graph querying, document retrieval, and stock price predictions.
 """
-from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
+try:
+    from google.adk.agents import Agent
+    from google.adk.models.lite_llm import LiteLlm
+    ADK_CORE_AVAILABLE = True
+except ImportError:
+    ADK_CORE_AVAILABLE = False
+    # Mock classes to allow file to load
+    class Agent:
+        def __init__(self, **kwargs): pass
+    class LiteLlm:
+        def __init__(self, **kwargs): pass
+
 # from ..neo4j_for_adk import graphdb  # Disabled - using JSON files instead
 from app.models.predict import predict_next_day_price
 from langchain_google_vertexai import VertexAIEmbeddings
@@ -22,7 +32,13 @@ except ImportError:
     HttpError = Exception  # type: ignore[assignment]
 
 # --- Setup ---
-llm = LiteLlm(model="gemini-2.5-pro")
+if ADK_CORE_AVAILABLE:
+    try:
+        llm = LiteLlm(model="gemini-2.5-pro")
+    except Exception:
+        llm = None
+else:
+    llm = None
 
 embeddings = VertexAIEmbeddings(model_name="text-embedding-005")
 
@@ -257,7 +273,7 @@ def search_latest_news(query: str, max_results: int = 5) -> dict:
             q=query,
             cx=GOOGLE_SEARCH_ENGINE_ID,
             num=max_results,
-            dateRestrict="d7"
+            dateRestrict="d3"
         ).execute()
 
         items = response.get("items", [])

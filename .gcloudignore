@@ -1,12 +1,17 @@
 # Ignore large files that aren't needed for deployment
-app/models/saved_models/
+data/
+myenv/
+venv/
 .venv/
+.git/
+.gitignore
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.git/
-.gitignore
 *.log
 *.tmp
 *.cache
+*.ipynb
+.DS_Store
+app/models/saved_models/

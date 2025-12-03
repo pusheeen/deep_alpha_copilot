@@ -59,9 +59,17 @@ except ImportError:
 
 # --- Import your new ADK root agent and utilities ---
 from dotenv import load_dotenv  # <-- ADD THIS
+# Try to import search_latest_news separately as it doesn't depend on ADK core
+try:
+    from app.agents.agents import search_latest_news
+    SEARCH_AVAILABLE = True
+except ImportError:
+    SEARCH_AVAILABLE = False
+    print("Warning: Could not import search_latest_news.")
+
 if ADK_AVAILABLE:
     try:
-        from app.agents.agents import root_agent, search_latest_news
+        from app.agents.agents import root_agent
     except ImportError:
         ADK_AVAILABLE = False
         print("Warning: Could not import agents. Agent features will be disabled.")
@@ -92,7 +100,9 @@ PRICE_ID = os.getenv("STRIPE_PRICE_ID")
 HAS_STRIPE = bool(STRIPE_SECRET_KEY and PRICE_ID)
 
 # Database setup
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./users.db")
+# Use /tmp for SQLite in Cloud Run (read-only filesystem)
+default_db_path = "sqlite:////tmp/users.db" if os.getenv("K_SERVICE") else "sqlite:///./users.db"
+DATABASE_URL = os.getenv("DATABASE_URL", default_db_path)
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
 
@@ -1033,7 +1043,10 @@ def fetch_realtime_news(ticker: str, window_hours: int = 72, max_results: int = 
     offline_articles = _load_offline_articles(ticker)
     offline_lookup = _build_article_lookup(offline_articles) if offline_articles else {"by_link": {}, "by_title": {}}
 
-    if not ADK_AVAILABLE or "search_latest_news" not in globals():
+    # Check if search is available (using new SEARCH_AVAILABLE flag or ADK_AVAILABLE fallback)
+    search_is_active = globals().get("SEARCH_AVAILABLE", False) or (globals().get("ADK_AVAILABLE", False) and "search_latest_news" in globals())
+
+    if not search_is_active:
         fallback = _load_offline_news_summary(ticker)
         if fallback:
             return fallback
@@ -1496,6 +1509,19 @@ async def make_agent_caller(agent: Agent) -> AgentCaller:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Download data from Cloud Storage on startup (if in production)
+    if os.getenv("K_SERVICE") or os.getenv("FORCE_STARTUP_DOWNLOAD"):
+        print("Downloading data from Cloud Storage...")
+        try:
+            from storage_helper import get_storage_manager
+            storage_manager = get_storage_manager()
+            loop = asyncio.get_event_loop()
+            file_count = await loop.run_in_executor(None, storage_manager.download_all_data)
+            print(f"✅ Downloaded {file_count} files from Cloud Storage")
+        except Exception as e:
+            print(f"⚠️ Warning: Could not download data from Cloud Storage: {e}")
+            print("   Continuing with existing local data (if any)...")
+    
     # On startup, initialize the ADK AgentCaller
     if ADK_AVAILABLE:
         print("Initializing ADK Agent...")
@@ -1870,22 +1896,40 @@ async def compare_stocks(request: ComparisonRequest):
                 # Recommendation Logic
                 points = 0
                 reasons = []
-                if current_price > ma50 and ma50 > ma200: 
-                    points += 2
-                    reasons.append("Strong Uptrend")
-                elif current_price > ma50: 
+                
+                # Trend Analysis
+                if current_price > ma50:
+                    if ma50 > ma200: 
+                        points += 2
+                        reasons.append("Strong Uptrend (Price > MA50 > MA200)")
+                    else:
+                        points += 1
+                        reasons.append("Moderate Uptrend (Price > MA50)")
+                elif current_price < ma50 and ma50 < ma200:
+                    reasons.append("Downtrend (Price < MA50 < MA200)")
+                
+                # Momentum Strength
+                if r6m > 0.20: 
                     points += 1
+                    reasons.append(f"High 6M Velocity (+{r6m*100:.0f}%)")
+                if r12m > 0.30: 
+                    points += 1
+                    
+                # RSI Context
+                if rsi > 70:
+                    reasons.append("Overbought (RSI > 70)")
+                elif rsi < 30:
+                    points += 1 # Potential mean reversion
+                    reasons.append("Oversold (RSI < 30)")
+                elif 50 <= rsi <= 70:
+                    points += 1
+                    reasons.append("Bullish RSI Range")
                 
-                if r6m > 0.20: points += 1
-                if r12m > 0.30: points += 1
-                if 50 <= rsi <= 70: points += 1
-                
+                # Fundamental Impact (Score) - affects points but not text description
                 if pd.notnull(da_score) and da_score >= 6.5: 
                     points += 2
-                    reasons.append("Strong Fundamentals")
                 elif pd.notnull(da_score) and da_score < 4.0: 
                     points -= 2
-                    reasons.append("Weak Fundamentals")
                 
                 action = "BUY" if points >= 5 else "HOLD" if points >= 3 else "SELL"
                 
@@ -1898,7 +1942,7 @@ async def compare_stocks(request: ComparisonRequest):
                     'mom_6m': f"{r6m * 100:.1f}%",
                     'mom_12m': f"{r12m * 100:.1f}%",
                     'da_score': f"{da_score:.1f}" if pd.notnull(da_score) else "N/A",
-                    'reasoning': "; ".join(reasons) if reasons else "Mixed signals"
+                    'reasoning': "; ".join(reasons) if reasons else "Neutral technicals"
                 })
                 
             except Exception as e:
