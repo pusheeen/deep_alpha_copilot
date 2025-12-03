@@ -21,7 +21,12 @@
 
         <!-- Comparison Controls -->
         <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Multi-Stock Comparison</h2>
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">Multi-Stock Comparison</h2>
+                    <p class="text-xs text-slate-500 mt-1" id="last-updated">Last Updated: --</p>
+                </div>
+            </div>
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[300px]">
                     <label class="block text-sm font-medium text-slate-600 mb-1">Add Tickers (comma separated)</label>
@@ -50,6 +55,9 @@
                 <div class="relative h-80">
                     <canvas id="priceChart"></canvas>
                 </div>
+                <p class="text-xs text-slate-400 mt-2 italic text-center">
+                    * Y-Axis: Cumulative % Return normalized to start date (0%).
+                </p>
             </div>
         </div>
 
@@ -396,6 +404,7 @@
         compareBtn.addEventListener('click', runComparison);
         
         // Auto-run on load
+        document.getElementById('last-updated').textContent = 'Last Updated: ' + new Date().toLocaleString();
         runComparison();
     </script>
 </body>
