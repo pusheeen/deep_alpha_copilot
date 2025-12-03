@@ -187,7 +187,7 @@ TOKEN_USAGE_LOCK = asyncio.Lock()
 SUPPORTED_TICKERS_CACHE: List[str] = []
 SUPPORTED_TICKERS_CACHE_TIME: Optional[datetime] = None
 SUPPORTED_TICKERS_TTL = timedelta(minutes=30)
-REALTIME_NEWS_TTL = timedelta(minutes=30)
+REALTIME_NEWS_TTL = timedelta(hours=12)  # Refresh news every 12 hours
 COMPANIES_FILE = DATA_ROOT / "companies.csv"
 COMPANY_METADATA_CACHE: Dict[str, Dict[str, str]] = {}
 COMPANY_METADATA_CACHE_TIME: Optional[datetime] = None
@@ -1507,20 +1507,26 @@ async def make_agent_caller(agent: Agent) -> AgentCaller:
 
 # --- FastAPI Application ---
 
+def _download_data_sync():
+    """Synchronous wrapper for data download."""
+    try:
+        from storage_helper import get_storage_manager
+        storage_manager = get_storage_manager()
+        return storage_manager.download_all_data()
+    except Exception as e:
+        print(f"⚠️ Warning: Could not download data from Cloud Storage: {e}")
+        return 0
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Download data from Cloud Storage on startup (if in production)
+    # Start background data download (non-blocking)
+    # This allows the app to start serving requests immediately
     if os.getenv("K_SERVICE") or os.getenv("FORCE_STARTUP_DOWNLOAD"):
-        print("Downloading data from Cloud Storage...")
-        try:
-            from storage_helper import get_storage_manager
-            storage_manager = get_storage_manager()
-            loop = asyncio.get_event_loop()
-            file_count = await loop.run_in_executor(None, storage_manager.download_all_data)
-            print(f"✅ Downloaded {file_count} files from Cloud Storage")
-        except Exception as e:
-            print(f"⚠️ Warning: Could not download data from Cloud Storage: {e}")
-            print("   Continuing with existing local data (if any)...")
+        print("Starting background data download from Cloud Storage...")
+        loop = asyncio.get_event_loop()
+        # Fire and forget - don't await, app starts immediately
+        loop.run_in_executor(None, _download_data_sync)
+        print("✅ Background data download started (app ready, data loading in background)")
     
     # On startup, initialize the ADK AgentCaller
     if ADK_AVAILABLE:
@@ -1820,6 +1826,7 @@ async def compare_stocks(request: ComparisonRequest):
     """
     Compares a list of tickers using momentum and fundamental data.
     Returns a list of comparison results suitable for the frontend.
+    Optimized with parallel score computation.
     """
     try:
         import yfinance as yf
@@ -1829,8 +1836,26 @@ async def compare_stocks(request: ComparisonRequest):
 
         tickers = [t.upper() for t in request.tickers]
         
-        # Fetch data
+        # Fetch price data for all tickers in parallel
         data = yf.download(tickers, period="2y", group_by='ticker', progress=False)
+        
+        # Pre-compute scores in parallel for faster response
+        async def compute_score_async(ticker):
+            """Compute score for a single ticker."""
+            loop = asyncio.get_event_loop()
+            try:
+                scores = await loop.run_in_executor(None, compute_company_scores, ticker)
+                if scores and scores.get('overall'):
+                    return ticker, float(scores.get('overall', {}).get('score', np.nan))
+            except Exception:
+                pass
+            return ticker, np.nan
+        
+        # Compute all scores in parallel
+        score_tasks = [compute_score_async(ticker) for ticker in tickers]
+        score_results = await asyncio.gather(*score_tasks)
+        score_dict = {ticker: score for ticker, score in score_results}
+        
         results = []
 
         for ticker in tickers:
@@ -1864,34 +1889,8 @@ async def compare_stocks(request: ComparisonRequest):
                 rs = gain / loss
                 rsi = float(100 - (100 / (1 + rs)).iloc[-1])
                 
-                # Deep Alpha Score
-                da_score = np.nan
-                try:
-                    scores = compute_company_scores(ticker)
-                    if scores and scores.get('overall'):
-                        sector = scores.get('company', {}).get('sector')
-                        comp_scores = scores.get('scores', {})
-                        
-                        # Count valid non-NaN inputs to ensure data quality
-                        valid_inputs_count = 0
-                        for c_name, c_data in comp_scores.items():
-                            if isinstance(c_data, dict) and 'inputs' in c_data:
-                                for k, v in c_data['inputs'].items():
-                                    # Check for None and NaN
-                                    if v is not None:
-                                        if isinstance(v, (int, float)):
-                                            if not np.isnan(v):
-                                                valid_inputs_count += 1
-                                        else:
-                                            # Strings or other types are considered valid
-                                            valid_inputs_count += 1
-
-                        # Require a minimum threshold of valid data points to show a score
-                        # (e.g., at least 3 valid metrics across all pillars)
-                        if valid_inputs_count >= 3:
-                            da_score = float(scores.get('overall', {}).get('score', 0))
-                except Exception:
-                    pass
+                # Deep Alpha Score (already computed in parallel above)
+                da_score = score_dict.get(ticker, np.nan)
                 
                 # Recommendation Logic
                 points = 0

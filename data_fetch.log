@@ -14352,3 +14352,737 @@ Basic Materials:
 2025-11-23 20:06:41,524 - INFO - Fetching CEO data for SNDK
 2025-11-23 20:06:41,750 - INFO - Found CEO Mr. David V.  Goeckeler via yfinance info
 2025-11-23 20:06:41,750 - INFO - Searching LinkedIn for Mr. David V.  Goeckeler
+2025-11-23 20:06:43,916 - INFO - ✅ Saved CEO profile for SNDK to data/ceo_profiles/SNDK_ceo_profile.json
+2025-11-23 20:06:43,916 - INFO - ✅ SNDK: Found CEO Mr. David V.  Goeckeler
+2025-11-23 20:06:43,916 - INFO - Processing CEO for 543/21: BE (Bloom Energy Corp)
+2025-11-23 20:06:43,916 - INFO - Fetching CEO data for BE
+2025-11-23 20:06:44,102 - INFO - Found CEO Dr. K. R. Sridhar Ph.D. via yfinance info
+2025-11-23 20:06:44,102 - INFO - Searching LinkedIn for Dr. K. R. Sridhar Ph.D.
+2025-11-23 20:06:46,343 - INFO - ✅ Saved CEO profile for BE to data/ceo_profiles/BE_ceo_profile.json
+2025-11-23 20:06:46,343 - INFO - ✅ BE: Found CEO Dr. K. R. Sridhar Ph.D.
+2025-11-23 20:06:46,344 - INFO - Processing CEO for 568/21: RKLB (Rocket Lab Corp)
+2025-11-23 20:06:46,344 - INFO - Fetching CEO data for RKLB
+2025-11-23 20:06:46,546 - INFO - Found CEO Mr. Peter  Beck via yfinance info
+2025-11-23 20:06:46,546 - INFO - Searching LinkedIn for Mr. Peter  Beck
+2025-11-23 20:06:48,713 - INFO - ✅ Saved CEO profile for RKLB to data/ceo_profiles/RKLB_ceo_profile.json
+2025-11-23 20:06:48,714 - INFO - ✅ RKLB: Found CEO Mr. Peter  Beck
+2025-11-23 20:06:48,714 - INFO - Processing CEO for 757/21: OKLO (Oklo Inc.)
+2025-11-23 20:06:48,714 - INFO - Fetching CEO data for OKLO
+2025-11-23 20:06:48,973 - INFO - Found CEO Mr. Jacob  Dewitte via yfinance info
+2025-11-23 20:06:48,973 - INFO - Searching LinkedIn for Mr. Jacob  Dewitte
+2025-11-23 20:06:51,135 - INFO - ✅ Saved CEO profile for OKLO to data/ceo_profiles/OKLO_ceo_profile.json
+2025-11-23 20:06:51,135 - INFO - ✅ OKLO: Found CEO Mr. Jacob  Dewitte
+2025-11-23 20:06:51,136 - INFO - Processing CEO for 817/21: IREN (IREN Ltd)
+2025-11-23 20:06:51,136 - INFO - Fetching CEO data for IREN
+2025-11-23 20:06:51,322 - INFO - Found CEO Mr. William  Roberts via yfinance info
+2025-11-23 20:06:51,322 - INFO - Searching LinkedIn for Mr. William  Roberts
+2025-11-23 20:06:53,545 - INFO - ✅ Saved CEO profile for IREN to data/ceo_profiles/IREN_ceo_profile.json
+2025-11-23 20:06:53,545 - INFO - ✅ IREN: Found CEO Mr. William  Roberts
+2025-11-23 20:06:53,545 - INFO - Processing CEO for 1129/21: QBTS (D-Wave Quantum Inc.)
+2025-11-23 20:06:53,545 - INFO - Fetching CEO data for QBTS
+2025-11-23 20:06:53,809 - INFO - Found CEO Dr. Alan E. Baratz Ph.D. via yfinance info
+2025-11-23 20:06:53,809 - INFO - Searching LinkedIn for Dr. Alan E. Baratz Ph.D.
+2025-11-23 20:06:55,978 - INFO - ✅ Saved CEO profile for QBTS to data/ceo_profiles/QBTS_ceo_profile.json
+2025-11-23 20:06:55,978 - INFO - ✅ QBTS: Found CEO Dr. Alan E. Baratz Ph.D.
+2025-11-23 20:06:55,979 - INFO - Processing CEO for 1450/21: LEU (CENTRUS ENERGY CORP)
+2025-11-23 20:06:55,979 - INFO - Fetching CEO data for LEU
+2025-11-23 20:06:56,253 - INFO - Found CEO Mr. Amir V. Vexler via yfinance info
+2025-11-23 20:06:56,254 - INFO - Searching LinkedIn for Mr. Amir V. Vexler
+2025-11-23 20:06:58,399 - INFO - ✅ Saved CEO profile for LEU to data/ceo_profiles/LEU_ceo_profile.json
+2025-11-23 20:06:58,400 - INFO - ✅ LEU: Found CEO Mr. Amir V. Vexler
+2025-11-23 20:06:58,400 - INFO - Processing CEO for 1594/21: EOSE (Eos Energy Enterprises, Inc.)
+2025-11-23 20:06:58,400 - INFO - Fetching CEO data for EOSE
+2025-11-23 20:06:58,587 - INFO - Found CEO Mr. Joseph R. Mastrangelo Jr. via yfinance info
+2025-11-23 20:06:58,587 - INFO - Searching LinkedIn for Mr. Joseph R. Mastrangelo Jr.
+2025-11-23 20:07:00,795 - INFO - ✅ Saved CEO profile for EOSE to data/ceo_profiles/EOSE_ceo_profile.json
+2025-11-23 20:07:00,796 - INFO - ✅ EOSE: Found CEO Mr. Joseph R. Mastrangelo Jr.
+2025-11-23 20:07:00,797 - INFO - Processing CEO for 1786/21: FLNC (Fluence Energy, Inc.)
+2025-11-23 20:07:00,797 - INFO - Fetching CEO data for FLNC
+2025-11-23 20:07:06,388 - INFO - Found CEO Mr. Julian Jose Nebreda Marquez via yfinance info
+2025-11-23 20:07:06,389 - INFO - Searching LinkedIn for Mr. Julian Jose Nebreda Marquez
+2025-11-23 20:07:06,845 - INFO - Found LinkedIn URL: https://www.linkedin.com/in/julian-nebreda
+2025-11-23 20:07:11,961 - INFO - ✅ Saved CEO profile for FLNC to data/ceo_profiles/FLNC_ceo_profile.json
+2025-11-23 20:07:11,961 - INFO - ✅ FLNC: Found CEO Mr. Julian Jose Nebreda Marquez
+2025-11-23 20:07:11,962 - INFO - Processing CEO for 2301/21: LAC (LITHIUM AMERICAS CORP.)
+2025-11-23 20:07:11,962 - INFO - Fetching CEO data for LAC
+2025-11-23 20:07:12,218 - INFO - Found CEO Mr. Jonathan D. Evans via yfinance info
+2025-11-23 20:07:12,218 - INFO - Searching LinkedIn for Mr. Jonathan D. Evans
+2025-11-23 20:07:14,378 - INFO - ✅ Saved CEO profile for LAC to data/ceo_profiles/LAC_ceo_profile.json
+2025-11-23 20:07:14,378 - INFO - ✅ LAC: Found CEO Mr. Jonathan D. Evans
+2025-11-23 20:07:14,378 - INFO - Processing CEO for 2790/21: NAK (NORTHERN DYNASTY MINERALS LTD)
+2025-11-23 20:07:14,378 - INFO - Fetching CEO data for NAK
+2025-11-23 20:07:14,661 - INFO - Found CEO Mr. Ronald William Thiessen C.P.A., CA, F.C.A., FCPA via yfinance info
+2025-11-23 20:07:14,661 - INFO - Searching LinkedIn for Mr. Ronald William Thiessen C.P.A., CA, F.C.A., FCPA
+2025-11-23 20:07:16,925 - INFO - ✅ Saved CEO profile for NAK to data/ceo_profiles/NAK_ceo_profile.json
+2025-11-23 20:07:16,925 - INFO - ✅ NAK: Found CEO Mr. Ronald William Thiessen C.P.A., CA, F.C.A., FCPA
+2025-11-23 20:07:16,925 - INFO - Processing CEO for 7905/21: ASST (Strive, Inc.)
+2025-11-23 20:07:16,925 - INFO - Fetching CEO data for ASST
+2025-11-23 20:07:17,133 - INFO - Found CEO Mr. Matthew Ryan Cole via yfinance info
+2025-11-23 20:07:17,133 - INFO - Searching LinkedIn for Mr. Matthew Ryan Cole
+2025-11-23 20:07:19,391 - INFO - ✅ Saved CEO profile for ASST to data/ceo_profiles/ASST_ceo_profile.json
+2025-11-23 20:07:19,391 - INFO - ✅ ASST: Found CEO Mr. Matthew Ryan Cole
+2025-11-23 20:07:19,392 - INFO - ============================================================
+2025-11-23 20:07:19,392 - INFO - CEO BATCH PROCESSING COMPLETED
+2025-11-23 20:07:19,392 - INFO - ============================================================
+2025-11-23 20:07:19,392 - INFO - Total companies: 21
+2025-11-23 20:07:19,392 - INFO - Successful: 21
+2025-11-23 20:07:19,392 - INFO - Failed: 0
+2025-11-23 20:07:19,392 - INFO - Success rate: 100.0%
+2025-11-23 20:07:19,392 - INFO - JSON report: data/reports/ceo_batch_report_20251123_200719.json
+2025-11-23 20:07:19,392 - INFO - CSV report: data/reports/ceo_summary_20251123_200719.csv
+2025-11-23 20:07:19,392 - INFO - 
+2025-11-23 20:07:19,392 - INFO - ============================================================
+2025-11-23 20:07:19,392 - INFO - FETCHING FINANCIAL DATA
+2025-11-23 20:07:19,392 - INFO - ============================================================
+2025-11-23 20:07:19,419 - INFO - Fetching financial statements for NVDA...
+2025-11-23 20:07:21,270 - INFO - ✅ Saved financial statements for NVDA
+2025-11-23 20:07:21,270 - INFO - Fetching quarterly earnings for NVDA...
+2025-11-23 20:07:21,275 - INFO - Quarterly earnings not available for NVDA; falling back to quarterly financials.
+2025-11-23 20:07:21,276 - INFO - ✅ Saved quarterly earnings for NVDA to data/structured/earnings/NVDA_quarterly_earnings.json
+2025-11-23 20:07:21,276 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:21,276 - INFO - Fetching stock prices for NVDA...
+2025-11-23 20:07:22,390 - INFO - ✅ Saved prices for NVDA
+2025-11-23 20:07:22,390 - INFO - Fetching annual 10-K/20-F filings for NVDA (CIK: 1045810)...
+2025-11-23 20:07:22,747 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:23,142 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:23,597 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:24,041 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:24,385 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:24,780 - INFO - ✅ Finished fetching filings for NVDA
+2025-11-23 20:07:25,287 - INFO - Fetching financial statements for MSFT...
+2025-11-23 20:07:26,804 - INFO - ✅ Saved financial statements for MSFT
+2025-11-23 20:07:26,804 - INFO - Fetching quarterly earnings for MSFT...
+2025-11-23 20:07:26,810 - INFO - Quarterly earnings not available for MSFT; falling back to quarterly financials.
+2025-11-23 20:07:26,810 - INFO - ✅ Saved quarterly earnings for MSFT to data/structured/earnings/MSFT_quarterly_earnings.json
+2025-11-23 20:07:26,810 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:26,810 - INFO - Fetching stock prices for MSFT...
+2025-11-23 20:07:27,468 - INFO - ✅ Saved prices for MSFT
+2025-11-23 20:07:27,468 - INFO - Fetching annual 10-K/20-F filings for MSFT (CIK: 789019)...
+2025-11-23 20:07:27,710 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:28,075 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:28,435 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:29,489 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:29,930 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:30,408 - INFO - ✅ Finished fetching filings for MSFT
+2025-11-23 20:07:30,914 - INFO - Fetching financial statements for XOM...
+2025-11-23 20:07:32,126 - INFO - ✅ Saved financial statements for XOM
+2025-11-23 20:07:32,126 - INFO - Fetching quarterly earnings for XOM...
+2025-11-23 20:07:32,133 - INFO - Quarterly earnings not available for XOM; falling back to quarterly financials.
+2025-11-23 20:07:32,133 - INFO - ✅ Saved quarterly earnings for XOM to data/structured/earnings/XOM_quarterly_earnings.json
+2025-11-23 20:07:32,133 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:32,133 - INFO - Fetching stock prices for XOM...
+2025-11-23 20:07:33,059 - INFO - ✅ Saved prices for XOM
+2025-11-23 20:07:33,059 - INFO - Fetching annual 10-K/20-F filings for XOM (CIK: 34088)...
+2025-11-23 20:07:33,247 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:33,648 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:34,091 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:34,546 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:34,926 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:35,319 - INFO - ✅ Finished fetching filings for XOM
+2025-11-23 20:07:35,826 - INFO - Fetching financial statements for UNH...
+2025-11-23 20:07:37,294 - INFO - ✅ Saved financial statements for UNH
+2025-11-23 20:07:37,295 - INFO - Fetching quarterly earnings for UNH...
+2025-11-23 20:07:37,305 - INFO - Quarterly earnings not available for UNH; falling back to quarterly financials.
+2025-11-23 20:07:37,306 - INFO - ✅ Saved quarterly earnings for UNH to data/structured/earnings/UNH_quarterly_earnings.json
+2025-11-23 20:07:37,306 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:37,306 - INFO - Fetching stock prices for UNH...
+2025-11-23 20:07:37,891 - INFO - ✅ Saved prices for UNH
+2025-11-23 20:07:37,891 - INFO - Fetching annual 10-K/20-F filings for UNH (CIK: 731766)...
+2025-11-23 20:07:38,103 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:38,476 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:38,852 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:39,332 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:39,877 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:40,362 - INFO - ✅ Finished fetching filings for UNH
+2025-11-23 20:07:40,869 - INFO - Fetching financial statements for MU...
+2025-11-23 20:07:42,036 - INFO - ✅ Saved financial statements for MU
+2025-11-23 20:07:42,036 - INFO - Fetching quarterly earnings for MU...
+2025-11-23 20:07:42,044 - INFO - Quarterly earnings not available for MU; falling back to quarterly financials.
+2025-11-23 20:07:42,045 - INFO - ✅ Saved quarterly earnings for MU to data/structured/earnings/MU_quarterly_earnings.json
+2025-11-23 20:07:42,045 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:42,045 - INFO - Fetching stock prices for MU...
+2025-11-23 20:07:42,539 - INFO - ✅ Saved prices for MU
+2025-11-23 20:07:42,539 - INFO - Fetching annual 10-K/20-F filings for MU (CIK: 723125)...
+2025-11-23 20:07:42,724 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:43,058 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:43,522 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:43,853 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:44,218 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:44,623 - INFO - ✅ Finished fetching filings for MU
+2025-11-23 20:07:45,129 - INFO - Fetching financial statements for INTC...
+2025-11-23 20:07:46,869 - INFO - ✅ Saved financial statements for INTC
+2025-11-23 20:07:46,870 - INFO - Fetching quarterly earnings for INTC...
+2025-11-23 20:07:46,884 - INFO - Quarterly earnings not available for INTC; falling back to quarterly financials.
+2025-11-23 20:07:46,885 - INFO - ✅ Saved quarterly earnings for INTC to data/structured/earnings/INTC_quarterly_earnings.json
+2025-11-23 20:07:46,885 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:46,885 - INFO - Fetching stock prices for INTC...
+2025-11-23 20:07:47,414 - INFO - ✅ Saved prices for INTC
+2025-11-23 20:07:47,415 - INFO - Fetching annual 10-K/20-F filings for INTC (CIK: 50863)...
+2025-11-23 20:07:47,641 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:47,999 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:48,347 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:48,827 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:49,315 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:07:49,820 - INFO - ✅ Finished fetching filings for INTC
+2025-11-23 20:07:50,323 - INFO - Fetching financial statements for ANET...
+2025-11-23 20:07:51,737 - INFO - ✅ Saved financial statements for ANET
+2025-11-23 20:07:51,737 - INFO - Fetching quarterly earnings for ANET...
+2025-11-23 20:07:51,742 - INFO - Quarterly earnings not available for ANET; falling back to quarterly financials.
+2025-11-23 20:07:51,743 - INFO - ✅ Saved quarterly earnings for ANET to data/structured/earnings/ANET_quarterly_earnings.json
+2025-11-23 20:07:51,743 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:51,743 - INFO - Fetching stock prices for ANET...
+2025-11-23 20:07:52,103 - INFO - ✅ Saved prices for ANET
+2025-11-23 20:07:52,103 - INFO - Fetching annual 10-K/20-F filings for ANET (CIK: 1596532)...
+2025-11-23 20:07:52,352 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:07:52,716 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:07:53,083 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:07:53,538 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:07:54,057 - INFO - ✅ Finished fetching filings for ANET
+2025-11-23 20:07:54,563 - INFO - Fetching financial statements for CCJ...
+2025-11-23 20:07:56,353 - INFO - ✅ Saved financial statements for CCJ
+2025-11-23 20:07:56,353 - INFO - Fetching quarterly earnings for CCJ...
+2025-11-23 20:07:56,361 - INFO - Quarterly earnings not available for CCJ; falling back to quarterly financials.
+2025-11-23 20:07:56,361 - INFO - ✅ Saved quarterly earnings for CCJ to data/structured/earnings/CCJ_quarterly_earnings.json
+2025-11-23 20:07:56,361 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:56,361 - INFO - Fetching stock prices for CCJ...
+2025-11-23 20:07:56,840 - INFO - ✅ Saved prices for CCJ
+2025-11-23 20:07:56,840 - INFO - Fetching annual 10-K/20-F filings for CCJ (CIK: 1009001)...
+2025-11-23 20:07:57,072 - INFO - ✅ Finished fetching filings for CCJ
+2025-11-23 20:07:57,578 - INFO - Fetching financial statements for CLS...
+2025-11-23 20:07:59,049 - INFO - ✅ Saved financial statements for CLS
+2025-11-23 20:07:59,049 - INFO - Fetching quarterly earnings for CLS...
+2025-11-23 20:07:59,057 - INFO - Quarterly earnings not available for CLS; falling back to quarterly financials.
+2025-11-23 20:07:59,058 - INFO - ✅ Saved quarterly earnings for CLS to data/structured/earnings/CLS_quarterly_earnings.json
+2025-11-23 20:07:59,058 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:07:59,058 - INFO - Fetching stock prices for CLS...
+2025-11-23 20:07:59,347 - INFO - ✅ Saved prices for CLS
+2025-11-23 20:07:59,347 - INFO - Fetching annual 10-K/20-F filings for CLS (CIK: 1030894)...
+2025-11-23 20:07:59,568 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:00,028 - INFO -   Downloading 20-F for 2024...
+2025-11-23 20:08:00,522 - INFO -   Downloading 20-F for 2023...
+2025-11-23 20:08:00,930 - INFO -   Downloading 20-F for 2022...
+2025-11-23 20:08:01,441 - INFO -   Downloading 20-F for 2021...
+2025-11-23 20:08:01,970 - INFO - ✅ Finished fetching filings for CLS
+2025-11-23 20:08:02,479 - INFO - Fetching financial statements for SNDK...
+2025-11-23 20:08:03,886 - INFO - ✅ Saved financial statements for SNDK
+2025-11-23 20:08:03,886 - INFO - Fetching quarterly earnings for SNDK...
+2025-11-23 20:08:03,894 - INFO - Quarterly earnings not available for SNDK; falling back to quarterly financials.
+2025-11-23 20:08:03,894 - INFO - ✅ Saved quarterly earnings for SNDK to data/structured/earnings/SNDK_quarterly_earnings.json
+2025-11-23 20:08:03,894 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:03,894 - INFO - Fetching stock prices for SNDK...
+2025-11-23 20:08:03,962 - INFO - ✅ Saved prices for SNDK
+2025-11-23 20:08:03,962 - INFO - Fetching annual 10-K/20-F filings for SNDK (CIK: 2023554)...
+2025-11-23 20:08:04,137 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:04,620 - INFO - ✅ Finished fetching filings for SNDK
+2025-11-23 20:08:05,126 - INFO - Fetching financial statements for BE...
+2025-11-23 20:08:06,575 - INFO - ✅ Saved financial statements for BE
+2025-11-23 20:08:06,575 - INFO - Fetching quarterly earnings for BE...
+2025-11-23 20:08:06,584 - INFO - Quarterly earnings not available for BE; falling back to quarterly financials.
+2025-11-23 20:08:06,584 - INFO - ✅ Saved quarterly earnings for BE to data/structured/earnings/BE_quarterly_earnings.json
+2025-11-23 20:08:06,584 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:06,584 - INFO - Fetching stock prices for BE...
+2025-11-23 20:08:06,726 - INFO - ✅ Saved prices for BE
+2025-11-23 20:08:06,726 - INFO - Fetching annual 10-K/20-F filings for BE (CIK: 1664703)...
+2025-11-23 20:08:06,928 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:07,292 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:07,738 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:08,234 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:08,730 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:08:09,228 - INFO - ✅ Finished fetching filings for BE
+2025-11-23 20:08:09,734 - INFO - Fetching financial statements for RKLB...
+2025-11-23 20:08:11,134 - INFO - ✅ Saved financial statements for RKLB
+2025-11-23 20:08:11,135 - INFO - Fetching quarterly earnings for RKLB...
+2025-11-23 20:08:11,139 - INFO - Quarterly earnings not available for RKLB; falling back to quarterly financials.
+2025-11-23 20:08:11,140 - INFO - ✅ Saved quarterly earnings for RKLB to data/structured/earnings/RKLB_quarterly_earnings.json
+2025-11-23 20:08:11,140 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:11,140 - INFO - Fetching stock prices for RKLB...
+2025-11-23 20:08:11,332 - INFO - ✅ Saved prices for RKLB
+2025-11-23 20:08:11,332 - INFO - Fetching annual 10-K/20-F filings for RKLB (CIK: 1819994)...
+2025-11-23 20:08:11,508 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:11,933 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:12,421 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:13,095 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:13,495 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:08:13,924 - INFO - ✅ Finished fetching filings for RKLB
+2025-11-23 20:08:14,434 - INFO - Fetching financial statements for OKLO...
+2025-11-23 20:08:16,222 - INFO - ✅ Saved financial statements for OKLO
+2025-11-23 20:08:16,222 - INFO - Fetching quarterly earnings for OKLO...
+2025-11-23 20:08:16,229 - INFO - Quarterly earnings not available for OKLO; falling back to quarterly financials.
+2025-11-23 20:08:16,229 - INFO - ✅ Saved quarterly earnings for OKLO to data/structured/earnings/OKLO_quarterly_earnings.json
+2025-11-23 20:08:16,229 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:16,229 - INFO - Fetching stock prices for OKLO...
+2025-11-23 20:08:16,338 - INFO - ✅ Saved prices for OKLO
+2025-11-23 20:08:16,338 - INFO - Fetching annual 10-K/20-F filings for OKLO (CIK: 1849056)...
+2025-11-23 20:08:16,611 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:17,085 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:17,576 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:18,078 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:18,466 - INFO - ✅ Finished fetching filings for OKLO
+2025-11-23 20:08:18,972 - INFO - Fetching financial statements for IREN...
+2025-11-23 20:08:20,406 - INFO - ✅ Saved financial statements for IREN
+2025-11-23 20:08:20,406 - INFO - Fetching quarterly earnings for IREN...
+2025-11-23 20:08:20,416 - INFO - Quarterly earnings not available for IREN; falling back to quarterly financials.
+2025-11-23 20:08:20,416 - INFO - ✅ Saved quarterly earnings for IREN to data/structured/earnings/IREN_quarterly_earnings.json
+2025-11-23 20:08:20,417 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:20,417 - INFO - Fetching stock prices for IREN...
+2025-11-23 20:08:20,552 - INFO - ✅ Saved prices for IREN
+2025-11-23 20:08:20,552 - INFO - Fetching annual 10-K/20-F filings for IREN (CIK: 1878848)...
+2025-11-23 20:08:20,835 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:21,327 - INFO -   Downloading 20-F for 2024...
+2025-11-23 20:08:21,821 - INFO -   Downloading 20-F for 2023...
+2025-11-23 20:08:22,368 - INFO -   Downloading 20-F for 2022...
+2025-11-23 20:08:22,906 - INFO - ✅ Finished fetching filings for IREN
+2025-11-23 20:08:23,412 - INFO - Fetching financial statements for QBTS...
+2025-11-23 20:08:25,196 - INFO - ✅ Saved financial statements for QBTS
+2025-11-23 20:08:25,196 - INFO - Fetching quarterly earnings for QBTS...
+2025-11-23 20:08:25,201 - INFO - Quarterly earnings not available for QBTS; falling back to quarterly financials.
+2025-11-23 20:08:25,201 - INFO - ✅ Saved quarterly earnings for QBTS to data/structured/earnings/QBTS_quarterly_earnings.json
+2025-11-23 20:08:25,201 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:25,201 - INFO - Fetching stock prices for QBTS...
+2025-11-23 20:08:25,403 - INFO - ✅ Saved prices for QBTS
+2025-11-23 20:08:25,403 - INFO - Fetching annual 10-K/20-F filings for QBTS (CIK: 1907982)...
+2025-11-23 20:08:25,665 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:26,113 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:26,621 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:27,115 - INFO - ✅ Finished fetching filings for QBTS
+2025-11-23 20:08:27,621 - INFO - Fetching financial statements for LEU...
+2025-11-23 20:08:28,929 - INFO - ✅ Saved financial statements for LEU
+2025-11-23 20:08:28,929 - INFO - Fetching quarterly earnings for LEU...
+2025-11-23 20:08:28,937 - INFO - Quarterly earnings not available for LEU; falling back to quarterly financials.
+2025-11-23 20:08:28,938 - INFO - ✅ Saved quarterly earnings for LEU to data/structured/earnings/LEU_quarterly_earnings.json
+2025-11-23 20:08:28,938 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:28,938 - INFO - Fetching stock prices for LEU...
+2025-11-23 20:08:29,257 - INFO - ✅ Saved prices for LEU
+2025-11-23 20:08:29,257 - INFO - Fetching annual 10-K/20-F filings for LEU (CIK: 1065059)...
+2025-11-23 20:08:29,575 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:29,929 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:30,307 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:30,879 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:31,300 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:08:31,775 - INFO - ✅ Finished fetching filings for LEU
+2025-11-23 20:08:32,281 - INFO - Fetching financial statements for EOSE...
+2025-11-23 20:08:33,674 - INFO - ✅ Saved financial statements for EOSE
+2025-11-23 20:08:33,674 - INFO - Fetching quarterly earnings for EOSE...
+2025-11-23 20:08:33,688 - INFO - Quarterly earnings not available for EOSE; falling back to quarterly financials.
+2025-11-23 20:08:33,689 - INFO - ✅ Saved quarterly earnings for EOSE to data/structured/earnings/EOSE_quarterly_earnings.json
+2025-11-23 20:08:33,689 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:33,689 - INFO - Fetching stock prices for EOSE...
+2025-11-23 20:08:33,925 - INFO - ✅ Saved prices for EOSE
+2025-11-23 20:08:33,925 - INFO - Fetching annual 10-K/20-F filings for EOSE (CIK: 1805077)...
+2025-11-23 20:08:34,106 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:34,581 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:34,961 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:35,450 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:35,970 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:08:36,394 - INFO - ✅ Finished fetching filings for EOSE
+2025-11-23 20:08:36,901 - INFO - Fetching financial statements for FLNC...
+2025-11-23 20:08:38,246 - INFO - ✅ Saved financial statements for FLNC
+2025-11-23 20:08:38,246 - INFO - Fetching quarterly earnings for FLNC...
+2025-11-23 20:08:38,253 - INFO - Quarterly earnings not available for FLNC; falling back to quarterly financials.
+2025-11-23 20:08:38,253 - INFO - ✅ Saved quarterly earnings for FLNC to data/structured/earnings/FLNC_quarterly_earnings.json
+2025-11-23 20:08:38,253 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:38,253 - INFO - Fetching stock prices for FLNC...
+2025-11-23 20:08:38,355 - INFO - ✅ Saved prices for FLNC
+2025-11-23 20:08:38,355 - INFO - Fetching annual 10-K/20-F filings for FLNC (CIK: 1868941)...
+2025-11-23 20:08:38,617 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:39,085 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:39,579 - INFO -   Downloading 10-K for 2022...
+2025-11-23 20:08:39,968 - INFO -   Downloading 10-K for 2021...
+2025-11-23 20:08:40,315 - INFO - ✅ Finished fetching filings for FLNC
+2025-11-23 20:08:40,821 - INFO - Fetching financial statements for LAC...
+2025-11-23 20:08:42,523 - INFO - ✅ Saved financial statements for LAC
+2025-11-23 20:08:42,523 - INFO - Fetching quarterly earnings for LAC...
+2025-11-23 20:08:42,531 - INFO - Quarterly earnings not available for LAC; falling back to quarterly financials.
+2025-11-23 20:08:42,531 - INFO - ✅ Saved quarterly earnings for LAC to data/structured/earnings/LAC_quarterly_earnings.json
+2025-11-23 20:08:42,531 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:42,531 - INFO - Fetching stock prices for LAC...
+2025-11-23 20:08:42,687 - INFO - ✅ Saved prices for LAC
+2025-11-23 20:08:42,687 - INFO - Fetching annual 10-K/20-F filings for LAC (CIK: 1966983)...
+2025-11-23 20:08:42,861 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:43,366 - INFO -   Downloading 20-F for 2024...
+2025-11-23 20:08:43,815 - INFO - ✅ Finished fetching filings for LAC
+2025-11-23 20:08:44,321 - INFO - Fetching financial statements for NAK...
+2025-11-23 20:08:45,693 - INFO - ✅ Saved financial statements for NAK
+2025-11-23 20:08:45,693 - INFO - Fetching quarterly earnings for NAK...
+2025-11-23 20:08:45,700 - INFO - Quarterly earnings not available for NAK; falling back to quarterly financials.
+2025-11-23 20:08:45,701 - INFO - ✅ Saved quarterly earnings for NAK to data/structured/earnings/NAK_quarterly_earnings.json
+2025-11-23 20:08:45,701 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:45,701 - INFO - Fetching stock prices for NAK...
+2025-11-23 20:08:45,930 - INFO - ✅ Saved prices for NAK
+2025-11-23 20:08:45,930 - INFO - Fetching annual 10-K/20-F filings for NAK (CIK: 1164771)...
+2025-11-23 20:08:46,164 - INFO -   Downloading 20-F for 2016...
+2025-11-23 20:08:46,533 - INFO -   Downloading 20-F for 2015...
+2025-11-23 20:08:47,074 - INFO -   Downloading 20-F for 2005...
+2025-11-23 20:08:47,497 - INFO -   Downloading 20-F for 2004...
+2025-11-23 20:08:48,022 - INFO -   Downloading 20-F for 2003...
+2025-11-23 20:08:48,357 - INFO - ✅ Finished fetching filings for NAK
+2025-11-23 20:08:48,864 - INFO - Fetching financial statements for ASST...
+2025-11-23 20:08:50,394 - INFO - ✅ Saved financial statements for ASST
+2025-11-23 20:08:50,394 - INFO - Fetching quarterly earnings for ASST...
+2025-11-23 20:08:50,398 - INFO - Quarterly earnings not available for ASST; falling back to quarterly financials.
+2025-11-23 20:08:50,399 - INFO - ✅ Saved quarterly earnings for ASST to data/structured/earnings/ASST_quarterly_earnings.json
+2025-11-23 20:08:50,399 - WARNING - Neo4j driver not available; skipping quarterly earnings storage.
+2025-11-23 20:08:50,399 - INFO - Fetching stock prices for ASST...
+2025-11-23 20:08:57,619 - INFO - ✅ Saved prices for ASST
+2025-11-23 20:08:57,620 - INFO - Fetching annual 10-K/20-F filings for ASST (CIK: 1920406)...
+2025-11-23 20:08:57,887 - INFO -   Downloading 10-K for 2025...
+2025-11-23 20:08:58,234 - INFO -   Downloading 10-K for 2024...
+2025-11-23 20:08:58,607 - INFO -   Downloading 10-K for 2023...
+2025-11-23 20:08:59,112 - INFO - ✅ Finished fetching filings for ASST
+2025-11-23 20:08:59,619 - INFO - 
+2025-11-23 20:08:59,619 - INFO - ============================================================
+2025-11-23 20:08:59,619 - INFO - FETCHING MARKET INDICES
+2025-11-23 20:08:59,619 - INFO - ============================================================
+2025-11-23 20:08:59,619 - INFO - Fetching market index vix (^VIX)...
+2025-11-23 20:08:59,761 - INFO - ✅ Saved vix data to data/market_index/vix.json
+2025-11-23 20:08:59,761 - INFO - Fetching market index nasdaq (^IXIC)...
+2025-11-23 20:08:59,997 - INFO - ✅ Saved nasdaq data to data/market_index/nasdaq.json
+2025-11-23 20:08:59,998 - INFO - Fetching market index dowjones (^DJI)...
+2025-11-23 20:09:00,135 - INFO - ✅ Saved dowjones data to data/market_index/dowjones.json
+2025-11-23 20:09:00,135 - INFO - Fetching market index russell2000 (^RUT)...
+2025-11-23 20:09:00,253 - INFO - ✅ Saved russell2000 data to data/market_index/russell2000.json
+2025-11-23 20:09:00,253 - INFO - Fetching CBOE put/call ratio...
+2025-11-23 20:09:00,253 - INFO - Falling back to scraping Yahoo Finance for ^PCR
+2025-11-23 20:09:01,589 - INFO - ✅ Saved put/call ratio (scraped) to data/market_index/put_call_ratio.json
+2025-11-23 20:09:01,590 - INFO - 
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - FETCHING REDDIT DATA
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - WARNING - Reddit scraping not available (praw not installed). Skipping...
+2025-11-23 20:09:01,590 - WARNING - No Reddit posts found via live scrape. Attempting fallback dataset...
+2025-11-23 20:09:01,590 - WARNING - No fallback Reddit dataset found.
+2025-11-23 20:09:01,590 - WARNING - Skipping Reddit data save because no data is available.
+2025-11-23 20:09:01,590 - INFO - 
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - FETCHING X/TWITTER DATA
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - FETCHING X/TWITTER DATA
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - Time range: Past 7 days (X API Basic tier limitation)
+2025-11-23 20:09:01,590 - WARNING - X API credentials not found in environment variables.
+2025-11-23 20:09:01,590 - INFO - Please set X_BEARER_TOKEN or (X_API_KEY and X_API_SECRET)
+2025-11-23 20:09:01,590 - WARNING - X client not available. Skipping X data collection.
+2025-11-23 20:09:01,590 - INFO - 
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - CALCULATING SECTOR METRICS
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,590 - INFO - CALCULATING SECTOR METRICS
+2025-11-23 20:09:01,590 - INFO - ============================================================
+2025-11-23 20:09:01,591 - INFO - Loaded 21 companies
+2025-11-23 20:09:01,591 - INFO - Fetching market benchmark (SPY)...
+2025-11-23 20:09:01,704 - INFO - ✅ Market benchmark loaded
+2025-11-23 20:09:25,180 - INFO - Successfully collected metrics for 21 companies
+2025-11-23 20:09:25,191 - INFO - 
+2025-11-23 20:09:25,191 - INFO - Aggregating sector sentiment from social media...
+2025-11-23 20:09:28,822 - WARNING - No X/Twitter data files found
+2025-11-23 20:09:28,822 - INFO - 
+2025-11-23 20:09:28,822 - INFO - 
+2025-11-23 20:09:28,822 - INFO - Calculating sector correlations and relative strength...
+2025-11-23 20:09:28,826 - INFO - ✅ Calculated correlations for 7 sectors
+2025-11-23 20:09:28,827 - INFO - ✅ Saved company metrics to: data/structured/sector_metrics/company_metrics_20251123_200928.json
+2025-11-23 20:09:28,828 - INFO - ✅ Saved sector metrics to: data/structured/sector_metrics/sector_metrics_20251123_200928.json
+2025-11-23 20:09:28,829 - INFO - 
+2025-11-23 20:09:28,829 - INFO - ============================================================
+2025-11-23 20:09:28,829 - INFO - SECTOR METRICS SUMMARY
+2025-11-23 20:09:28,829 - INFO - ============================================================
+2025-11-23 20:09:28,829 - INFO - 
+Energy:
+2025-11-23 20:09:28,829 - INFO -   Companies: 3
+2025-11-23 20:09:28,829 - INFO -   Quality Score: 70.7/100
+2025-11-23 20:09:28,829 - INFO - 
+2025-11-23 20:09:28,829 - INFO -   Profitability:
+2025-11-23 20:09:28,829 - INFO -     ROE: 23.75%
+2025-11-23 20:09:28,829 - INFO -     ROA: 4.16%
+2025-11-23 20:09:28,829 - INFO -     ROIC: 12.76%
+2025-11-23 20:09:28,829 - INFO -     Net Margin: 10.66%
+2025-11-23 20:09:28,829 - INFO -   Growth:
+2025-11-23 20:09:28,829 - INFO -     CAGR: 71.00%
+2025-11-23 20:09:28,829 - INFO -     3M Momentum: 8.54%
+2025-11-23 20:09:28,829 - INFO -   Valuation:
+2025-11-23 20:09:28,829 - INFO -     P/E: 48.99
+2025-11-23 20:09:28,829 - INFO -     P/S: 7.08
+2025-11-23 20:09:28,829 - INFO -   Financial Health:
+2025-11-23 20:09:28,829 - INFO -     Debt/Equity: 121.60
+2025-11-23 20:09:28,829 - INFO -     Current Ratio: 2.53
+2025-11-23 20:09:28,829 - INFO -   Risk:
+2025-11-23 20:09:28,829 - INFO -     Beta: 1.17
+2025-11-23 20:09:28,829 - INFO -     Volatility: 57.61%
+2025-11-23 20:09:28,829 - INFO -     Sharpe Ratio: 0.73
+2025-11-23 20:09:28,829 - INFO - 
+Technology:
+2025-11-23 20:09:28,829 - INFO -   Companies: 8
+2025-11-23 20:09:28,829 - INFO -   Quality Score: 59.3/100
+2025-11-23 20:09:28,829 - INFO - 
+2025-11-23 20:09:28,829 - INFO -   Profitability:
+2025-11-23 20:09:28,829 - INFO -     ROE: 10.97%
+2025-11-23 20:09:28,829 - INFO -     ROA: 11.25%
+2025-11-23 20:09:28,829 - INFO -     ROIC: -3.94%
+2025-11-23 20:09:28,829 - INFO -     Net Margin: -190.95%
+2025-11-23 20:09:28,829 - INFO -   Growth:
+2025-11-23 20:09:28,829 - INFO -     CAGR: 260.01%
+2025-11-23 20:09:28,829 - INFO -     3M Momentum: 61.99%
+2025-11-23 20:09:28,829 - INFO -   Valuation:
+2025-11-23 20:09:28,830 - INFO -     P/E: 87.73
+2025-11-23 20:09:28,830 - INFO -     P/S: 45.57
+2025-11-23 20:09:28,830 - INFO -   Financial Health:
+2025-11-23 20:09:28,830 - INFO -     Debt/Equity: 24.51
+2025-11-23 20:09:28,830 - INFO -     Current Ratio: 9.08
+2025-11-23 20:09:28,830 - INFO -   Risk:
+2025-11-23 20:09:28,830 - INFO -     Beta: 1.85
+2025-11-23 20:09:28,830 - INFO -     Volatility: 74.67%
+2025-11-23 20:09:28,830 - INFO -     Sharpe Ratio: 2.51
+2025-11-23 20:09:28,830 - INFO - 
+Financial Services:
+2025-11-23 20:09:28,830 - INFO -   Companies: 2
+2025-11-23 20:09:28,830 - INFO -   Quality Score: 57.5/100
+2025-11-23 20:09:28,830 - INFO - 
+2025-11-23 20:09:28,830 - INFO -   Profitability:
+2025-11-23 20:09:28,830 - INFO -     ROE: 26.12%
+2025-11-23 20:09:28,830 - INFO -     ROA: -0.01%
+2025-11-23 20:09:28,830 - INFO -     ROIC: -41.22%
+2025-11-23 20:09:28,830 - INFO -     Net Margin: -286.93%
+2025-11-23 20:09:28,830 - INFO -   Growth:
+2025-11-23 20:09:28,830 - INFO -     CAGR: 178.28%
+2025-11-23 20:09:28,830 - INFO -     3M Momentum: 1.03%
+2025-11-23 20:09:28,830 - INFO -   Valuation:
+2025-11-23 20:09:28,830 - INFO -     P/E: 24.29
+2025-11-23 20:09:28,830 - INFO -     P/S: 84.15
+2025-11-23 20:09:28,830 - INFO -   Financial Health:
+2025-11-23 20:09:28,830 - INFO -     Debt/Equity: 17.02
+2025-11-23 20:09:28,830 - INFO -     Current Ratio: 8.74
+2025-11-23 20:09:28,830 - INFO -   Risk:
+2025-11-23 20:09:28,830 - INFO -     Beta: 1.89
+2025-11-23 20:09:28,830 - INFO -     Volatility: 314.46%
+2025-11-23 20:09:28,830 - INFO -     Sharpe Ratio: 1.50
+2025-11-23 20:09:28,830 - INFO - 
+Industrials:
+2025-11-23 20:09:28,830 - INFO -   Companies: 3
+2025-11-23 20:09:28,830 - INFO -   Quality Score: 53.4/100
+2025-11-23 20:09:28,830 - INFO - 
+2025-11-23 20:09:28,830 - INFO -   Profitability:
+2025-11-23 20:09:28,830 - INFO -     ROE: -10.15%
+2025-11-23 20:09:28,830 - INFO -     ROA: -19.15%
+2025-11-23 20:09:28,830 - INFO -     ROIC: 22.48%
+2025-11-23 20:09:28,830 - INFO -     Net Margin: -1480.16%
+2025-11-23 20:09:28,830 - INFO -   Growth:
+2025-11-23 20:09:28,830 - INFO -     CAGR: 230.09%
+2025-11-23 20:09:28,830 - INFO -     3M Momentum: 47.51%
+2025-11-23 20:09:28,830 - INFO -   Valuation:
+2025-11-23 20:09:28,830 - INFO -     P/E: 312.84
+2025-11-23 20:09:28,830 - INFO -     P/S: 35.55
+2025-11-23 20:09:28,831 - INFO -   Financial Health:
+2025-11-23 20:09:28,831 - INFO -     Debt/Equity: 132.05
+2025-11-23 20:09:28,831 - INFO -     Current Ratio: 3.13
+2025-11-23 20:09:28,831 - INFO -   Risk:
+2025-11-23 20:09:28,831 - INFO -     Beta: 1.96
+2025-11-23 20:09:28,831 - INFO -     Volatility: 96.36%
+2025-11-23 20:09:28,831 - INFO -     Sharpe Ratio: 2.26
+2025-11-23 20:09:28,831 - INFO - 
+Basic Materials:
+2025-11-23 20:09:28,831 - INFO -   Companies: 2
+2025-11-23 20:09:28,831 - INFO -   Quality Score: 50.3/100
+2025-11-23 20:09:28,831 - INFO - 
+2025-11-23 20:09:28,831 - INFO -   Profitability:
+2025-11-23 20:09:28,831 - INFO -     ROE: -63.92%
+2025-11-23 20:09:28,831 - INFO -     ROA: -6.30%
+2025-11-23 20:09:28,831 - INFO -     ROIC: -19.83%
+2025-11-23 20:09:28,831 - INFO -     Net Margin: N/A
+2025-11-23 20:09:28,831 - INFO -   Growth:
+2025-11-23 20:09:28,831 - INFO -     CAGR: 120.85%
+2025-11-23 20:09:28,831 - INFO -     3M Momentum: 65.62%
+2025-11-23 20:09:28,831 - INFO -   Valuation:
+2025-11-23 20:09:28,831 - INFO -     P/E: -45.67
+2025-11-23 20:09:28,831 - INFO -     P/S: N/A
+2025-11-23 20:09:28,831 - INFO -   Financial Health:
+2025-11-23 20:09:28,831 - INFO -     Debt/Equity: 25.22
+2025-11-23 20:09:28,831 - INFO -     Current Ratio: 2.23
+2025-11-23 20:09:28,831 - INFO -   Risk:
+2025-11-23 20:09:28,831 - INFO -     Beta: 1.29
+2025-11-23 20:09:28,831 - INFO -     Volatility: 123.45%
+2025-11-23 20:09:28,831 - INFO -     Sharpe Ratio: 0.98
+2025-11-23 20:09:28,831 - INFO - 
+Utilities:
+2025-11-23 20:09:28,831 - INFO -   Companies: 2
+2025-11-23 20:09:28,831 - INFO -   Quality Score: 44.6/100
+2025-11-23 20:09:28,831 - INFO - 
+2025-11-23 20:09:28,831 - INFO -   Profitability:
+2025-11-23 20:09:28,831 - INFO -     ROE: -7.51%
+2025-11-23 20:09:28,831 - INFO -     ROA: -4.40%
+2025-11-23 20:09:28,831 - INFO -     ROIC: -29.20%
+2025-11-23 20:09:28,831 - INFO -     Net Margin: 0.84%
+2025-11-23 20:09:28,831 - INFO -   Growth:
+2025-11-23 20:09:28,831 - INFO -     CAGR: 110.04%
+2025-11-23 20:09:28,831 - INFO -     3M Momentum: 60.91%
+2025-11-23 20:09:28,831 - INFO -   Valuation:
+2025-11-23 20:09:28,831 - INFO -     P/E: -101.19
+2025-11-23 20:09:28,831 - INFO -     P/S: 1.15
+2025-11-23 20:09:28,831 - INFO -   Financial Health:
+2025-11-23 20:09:28,831 - INFO -     Debt/Equity: 39.38
+2025-11-23 20:09:28,831 - INFO -     Current Ratio: 34.58
+2025-11-23 20:09:28,831 - INFO -   Risk:
+2025-11-23 20:09:28,831 - INFO -     Beta: 2.17
+2025-11-23 20:09:28,831 - INFO -     Volatility: 117.72%
+2025-11-23 20:09:28,832 - INFO -     Sharpe Ratio: 0.85
+2025-11-23 20:09:28,832 - INFO - 
+Healthcare:
+2025-11-23 20:09:28,832 - INFO -   Companies: 1
+2025-11-23 20:09:28,832 - INFO -   Quality Score: 35.9/100
+2025-11-23 20:09:28,832 - INFO - 
+2025-11-23 20:09:28,832 - INFO -   Profitability:
+2025-11-23 20:09:28,832 - INFO -     ROE: 17.48%
+2025-11-23 20:09:28,832 - INFO -     ROA: 5.36%
+2025-11-23 20:09:28,832 - INFO -     ROIC: 9.74%
+2025-11-23 20:09:28,832 - INFO -     Net Margin: 3.60%
+2025-11-23 20:09:28,832 - INFO -   Growth:
+2025-11-23 20:09:28,832 - INFO -     CAGR: -44.93%
+2025-11-23 20:09:28,832 - INFO -     3M Momentum: 7.18%
+2025-11-23 20:09:28,832 - INFO -   Valuation:
+2025-11-23 20:09:28,832 - INFO -     P/E: 16.67
+2025-11-23 20:09:28,832 - INFO -     P/S: 0.67
+2025-11-23 20:09:28,832 - INFO -   Financial Health:
+2025-11-23 20:09:28,832 - INFO -     Debt/Equity: 75.73
+2025-11-23 20:09:28,832 - INFO -     Current Ratio: 0.82
+2025-11-23 20:09:28,832 - INFO -   Risk:
+2025-11-23 20:09:28,832 - INFO -     Beta: 0.27
+2025-11-23 20:09:28,832 - INFO -     Volatility: 48.50%
+2025-11-23 20:09:28,832 - INFO -     Sharpe Ratio: -1.01
+2025-11-23 20:09:28,832 - INFO - 
+2025-11-23 20:09:28,832 - INFO - ============================================================
+2025-11-23 20:09:28,832 - INFO - SECTOR MOMENTUM SIGNALS
+2025-11-23 20:09:28,832 - INFO - ============================================================
+2025-11-23 20:09:28,832 - INFO - 
+Industrials:
+2025-11-23 20:09:28,832 - INFO -   Combined Momentum Score: 60.08%
+2025-11-23 20:09:28,832 - INFO -   Signal: Strong Buy
+2025-11-23 20:09:28,832 - INFO -   Trend: Decelerating
+2025-11-23 20:09:28,832 - INFO -   3M Price: 47.51%
+2025-11-23 20:09:28,832 - INFO - 
+Technology:
+2025-11-23 20:09:28,832 - INFO -   Combined Momentum Score: 55.49%
+2025-11-23 20:09:28,832 - INFO -   Signal: Strong Buy
+2025-11-23 20:09:28,832 - INFO -   Trend: Decelerating
+2025-11-23 20:09:28,832 - INFO -   3M Price: 61.99%
+2025-11-23 20:09:28,832 - INFO - 
+Utilities:
+2025-11-23 20:09:28,832 - INFO -   Combined Momentum Score: 46.09%
+2025-11-23 20:09:28,832 - INFO -   Signal: Strong Buy
+2025-11-23 20:09:28,832 - INFO -   Trend: Decelerating
+2025-11-23 20:09:28,832 - INFO -   3M Price: 60.91%
+2025-11-23 20:09:28,832 - INFO - 
+Financial Services:
+2025-11-23 20:09:28,832 - INFO -   Combined Momentum Score: 36.86%
+2025-11-23 20:09:28,832 - INFO -   Signal: Strong Buy
+2025-11-23 20:09:28,832 - INFO -   Trend: Decelerating
+2025-11-23 20:09:28,832 - INFO -   3M Price: 1.03%
+2025-11-23 20:09:28,832 - INFO - 
+Basic Materials:
+2025-11-23 20:09:28,833 - INFO -   Combined Momentum Score: 31.62%
+2025-11-23 20:09:28,833 - INFO -   Signal: Strong Buy
+2025-11-23 20:09:28,833 - INFO -   Trend: Accelerating
+2025-11-23 20:09:28,833 - INFO -   3M Price: 65.62%
+2025-11-23 20:09:28,833 - INFO - 
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - HIGH CORRELATION SECTOR PAIRS
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - 
+Energy <-> Industrials
+2025-11-23 20:09:28,833 - INFO -   Correlation: 1.00 (Positive)
+2025-11-23 20:09:28,833 - INFO - 
+Healthcare <-> Basic Materials
+2025-11-23 20:09:28,833 - INFO -   Correlation: -1.00 (Negative)
+2025-11-23 20:09:28,833 - INFO - 
+Industrials <-> Financial Services
+2025-11-23 20:09:28,833 - INFO -   Correlation: 1.00 (Positive)
+2025-11-23 20:09:28,833 - INFO - 
+Energy <-> Financial Services
+2025-11-23 20:09:28,833 - INFO -   Correlation: 0.98 (Positive)
+2025-11-23 20:09:28,833 - INFO - 
+Technology <-> Healthcare
+2025-11-23 20:09:28,833 - INFO -   Correlation: -0.95 (Negative)
+2025-11-23 20:09:28,833 - INFO - 
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - SECTOR RELATIVE STRENGTH (vs SPY)
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - 
+Industrials:
+2025-11-23 20:09:28,833 - INFO -   Composite RS: 112.40%
+2025-11-23 20:09:28,833 - INFO -   Classification: Strong Outperformer
+2025-11-23 20:09:28,833 - INFO -   3M RS: 45.08%
+2025-11-23 20:09:28,833 - INFO - 
+Technology:
+2025-11-23 20:09:28,833 - INFO -   Composite RS: 96.05%
+2025-11-23 20:09:28,833 - INFO -   Classification: Strong Outperformer
+2025-11-23 20:09:28,833 - INFO -   3M RS: 59.56%
+2025-11-23 20:09:28,833 - INFO - 
+Utilities:
+2025-11-23 20:09:28,833 - INFO -   Composite RS: 87.24%
+2025-11-23 20:09:28,833 - INFO -   Classification: Strong Outperformer
+2025-11-23 20:09:28,833 - INFO -   3M RS: 58.48%
+2025-11-23 20:09:28,833 - INFO - 
+Financial Services:
+2025-11-23 20:09:28,833 - INFO -   Composite RS: 68.90%
+2025-11-23 20:09:28,833 - INFO -   Classification: Strong Outperformer
+2025-11-23 20:09:28,833 - INFO -   3M RS: -1.40%
+2025-11-23 20:09:28,833 - INFO - 
+Basic Materials:
+2025-11-23 20:09:28,833 - INFO -   Composite RS: 66.20%
+2025-11-23 20:09:28,833 - INFO -   Classification: Strong Outperformer
+2025-11-23 20:09:28,833 - INFO -   3M RS: 63.19%
+2025-11-23 20:09:28,833 - INFO - 
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - SECTOR METRICS CALCULATION COMPLETED
+2025-11-23 20:09:28,833 - INFO - ============================================================
+2025-11-23 20:09:28,833 - INFO - ✅ Complete analysis saved to: data/structured/sector_metrics/sector_metrics_20251123_200928.json
+2025-11-23 20:09:28,834 - INFO - ✅ Sector metrics calculation completed
+2025-11-23 20:09:28,834 - INFO - 
+2025-11-23 20:09:28,834 - INFO - ============================================================
+2025-11-23 20:09:28,834 - INFO - CALCULATING INDUSTRY BENCHMARKS
+2025-11-23 20:09:28,834 - INFO - ============================================================
+2025-11-23 20:09:28,834 - INFO - Calculating industry benchmarks from market data...
+2025-11-23 20:09:28,834 - INFO - Processing Semiconductors...
+2025-11-23 20:09:32,261 - INFO -   Semiconductors: P/E=31.0, P/S=7.5 (samples: 9/10)
+2025-11-23 20:09:32,261 - INFO - Processing Software - Infrastructure...
+2025-11-23 20:09:35,856 - INFO -   Software - Infrastructure: P/E=98.6, P/S=13.4 (samples: 10/10)
+2025-11-23 20:09:35,856 - INFO - Processing Software...
+2025-11-23 20:09:37,454 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: ANSS"}}}
+2025-11-23 20:09:38,359 - INFO -   Software: P/E=48.9, P/S=10.4 (samples: 6/6)
+2025-11-23 20:09:38,360 - INFO - Processing Hardware...
+2025-11-23 20:09:40,453 - INFO -   Hardware: P/E=21.9, P/S=4.0 (samples: 6/6)
+2025-11-23 20:09:40,453 - INFO - Processing Internet Services...
+2025-11-23 20:09:41,905 - INFO -   Internet Services: P/E=30.4, P/S=8.7 (samples: 4/4)
+2025-11-23 20:09:41,905 - INFO - Processing Financial Services...
+2025-11-23 20:09:44,708 - INFO -   Financial Services: P/E=15.2, P/S=3.9 (samples: 8/8)
+2025-11-23 20:09:44,708 - INFO - Processing Healthcare...
+2025-11-23 20:09:47,407 - INFO -   Healthcare: P/E=18.2, P/S=5.1 (samples: 8/8)
+2025-11-23 20:09:47,408 - INFO - Processing Energy...
+2025-11-23 20:09:49,657 - INFO -   Energy: P/E=17.0, P/S=1.5 (samples: 7/7)
+2025-11-23 20:09:49,657 - INFO - Processing Consumer...
+2025-11-23 20:09:52,125 - INFO -   Consumer: P/E=26.4, P/S=2.0 (samples: 7/7)
+2025-11-23 20:09:52,126 - INFO - Processing Other Industrial Metals & Mining...
+2025-11-23 20:09:53,458 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: X"}}}
+2025-11-23 20:09:54,275 - INFO -   Other Industrial Metals & Mining: P/E=20.9, P/S=1.3 (samples: 5/5)
+2025-11-23 20:09:54,275 - INFO - Processing Other Precious Metals & Mining...
+2025-11-23 20:09:54,814 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: GOLD"}}}
+2025-11-23 20:09:56,709 - INFO -   Other Precious Metals & Mining: P/E=20.4, P/S=6.2 (samples: 6/6)
+2025-11-23 20:09:56,709 - INFO - Processing Gold...
+2025-11-23 20:09:57,202 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: GOLD"}}}
+2025-11-23 20:09:59,393 - INFO -   Gold: P/E=24.4, P/S=8.1 (samples: 8/8)
+2025-11-23 20:09:59,393 - INFO - Processing Copper...
+2025-11-23 20:10:00,274 - ERROR - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: TRQ"}}}
+2025-11-23 20:10:00,501 - INFO -   Copper: P/E=27.3, P/S=5.2 (samples: 2/2)
+2025-11-23 20:10:00,501 - INFO - Processing Aluminum...
+2025-11-23 20:10:01,101 - INFO -   Aluminum: P/E=20.1, P/S=0.9 (samples: 2/2)
+2025-11-23 20:10:01,102 - INFO - Processing Specialty Chemicals...
+2025-11-23 20:10:04,459 - INFO -   Specialty Chemicals: P/E=9.9, P/S=0.8 (samples: 9/9)
+2025-11-23 20:10:04,462 - INFO - ✅ Industry benchmarks saved to data/structured/industry_benchmarks.json
+2025-11-23 20:10:04,462 - INFO - ✅ Industry benchmarks calculation completed
+2025-11-23 20:10:04,462 - INFO - 
+2025-11-23 20:10:04,462 - INFO - ============================================================
+2025-11-23 20:10:04,462 - INFO - DATA FETCHING PIPELINE COMPLETED
+2025-11-23 20:10:04,462 - INFO - ============================================================
+2025-11-23 20:10:04,462 - INFO - Check the 'data' directory for all fetched data.
+2025-11-23 20:10:04,462 - INFO -   - Financials: data/structured/financials
+2025-11-23 20:10:04,462 - INFO -   - Sector Metrics: data/structured/sector_metrics
+2025-11-23 20:10:04,462 - INFO -   - Industry Benchmarks: data/structured/industry_benchmarks.json

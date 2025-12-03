@@ -16,6 +16,7 @@ from statistics import mean, pvariance
 from typing import Dict, List, Optional, Tuple
 
 import json
+import os
 import numpy as np
 import pandas as pd
 import re
@@ -545,7 +546,21 @@ def score_from_thresholds(value: float, thresholds: List[Tuple[float, float]]) -
 def load_financials_df(ticker: str) -> pd.DataFrame:
     path = FINANCIALS_DIR / f"{ticker}_financials.json"
     if not path.exists():
-        raise ScoreComputationError(f"Financials file not found for {ticker}")
+        # Try lazy loading from GCS if in production
+        if os.getenv("K_SERVICE"):
+            try:
+                from storage_helper import get_storage_manager
+                storage_manager = get_storage_manager()
+                cloud_path = f"data/structured/financials/{ticker}_financials.json"
+                if storage_manager.download_file(cloud_path):
+                    logger.info(f"✅ Lazy-loaded {ticker} financials from GCS")
+                else:
+                    raise ScoreComputationError(f"Financials file not found for {ticker}")
+            except Exception as e:
+                logger.warning(f"Could not lazy-load {ticker} financials: {e}")
+                raise ScoreComputationError(f"Financials file not found for {ticker}")
+        else:
+            raise ScoreComputationError(f"Financials file not found for {ticker}")
     
     with open(path, 'r') as f:
         data = json.load(f)
@@ -595,7 +610,21 @@ def load_financials_df(ticker: str) -> pd.DataFrame:
 def load_earnings_df(ticker: str) -> pd.DataFrame:
     path = EARNINGS_DIR / f"{ticker}_quarterly_earnings.json"
     if not path.exists():
-        raise ScoreComputationError(f"Earnings file not found for {ticker}")
+        # Try lazy loading from GCS if in production
+        if os.getenv("K_SERVICE"):
+            try:
+                from storage_helper import get_storage_manager
+                storage_manager = get_storage_manager()
+                cloud_path = f"data/structured/earnings/{ticker}_quarterly_earnings.json"
+                if storage_manager.download_file(cloud_path):
+                    logger.info(f"✅ Lazy-loaded {ticker} earnings from GCS")
+                else:
+                    raise ScoreComputationError(f"Earnings file not found for {ticker}")
+            except Exception as e:
+                logger.warning(f"Could not lazy-load {ticker} earnings: {e}")
+                raise ScoreComputationError(f"Earnings file not found for {ticker}")
+        else:
+            raise ScoreComputationError(f"Earnings file not found for {ticker}")
     df = pd.read_json(path)
     df["period"] = pd.to_datetime(df["period"])
     df = df.sort_values("period")
@@ -605,7 +634,21 @@ def load_earnings_df(ticker: str) -> pd.DataFrame:
 def load_price_history(ticker: str) -> pd.DataFrame:
     path = PRICES_DIR / f"{ticker}_prices.csv"
     if not path.exists():
-        raise ScoreComputationError(f"Price history not found for {ticker}")
+        # Try lazy loading from GCS if in production
+        if os.getenv("K_SERVICE"):
+            try:
+                from storage_helper import get_storage_manager
+                storage_manager = get_storage_manager()
+                cloud_path = f"data/structured/prices/{ticker}_prices.csv"
+                if storage_manager.download_file(cloud_path):
+                    logger.info(f"✅ Lazy-loaded {ticker} prices from GCS")
+                else:
+                    raise ScoreComputationError(f"Price history not found for {ticker}")
+            except Exception as e:
+                logger.warning(f"Could not lazy-load {ticker} prices: {e}")
+                raise ScoreComputationError(f"Price history not found for {ticker}")
+        else:
+            raise ScoreComputationError(f"Price history not found for {ticker}")
     df = pd.read_csv(path, parse_dates=["Date"])
     df = df.sort_values("Date").set_index("Date")
 

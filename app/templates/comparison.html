@@ -180,14 +180,18 @@
                 const scores = data?.scores || {};
                 
                 // Map scores to radar axes
-                // Axes: Business, Financial, Sentiment, Critical, Leadership, Earnings, Technical
+                // Combine Financial and Earnings into one axis
+                // Axes: Business, Financial & Earnings, Sentiment, Critical, Leadership, Technical
+                const financialScore = scores.financial?.score || 0;
+                const earningsScore = scores.earnings?.score || 0;
+                const combinedFinancialEarnings = (financialScore + earningsScore) / 2;
+                
                 const axisValues = [
                     scores.business?.score || 0,
-                    scores.financial?.score || 0,
+                    combinedFinancialEarnings,
                     scores.sentiment?.score || 0,
                     scores.critical?.score || 0,
                     scores.leadership?.score || 0,
-                    scores.earnings?.score || 0,
                     scores.technical?.score || 0
                 ];
 
@@ -204,7 +208,7 @@
             radarChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Business', 'Financial', 'Sentiment', 'Critical', 'Leadership', 'Earnings', 'Technical'],
+                    labels: ['Business', 'Financial & Earnings', 'Sentiment', 'Critical', 'Leadership', 'Technical'],
                     datasets: datasets
                 },
                 options: {
