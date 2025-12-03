@@ -104,7 +104,10 @@
                     <span class="text-slate-400">Put/Call:</span>
                     <span id="put-call-ratio" class="font-semibold">--</span>
                 </div>
-                <div class="ml-auto text-slate-500 text-xs" id="market-update-time">Updating...</div>
+                <div class="ml-auto text-slate-400 text-xs flex items-center gap-2">
+                    <span>Data as of:</span>
+                    <span id="market-update-time" class="font-mono text-blue-300">Loading...</span>
+                </div>
             </div>
             
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
@@ -1000,7 +1003,7 @@
                     document.getElementById('market-phase').textContent = data.market_phase.phase;
                     
                     // Update timestamp
-                    document.getElementById('market-update-time').textContent = 'Updated ' + new Date().toLocaleTimeString();
+                    document.getElementById('market-update-time').textContent = new Date().toLocaleString();
                 }
             } catch (error) {
                 console.error('Error loading market conditions:', error);
@@ -1620,7 +1623,7 @@
                                 position: 'right',
                                 title: {
                                     display: true,
-                                    text: 'Price Change %'
+                                    text: 'Price Change % (Normalized to 0)'
                                 },
                                 grid: {
                                     drawOnChartArea: false
@@ -2025,8 +2028,8 @@
             const container = document.getElementById('scoreComparison');
             if (!container) return;
 
-            // Force separation of Financial and Earnings for clarity if requested
-            const displaySeparateFinancials = true;
+            // Combine Financial and Earnings into a single scorecard
+            const displaySeparateFinancials = false;
             const combinedComparisons = { ...comparisons };
 
             if (!displaySeparateFinancials && comparisons.financial && comparisons.earnings) {
