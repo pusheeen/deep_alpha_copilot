@@ -2239,7 +2239,17 @@ async def chat(request: QueryRequest, http_request: Request):
             logger.warning(f"ADK agent call failed: {e}, falling back to direct tools")
     
     # Fallback: Use direct tool calls without ADK
-    return await _handle_chat_fallback(request.question, request.include_reasoning)
+    try:
+        return await _handle_chat_fallback(request.question, request.include_reasoning)
+    except Exception as e:
+        logger.error(f"Fallback chat handler failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return {
+            'answer': f"I encountered an error processing your question. Please try rephrasing it or ask about a specific ticker (e.g., 'What is the sentiment of MU?' or 'Does NVDA have good momentum?').",
+            'status': 'error',
+            'error': str(e)
+        }
 
 
 async def _handle_chat_fallback(question: str, include_reasoning: bool = False) -> dict:
