@@ -2215,6 +2215,7 @@ async def compare_stocks(request: ComparisonRequest):
 async def chat(request: QueryRequest, http_request: Request):
     """
     Receives a question, processes it through the ADK agent, and returns the response.
+    Falls back to direct tool calls if ADK is not available.
     """
     # Basic validation
     if not request.question or len(request.question.strip()) < 5:
@@ -2226,18 +2227,146 @@ async def chat(request: QueryRequest, http_request: Request):
     # Access the agent_caller initialized at startup
     agent_caller = http_request.app.state.agent_caller
 
-    if not agent_caller:
-        return {
-            'answer': "Agent features are not available. Please contact support.",
-            'status': 'agent_unavailable'
-        }
+    if agent_caller:
+        # Use ADK agent if available
+        try:
+            response = await agent_caller.call(
+                user_message=request.question,
+                include_reasoning=request.include_reasoning
+            )
+            return response
+        except Exception as e:
+            logger.warning(f"ADK agent call failed: {e}, falling back to direct tools")
+    
+    # Fallback: Use direct tool calls without ADK
+    return await _handle_chat_fallback(request.question, request.include_reasoning)
 
-    # Process the query using the ADK agent
-    response = await agent_caller.call(
-        user_message=request.question,
-        include_reasoning=request.include_reasoning
-    )
-    return response
+
+async def _handle_chat_fallback(question: str, include_reasoning: bool = False) -> dict:
+    """
+    Fallback chatbot that uses tools directly without ADK.
+    """
+    question_lower = question.lower().strip()
+    
+    # Extract ticker from question
+    import re
+    ticker_match = re.search(r'\b([A-Z]{2,5})\b', question.upper())
+    ticker = ticker_match.group(1) if ticker_match else None
+    
+    # Check if ticker is supported
+    if ticker:
+        supported_tickers = load_supported_tickers()
+        if ticker not in supported_tickers:
+            ticker = None
+    
+    try:
+        # Handle momentum questions
+        if any(word in question_lower for word in ['momentum', 'going up', 'trend', 'direction', 'price movement']):
+            if ticker:
+                try:
+                    from app.scoring import compute_company_scores
+                    data = compute_company_scores(ticker)
+                    technical_score = data.get("scores", {}).get("technical", {}).get("score", 0)
+                    recommendation = data.get("recommendation", {}).get("rating", "HOLD")
+                    
+                    if technical_score >= 7:
+                        answer = f"{ticker} shows strong positive momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Recent price trends and technical indicators suggest upward movement potential."
+                    elif technical_score >= 5:
+                        answer = f"{ticker} shows moderate momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Mixed signals suggest cautious optimism."
+                    else:
+                        answer = f"{ticker} shows weak momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Technical indicators suggest limited upward movement."
+                    
+                    return {'answer': answer, 'status': 'success'}
+                except Exception as e:
+                    logger.error(f"Error getting momentum for {ticker}: {e}")
+        
+        # Handle sentiment questions
+        if any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception']):
+            if ticker:
+                try:
+                    from app.scoring import compute_company_scores
+                    data = compute_company_scores(ticker)
+                    sentiment_score = data.get("scores", {}).get("sentiment", {}).get("score", 0)
+                    overall_score = data.get("overall", {}).get("score", 0)
+                    
+                    if sentiment_score >= 7:
+                        sentiment_desc = "very positive"
+                    elif sentiment_score >= 5:
+                        sentiment_desc = "moderately positive"
+                    elif sentiment_score >= 3:
+                        sentiment_desc = "neutral to slightly negative"
+                    else:
+                        sentiment_desc = "negative"
+                    
+                    answer = f"The sentiment for {ticker} is {sentiment_desc} with a sentiment score of {sentiment_score:.1f}/10. Overall Deep Alpha score is {overall_score:.1f}/10. This reflects market perception, news sentiment, and social media discussions."
+                    return {'answer': answer, 'status': 'success'}
+                except Exception as e:
+                    logger.error(f"Error getting sentiment for {ticker}: {e}")
+        
+        # Handle general company questions
+        if ticker:
+            try:
+                from app.scoring import compute_company_scores
+                data = compute_company_scores(ticker)
+                overall_score = data.get("overall", {}).get("score", 0)
+                recommendation = data.get("recommendation", {}).get("rating", "HOLD")
+                company_name = data.get("quick_facts", {}).get("name", ticker)
+                
+                answer = f"{company_name} ({ticker}) has a Deep Alpha score of {overall_score:.1f}/10 with a {recommendation} recommendation. "
+                
+                # Add relevant details based on question
+                if 'risk' in question_lower or 'concern' in question_lower:
+                    risks = data.get("recommendation", {}).get("risks", [])
+                    if risks:
+                        answer += f"Key risks include: {', '.join(risks[:3])}."
+                
+                if 'financial' in question_lower or 'health' in question_lower:
+                    financial_score = data.get("scores", {}).get("financial", {}).get("score", 0)
+                    answer += f" Financial health score: {financial_score:.1f}/10."
+                
+                return {'answer': answer, 'status': 'success'}
+            except Exception as e:
+                logger.error(f"Error getting company data for {ticker}: {e}")
+        
+        # Handle news questions
+        if any(word in question_lower for word in ['news', 'latest', 'recent', 'happening']):
+            if ticker:
+                try:
+                    payload = _load_cached_news(ticker)
+                    if not payload:
+                        payload = fetch_realtime_news(ticker)
+                    
+                    articles = payload.get("articles", [])
+                    if articles:
+                        summary = payload.get("summary", {})
+                        headline = summary.get("headline", "Latest news available")
+                        answer = f"Latest news for {ticker}: {headline}. Found {len(articles)} recent articles. "
+                        if articles:
+                            answer += f"Top headline: {articles[0].get('title', 'N/A')}"
+                        return {'answer': answer, 'status': 'success'}
+                    else:
+                        return {'answer': f"No recent news found for {ticker}.", 'status': 'success'}
+                except Exception as e:
+                    logger.error(f"Error getting news for {ticker}: {e}")
+        
+        # Default response
+        if ticker:
+            return {
+                'answer': f"I can help with questions about {ticker}. Try asking about momentum, sentiment, risks, financials, or latest news. For example: 'What is the sentiment of {ticker}?' or 'Does {ticker} have good momentum?'",
+                'status': 'success'
+            }
+        else:
+            return {
+                'answer': "I can help answer questions about stocks. Please include a ticker symbol (e.g., NVDA, MU, AAPL) in your question. I can help with momentum, sentiment, risks, financials, and latest news.",
+                'status': 'success'
+            }
+    
+    except Exception as e:
+        logger.error(f"Error in chat fallback: {e}")
+        return {
+            'answer': f"I encountered an error processing your question. Please try rephrasing or contact support if the issue persists.",
+            'status': 'error'
+        }
 
 # User authentication and subscription routes
 
