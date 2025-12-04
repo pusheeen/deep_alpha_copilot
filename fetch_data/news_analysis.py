@@ -466,54 +466,102 @@ Generate the analysis in the **strict JSON format** below. The entire response m
 
         # Configure Gemini API
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
-
-        # Retry logic with exponential backoff
-        for attempt in range(max_retries):
+        
+        # Tiered fallback: Try models in order of quality
+        # Tier 1: Best quality (Gemini 2.0 Flash Experimental)
+        # Tier 2: High quality fallback (Gemini 1.5 Flash - different quota pool)
+        fallback_models = [
+            ('gemini-2.0-flash-exp', 'premium'),
+            ('gemini-1.5-flash', 'high'),
+        ]
+        
+        last_error = None
+        
+        # Try each model in the fallback chain
+        for model_name, quality_tier in fallback_models:
             try:
-                # Generate content with JSON mode for structured output
-                response = model.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(
-                        max_output_tokens=3000,
-                        temperature=0.3,
-                        response_mime_type="application/json",
-                    )
-                )
+                model = genai.GenerativeModel(model_name)
+                logger.info(f"Attempting interpretation for {ticker} using {model_name} ({quality_tier} tier)...")
+                
+                # Retry logic with exponential backoff for each model
+                for attempt in range(max_retries):
+                    try:
+                        # Generate content with JSON mode for structured output
+                        response = model.generate_content(
+                            prompt,
+                            generation_config=genai.types.GenerationConfig(
+                                max_output_tokens=3000,
+                                temperature=0.3,
+                                response_mime_type="application/json",
+                            )
+                        )
 
-                interpretation = response.text.strip()
+                        interpretation = response.text.strip()
 
-                # Validate that we got a meaningful response
-                if len(interpretation) < 50:
-                    raise ValueError(f"Response too short ({len(interpretation)} chars), likely incomplete")
+                        # Validate that we got a meaningful response
+                        if len(interpretation) < 50:
+                            raise ValueError(f"Response too short ({len(interpretation)} chars), likely incomplete")
 
-                # Validate JSON structure
-                try:
-                    parsed_json = json.loads(interpretation)
-                    # Validate required fields for Deep Alpha structure
-                    required_fields = ['rating_buy_hold_sell', 'sentiment_confidence', 'key_takeaways', 'investment_conclusion']
-                    missing_fields = [field for field in required_fields if field not in parsed_json]
-                    if missing_fields:
-                        logger.warning(f"JSON missing required fields: {missing_fields}, retrying...")
-                        raise ValueError(f"Missing required fields: {missing_fields}")
-                except json.JSONDecodeError as je:
-                    logger.warning(f"Invalid JSON format: {je}, retrying...")
-                    raise ValueError(f"Invalid JSON format: {je}")
+                        # Validate JSON structure
+                        try:
+                            parsed_json = json.loads(interpretation)
+                            # Validate required fields for Deep Alpha structure
+                            required_fields = ['rating_buy_hold_sell', 'sentiment_confidence', 'key_takeaways', 'investment_conclusion']
+                            missing_fields = [field for field in required_fields if field not in parsed_json]
+                            if missing_fields:
+                                logger.warning(f"JSON missing required fields: {missing_fields}, retrying...")
+                                raise ValueError(f"Missing required fields: {missing_fields}")
+                            
+                            # Add metadata about which model was used
+                            parsed_json['_metadata'] = {
+                                'model_used': model_name,
+                                'quality_tier': quality_tier,
+                                'fallback_used': quality_tier != 'premium'
+                            }
+                            interpretation = json.dumps(parsed_json)
+                            
+                        except json.JSONDecodeError as je:
+                            logger.warning(f"Invalid JSON format: {je}, retrying...")
+                            raise ValueError(f"Invalid JSON format: {je}")
 
-                logger.info(f"✅ Generated DeepAlpha news interpretation for {ticker} using Gemini 2.0 Flash Experimental (attempt {attempt + 1})")
-                return interpretation
+                        logger.info(f"✅ Generated DeepAlpha news interpretation for {ticker} using {model_name} ({quality_tier} tier, attempt {attempt + 1})")
+                        return interpretation
 
-            except Exception as api_error:
-                logger.warning(f"Attempt {attempt + 1}/{max_retries} failed for {ticker}: {api_error}")
+                    except Exception as api_error:
+                        error_str = str(api_error)
+                        # Check if it's a quota error (429) - don't retry same model
+                        if '429' in error_str or 'quota' in error_str.lower() or 'Quota exceeded' in error_str:
+                            logger.warning(f"Quota exceeded for {model_name}, trying next fallback model...")
+                            last_error = api_error
+                            break  # Break retry loop, try next model
+                        
+                        logger.warning(f"Attempt {attempt + 1}/{max_retries} failed for {ticker} with {model_name}: {api_error}")
 
-                if attempt < max_retries - 1:
-                    import time
-                    wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
-                    logger.info(f"Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-                else:
-                    # Final attempt failed
-                    raise
+                        if attempt < max_retries - 1:
+                            import time
+                            wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                            logger.info(f"Retrying {model_name} in {wait_time} seconds...")
+                            time.sleep(wait_time)
+                        else:
+                            # Final attempt failed for this model, try next
+                            last_error = api_error
+                            break
+                
+                # If we got here and have a valid interpretation, return it
+                # (This shouldn't happen, but safety check)
+                if 'interpretation' in locals() and len(interpretation) > 50:
+                    return interpretation
+                    
+            except Exception as model_error:
+                logger.warning(f"Model {model_name} failed completely: {model_error}")
+                last_error = model_error
+                continue  # Try next model in fallback chain
+        
+        # All models failed
+        if last_error:
+            raise last_error
+        else:
+            raise ValueError("All fallback models failed without specific error")
 
     except Exception as e:
         logger.error(f"❌ All {max_retries} attempts failed for {ticker}: {e}")

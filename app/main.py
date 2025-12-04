@@ -1691,6 +1691,10 @@ async def get_latest_news(ticker: str):
 
                 if isinstance(raw_interpretation, dict):
                     deep_alpha_card = raw_interpretation
+                    # Preserve metadata if present (for quality indicators)
+                    if '_metadata' in deep_alpha_card:
+                        # Keep metadata for UI display
+                        pass
                 elif isinstance(raw_interpretation, str):
                     try:
                         parsed = json.loads(raw_interpretation)
@@ -1706,7 +1710,21 @@ async def get_latest_news(ticker: str):
                 # Preserve legacy analysis field if available separately
                 if not interpretation_summary:
                     interpretation_summary = interpretation_blob.get("analysis")
-            except Exception:
+                
+                # Check if interpretation is stale (older than news)
+                if card_generated_at and payload.get("fetched_at"):
+                    from datetime import datetime
+                    try:
+                        interp_time = datetime.fromisoformat(card_generated_at.replace('Z', '+00:00'))
+                        news_time = datetime.fromisoformat(payload["fetched_at"].replace('Z', '+00:00'))
+                        # If interpretation is older than news, mark as stale
+                        if interp_time < news_time:
+                            logger.info(f"Interpretation for {ticker} is older than news data (interp: {card_generated_at}, news: {payload['fetched_at']})")
+                            # Still use it, but could add a flag to indicate it's stale
+                    except Exception:
+                        pass
+            except Exception as e:
+                logger.warning(f"Error loading interpretation for {ticker}: {e}")
                 interpretation_summary = None
 
         payload["deep_alpha_analysis"] = deep_alpha_card

@@ -275,7 +275,7 @@
         <section id="standalone-flow-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                    <span class="mr-2">💹</span> Institutional & Retail Flow Data
+                    <span class="mr-2">💹</span> Institutional & Retail Flow Data <span class="text-xs text-slate-400 ml-2 font-normal">(Quarterly institutional, 3mo retail estimates)</span>
                     <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-blue-600 hover:bg-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
                         ?
                     </button>
@@ -1683,6 +1683,19 @@
             }
         });
 
+        function toggleNewsCoverage() {
+            const content = document.getElementById('news-coverage-content');
+            const toggleText = document.getElementById('news-toggle-text');
+            const toggleIcon = document.getElementById('news-toggle-icon');
+            
+            if (content && toggleText && toggleIcon) {
+                const isHidden = content.classList.contains('hidden');
+                content.classList.toggle('hidden');
+                toggleText.textContent = isHidden ? 'Hide' : 'Show';
+                toggleIcon.classList.toggle('rotate-180');
+            }
+        }
+
         function setupPriceChartControls(ticker) {
             const timePeriodButtons = document.querySelectorAll('.time-period-btn');
             const refreshButton = document.getElementById('refreshPriceChart');
@@ -2916,16 +2929,24 @@
 
             try {
                 const response = await fetch(`/api/latest-news/${ticker}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 const result = await response.json();
 
                 if (result.status === 'success' && result.data) {
+                    console.log(`News data loaded for ${ticker}:`, {
+                        articlesCount: result.data.articles?.length || 0,
+                        hasSummary: !!result.data.summary
+                    });
                     renderStandaloneNewsSection(result.data, ticker);
                 } else {
-                    container.innerHTML = '<p class="text-sm text-red-600">Failed to load news. Please try again later.</p>';
+                    console.error('News API returned error:', result);
+                    container.innerHTML = `<p class="text-sm text-red-600">Failed to load news: ${result.message || 'Unknown error'}</p>`;
                 }
             } catch (error) {
                 console.error('Error loading standalone news:', error);
-                container.innerHTML = '<p class="text-sm text-red-600">Error loading news data.</p>';
+                container.innerHTML = `<p class="text-sm text-red-600">Error loading news data: ${error.message}</p>`;
             }
         }
 
@@ -2937,6 +2958,13 @@
             const summary = data.summary || {};
             const articles = Array.isArray(data.articles) ? data.articles : [];
             const fetchedAt = data.fetched_at ? new Date(data.fetched_at) : null;
+            
+            // Debug logging
+            console.log(`Rendering news for ${ticker}:`, {
+                articlesCount: articles.length,
+                articles: articles.slice(0, 2).map(a => ({ title: a.title, source: a.source })),
+                fetchedAt: fetchedAt?.toISOString()
+            });
             const formatLastUpdated = (date) => {
                 if (!date) return 'N/A';
                 const now = new Date();
@@ -3002,6 +3030,22 @@
 
             let analysisHtml = '';
             if (deepAlphaCard) {
+                // Extract metadata about model used (if available)
+                const metadata = deepAlphaCard._metadata || {};
+                const modelUsed = metadata.model_used || 'Unknown';
+                const qualityTier = metadata.quality_tier || 'standard';
+                const fallbackUsed = metadata.fallback_used || false;
+                
+                // Quality tier badges
+                const qualityBadges = {
+                    'premium': { text: 'Premium Analysis', class: 'bg-purple-100 text-purple-700 border-purple-300' },
+                    'high': { text: 'High Quality Analysis', class: 'bg-blue-100 text-blue-700 border-blue-300' },
+                    'good': { text: 'Standard Analysis', class: 'bg-amber-100 text-amber-700 border-amber-300' },
+                    'basic': { text: 'Basic Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' },
+                    'standard': { text: 'Standard Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' }
+                };
+                const qualityBadge = qualityBadges[qualityTier] || qualityBadges['standard'];
+                
                 const ratingLabel = (deepAlphaCard.rating_buy_hold_sell || 'HOLD').toString().toUpperCase();
                 const confidenceLabel = (deepAlphaCard.sentiment_confidence || 'Medium').toString().toUpperCase();
                 const keyTakeaways = Array.isArray(deepAlphaCard.key_takeaways) ? deepAlphaCard.key_takeaways : [];
@@ -3053,6 +3097,12 @@
                                 <p class="text-xs text-slate-400 mt-1">${escapeHtml(analysisGeneratedLabel)}</p>
                             </div>
                             <div class="flex flex-wrap gap-3 items-center">
+                                ${fallbackUsed ? `
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${qualityBadge.class}">
+                                        <span>${qualityBadge.text}</span>
+                                        ${fallbackUsed ? '<span class="text-[10px] opacity-75">(Fallback)</span>' : ''}
+                                    </span>
+                                ` : ''}
                                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full ${ratingColors[ratingLabel] || ratingColors.HOLD}">
                                     <span class="text-xs font-semibold uppercase tracking-wide">Rating</span>
                                     <span class="text-lg font-bold">${ratingLabel}</span>
@@ -3128,9 +3178,17 @@
                     <section class="space-y-4">
                         <div class="flex items-center justify-between">
                             <h4 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Latest News Coverage (Last 72 Hours)</h4>
+                            <button onclick="toggleNewsCoverage()" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1">
+                                <span id="news-toggle-text">Show</span>
+                                <svg id="news-toggle-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
                         </div>
                         ${lastUpdatedHtml}
-                        ${articlesHtml}
+                        <div id="news-coverage-content" class="hidden">
+                            ${articlesHtml}
+                        </div>
                     </section>
                 </div>
             `;
@@ -3170,7 +3228,19 @@
                     fetch(`/api/flow-data/${ticker}?flow_type=combined`),
                     fetch(`/api/flow-summary/${ticker}`)
                 ]);
+                
+                if (!detailResponse.ok) {
+                    throw new Error(`Flow data HTTP ${detailResponse.status}: ${detailResponse.statusText}`);
+                }
+                
                 const [detailResult, summaryResult] = await Promise.all([detailResponse.json(), summaryResponse.json()]);
+                
+                console.log(`Flow data loaded for ${ticker}:`, {
+                    status: detailResult.status,
+                    hasData: !!detailResult.data,
+                    hasInstitutional: !!detailResult.data?.data?.institutional,
+                    hasRetail: !!detailResult.data?.data?.retail
+                });
 
                 if (summaryResult.status === 'success' && summaryResult.summary) {
                     const summary = summaryResult.summary;
@@ -3201,8 +3271,41 @@
                 if (detailResult.status === 'success' && detailResult.data) {
                     const flowData = detailResult.data.data;
                     const fileDate = detailResult.data.file_date || 'Latest';
-
-                    let html = '';
+                    
+                    // Format file date for display (YYYYMMDD -> readable format)
+                    const formatFileDate = (dateStr) => {
+                        if (!dateStr || dateStr === 'Latest') return 'Latest';
+                        if (dateStr.length === 8) {
+                            const year = dateStr.substring(0, 4);
+                            const month = dateStr.substring(4, 6);
+                            const day = dateStr.substring(6, 8);
+                            const date = new Date(`${year}-${month}-${day}`);
+                            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                        }
+                        return dateStr;
+                    };
+                    
+                    const formattedDate = formatFileDate(fileDate);
+                    const dataTimestamp = flowData.timestamp ? new Date(flowData.timestamp) : null;
+                    const formatDataTime = (date) => {
+                        if (!date) return 'N/A';
+                        return date.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    };
+                    
+                    // Determine data period
+                    const retailPeriod = flowData.retail?.period_analyzed || '3mo';
+                    const institutionalPeriod = 'Quarterly (13F filings)';
+                    
+                    let html = `
+                        <div class="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="text-xs text-slate-600 space-y-1">
+                                <div><strong>Data Period:</strong></div>
+                                <div>• Institutional: ${institutionalPeriod} (as of ${formattedDate})</div>
+                                <div>• Retail: Last ${retailPeriod} (estimated from volume patterns)</div>
+                                ${dataTimestamp ? `<div>• Data fetched: ${formatDataTime(dataTimestamp)}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
 
                     if (flowData.institutional) {
                         const inst = flowData.institutional;
