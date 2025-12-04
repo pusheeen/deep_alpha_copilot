@@ -317,15 +317,33 @@
         <section id="score-table" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h2 class="text-xl font-semibold text-slate-800">Help us test!</h2>
-                    <p class="text-sm text-slate-600 mt-1">Check out other companies for testing. Click refresh to load the latest scores.</p>
+                    <h2 class="text-xl font-semibold text-slate-800">Coverage Universe</h2>
+                    <p class="text-sm text-slate-600 mt-1">Browse all companies we track. Scores load automatically in the background.</p>
             </div>
                 <button id="load-all-btn" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Refresh
+                    Refresh All
                 </button>
+            </div>
+            
+            <!-- Background Loading Progress Bar -->
+            <div id="background-loading-container" class="mb-6 hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-slate-700">Loading tickers in background...</span>
+                    <span id="loading-progress-text" class="text-sm font-semibold text-blue-600">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div id="loading-progress-bar" class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-slate-500 mt-2 flex items-center">
+                    <svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    You can continue browsing while we load the rest
+                </p>
             </div>
             
             <!-- Ticker Grid -->
@@ -2416,6 +2434,16 @@
                     </div>`
                 );
             }
+
+            // Start background loading of all other tickers if not already active
+            if (!backgroundLoadingActive && !loadedTickers.has(ticker)) {
+                // Load this ticker first, then start background loading
+                setTimeout(() => {
+                    refreshCoverageTable(ticker).catch(err => {
+                        console.error('Background loading error:', err);
+                    });
+                }, 500); // Small delay to let main ticker load finish
+            }
         }
 
         scoreForm.addEventListener('submit', async (event) => {
@@ -2430,27 +2458,58 @@
             await handleTickerSelection(ticker);
         });
 
-        async function refreshCoverageTable() {
+        // Background loading state
+        let backgroundLoadingActive = false;
+        let loadedTickers = new Set();
+
+        function getCachedTickerData(ticker) {
+            const tickerCard = document.querySelector(`[data-ticker="${ticker}"]`);
+            if (!tickerCard) return { ticker, score: null, recommendation: 'Unknown', confidence: null };
+            
+            const scoreText = tickerCard.querySelector('.text-xs.font-semibold')?.textContent;
+            const recText = tickerCard.querySelector('.text-xs.text-slate-600')?.textContent;
+            const score = scoreText && scoreText !== '—' ? parseFloat(scoreText) : null;
+            
+            return {
+                ticker,
+                score,
+                recommendation: recText || 'Unknown',
+                confidence: null,
+            };
+        }
+
+        async function refreshCoverageTable(priorityTicker = null) {
             const tickerGrid = document.getElementById('ticker-grid');
             const tableBody = document.getElementById('table-body');
+            const progressContainer = document.getElementById('background-loading-container');
+            const progressBar = document.getElementById('loading-progress-bar');
+            const progressText = document.getElementById('loading-progress-text');
             
             if (!tickerGrid) return;
 
+            // Initialize ticker grid with loading states
             tickerGrid.innerHTML = supportedTickers.map(ticker => {
                 const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
+                const isLoaded = loadedTickers.has(ticker);
                 return `
-                    <div class="ticker-card bg-slate-50 rounded-lg p-3 text-center border border-slate-200 opacity-50" data-ticker="${ticker}">
+                    <div class="ticker-card bg-slate-50 rounded-lg p-3 text-center border border-slate-200 ${isLoaded ? '' : 'opacity-50'}" data-ticker="${ticker}">
                         <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
                         <div class="text-xs text-slate-500 mt-1 truncate">${metadata.name}</div>
-                        <div class="text-xs text-slate-400 mt-1">Loading...</div>
+                        ${isLoaded ? '' : '<div class="text-xs text-slate-400 mt-1">Loading...</div>'}
                     </div>
                 `;
             }).join('');
             
             const rows = [];
             const batchSize = 5;
+            const totalTickers = supportedTickers.length;
 
-            const loadTickerMetrics = async (ticker) => {
+            const loadTickerMetrics = async (ticker, skipProgress = false) => {
+                // Skip if already loaded
+                if (loadedTickers.has(ticker) && !skipProgress) {
+                    return getCachedTickerData(ticker);
+                }
+
                 try {
                     const response = await fetch(scoreApiUrl(ticker));
                     const data = await response.json();
@@ -2471,6 +2530,7 @@
                             tickerCard.classList.add('hover:bg-slate-100', 'cursor-pointer', 'transition-colors', 'hover:border-blue-300');
                         }
 
+                        loadedTickers.add(ticker);
                         return {
                             ticker,
                             score: numericScore,
@@ -2495,16 +2555,54 @@
                 }
             };
 
-            for (let i = 0; i < supportedTickers.length; i += batchSize) {
-                const batch = supportedTickers.slice(i, i + batchSize);
-                const batchResults = await Promise.all(batch.map(loadTickerMetrics));
-                rows.push(...batchResults);
+            // Show progress bar if loading in background
+            if (priorityTicker) {
+                // Load priority ticker first, then start background loading
+                await loadTickerMetrics(priorityTicker, true);
             }
             
-            rows.sort((a, b) => (b.score || 0) - (a.score || 0));
+            if (progressContainer) {
+                progressContainer.classList.remove('hidden');
+                backgroundLoadingActive = true;
+            }
+
+            // Filter out priority ticker if provided (already loaded)
+            const tickersToLoad = priorityTicker 
+                ? supportedTickers.filter(t => t !== priorityTicker && !loadedTickers.has(t))
+                : supportedTickers.filter(t => !loadedTickers.has(t));
+
+            // Load in batches with progress updates
+            for (let i = 0; i < tickersToLoad.length; i += batchSize) {
+                const batch = tickersToLoad.slice(i, i + batchSize);
+                const batchResults = await Promise.all(batch.map(ticker => loadTickerMetrics(ticker)));
+                rows.push(...batchResults);
+                
+                // Update progress
+                const loaded = loadedTickers.size;
+                const progress = Math.round((loaded / totalTickers) * 100);
+                if (progressBar) progressBar.style.width = `${progress}%`;
+                if (progressText) progressText.textContent = `${progress}%`;
+                
+                // Small delay to prevent overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Hide progress bar when done
+            if (progressContainer) {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    backgroundLoadingActive = false;
+                }, 500);
+            }
+            
+            // Sort and update table
+            const allRows = priorityTicker && loadedTickers.has(priorityTicker)
+                ? [getCachedTickerData(priorityTicker), ...rows]
+                : rows;
+            allRows.sort((a, b) => (b.score || 0) - (a.score || 0));
             
             if (tableBody) {
-                tableBody.innerHTML = rows.map(row => {
+                tableBody.innerHTML = allRows.map(row => {
                     const metadata = companyMetadata[row.ticker] || { name: row.ticker, industry: 'Unknown' };
                     return `
                         <tr class="hover:bg-slate-50">
@@ -3785,11 +3883,22 @@
         // Refresh market conditions every 5 minutes
         setInterval(loadMarketConditions, 300000);
 
-        refreshCoverageTable();
-
+        // Don't load all tickers immediately - wait for user input or start background loading after initial ticker
         (async () => {
-            const initialTicker = scoreTickerInput.value.trim().toUpperCase();
-            await handleTickerSelection(initialTicker);
+            const initialTicker = scoreTickerInput.value.trim().toUpperCase() || 'NVDA';
+            if (initialTicker && supportedTickerSet.has(initialTicker)) {
+                await handleTickerSelection(initialTicker);
+                // Background loading will start automatically from handleTickerSelection
+            } else {
+                // If no valid initial ticker, start background loading after a delay
+                setTimeout(() => {
+                    if (!backgroundLoadingActive) {
+                        refreshCoverageTable().catch(err => {
+                            console.error('Background loading error:', err);
+                        });
+                    }
+                }, 1000);
+            }
             loadStandaloneTokenUsage();
         })();
     </script>

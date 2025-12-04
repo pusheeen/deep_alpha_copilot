@@ -19,6 +19,13 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
+# Try to import requests for OpenRouter fallback
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
 from .utils import NEWS_INTERPRETATION_DIR
 
 logger = logging.getLogger(__name__)
@@ -199,6 +206,233 @@ def compute_technical_snapshot(ticker: str) -> Tuple[str, str, str]:
     except Exception as exc:
         logger.warning(f"Unable to compute technical snapshot for {ticker}: {exc}")
         return ("N/A", "Insufficient data", "N/A")
+
+
+def _try_openrouter_fallback(ticker: str, news_articles: List[Dict[str, Any]], prompt: str) -> Optional[str]:
+    """
+    Try OpenRouter API as fallback (supports many open source models).
+    
+    Models to try (in order):
+    1. gwen-7b (Gwen model - open source)
+    2. meta-llama/llama-3.1-8b-instruct (Llama 3.1)
+    3. mistralai/mistral-7b-instruct (Mistral)
+    4. google/gemma-7b-it (Gemma)
+    """
+    if not REQUESTS_AVAILABLE:
+        return None
+    
+    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+    if not openrouter_api_key:
+        logger.debug("OPENROUTER_API_KEY not set, skipping OpenRouter fallback")
+        return None
+    
+    # Open source models to try (in order of preference)
+    fallback_models = [
+        "gwen/gwen-7b",  # Gwen model
+        "meta-llama/llama-3.1-8b-instruct:free",  # Llama 3.1 (free tier)
+        "mistralai/mistral-7b-instruct:free",  # Mistral (free tier)
+        "google/gemma-7b-it:free",  # Gemma (free tier)
+        "qwen/qwen-2.5-7b-instruct:free",  # Qwen (free tier)
+    ]
+    
+    for model_name in fallback_models:
+        try:
+            logger.info(f"Trying OpenRouter model {model_name} for {ticker}...")
+            
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {openrouter_api_key}",
+                    "HTTP-Referer": "https://deepalphacopilot.com",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model_name,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a financial analyst. Respond ONLY with valid JSON, no markdown, no code fences."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 3000,
+                    "response_format": {"type": "json_object"}
+                },
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                interpretation_text = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                
+                if interpretation_text and len(interpretation_text) > 50:
+                    # Validate JSON
+                    try:
+                        parsed_json = json.loads(interpretation_text)
+                        required_fields = ['rating_buy_hold_sell', 'sentiment_confidence', 'key_takeaways', 'investment_conclusion']
+                        missing_fields = [field for field in required_fields if field not in parsed_json]
+                        
+                        if not missing_fields:
+                            parsed_json['_metadata'] = {
+                                'model_used': model_name,
+                                'quality_tier': 'open_source',
+                                'fallback_used': True,
+                                'provider': 'openrouter'
+                            }
+                            logger.info(f"✅ Generated interpretation using OpenRouter {model_name}")
+                            return json.dumps(parsed_json)
+                    except json.JSONDecodeError:
+                        logger.warning(f"Invalid JSON from {model_name}, trying next model...")
+                        continue
+            
+            # If we get here, this model didn't work
+            logger.warning(f"OpenRouter model {model_name} failed or returned invalid response")
+            
+        except Exception as e:
+            logger.warning(f"Error with OpenRouter model {model_name}: {e}")
+            continue
+    
+    return None
+
+
+def _generate_template_fallback(ticker: str, news_articles: List[Dict[str, Any]]) -> str:
+    """
+    Generate a template-based fallback when all LLM APIs fail.
+    Uses simple heuristics based on news sentiment and article count.
+    """
+    logger.info(f"Generating template-based fallback for {ticker}")
+    
+    if not news_articles:
+        return json.dumps({
+            "rating_buy_hold_sell": "HOLD",
+            "sentiment_confidence": "Low",
+            "key_takeaways": [
+                {
+                    "type": "Data Availability",
+                    "summary": "No recent news articles available for analysis."
+                }
+            ],
+            "investment_conclusion": {
+                "paragraph": f"Unable to generate AI-powered analysis for {ticker} due to API limitations. No recent news articles were found. Please check back later or consult other sources for investment decisions.",
+                "reasoning_justification": "Analysis unavailable - no news data and API fallbacks exhausted."
+            },
+            "next_step_focus": {
+                "title": "Next Steps",
+                "monitor_points": [
+                    "Check back later for updated analysis",
+                    "Monitor company fundamentals independently",
+                    "Review latest SEC filings and earnings reports"
+                ]
+            },
+            "_metadata": {
+                "model_used": "template_fallback",
+                "quality_tier": "fallback",
+                "fallback_used": True,
+                "provider": "template"
+            }
+        })
+    
+    # Simple sentiment analysis from titles
+    positive_keywords = ['surge', 'gain', 'beat', 'rise', 'up', 'growth', 'profit', 'strong', 'positive', 'upgrade']
+    negative_keywords = ['fall', 'drop', 'miss', 'decline', 'down', 'loss', 'weak', 'negative', 'downgrade', 'concern']
+    
+    positive_count = 0
+    negative_count = 0
+    
+    for article in news_articles[:5]:
+        title = (article.get('title') or article.get('headline') or '').lower()
+        if any(keyword in title for keyword in positive_keywords):
+            positive_count += 1
+        if any(keyword in title for keyword in negative_keywords):
+            negative_count += 1
+    
+    # Determine rating
+    if positive_count > negative_count + 1:
+        rating = "BUY"
+        sentiment = "Positive"
+        confidence = "Medium"
+    elif negative_count > positive_count + 1:
+        rating = "SELL"
+        sentiment = "Negative"
+        confidence = "Medium"
+    else:
+        rating = "HOLD"
+        sentiment = "Neutral"
+        confidence = "Low"
+    
+    # Generate key takeaways from article titles
+    key_takeaways = []
+    if news_articles:
+        key_takeaways.append({
+            "type": "News Coverage",
+            "summary": f"Found {len(news_articles)} recent article(s). Headlines suggest {sentiment.lower()} sentiment."
+        })
+    
+    if positive_count > 0:
+        key_takeaways.append({
+            "type": "Positive Signals",
+            "summary": f"{positive_count} article(s) contain positive keywords, suggesting favorable developments."
+        })
+    
+    if negative_count > 0:
+        key_takeaways.append({
+            "type": "Risk Factors",
+            "summary": f"{negative_count} article(s) contain negative keywords, indicating potential concerns."
+        })
+    
+    # Generate conclusion
+    conclusion_paragraph = (
+        f"Based on a template-based analysis of {len(news_articles)} recent news article(s) for {ticker}, "
+        f"the sentiment appears {sentiment.lower()}. "
+    )
+    
+    if positive_count > negative_count:
+        conclusion_paragraph += (
+            f"Positive keywords ({positive_count}) outweigh negative ones ({negative_count}), "
+            f"suggesting favorable market sentiment. However, this is a simplified analysis and should be "
+            f"supplemented with fundamental research."
+        )
+    elif negative_count > positive_count:
+        conclusion_paragraph += (
+            f"Negative keywords ({negative_count}) outweigh positive ones ({positive_count}), "
+            f"indicating potential concerns. Investors should review fundamentals and company guidance carefully."
+        )
+    else:
+        conclusion_paragraph += (
+            f"The news coverage appears balanced with {positive_count} positive and {negative_count} negative signals. "
+            f"Consider reviewing company fundamentals and recent earnings for more detailed insights."
+        )
+    
+    return json.dumps({
+        "rating_buy_hold_sell": rating,
+        "sentiment_confidence": confidence,
+        "key_takeaways": key_takeaways,
+        "investment_conclusion": {
+            "paragraph": conclusion_paragraph,
+            "reasoning_justification": f"Template-based analysis using keyword matching. {sentiment} sentiment detected from {len(news_articles)} articles."
+        },
+        "next_step_focus": {
+            "title": "Next Steps: Enhanced Analysis Recommended",
+            "monitor_points": [
+                "Review latest earnings reports and guidance",
+                "Monitor company fundamentals and financial metrics",
+                "Check for upcoming earnings announcements or major events"
+            ]
+        },
+        "_metadata": {
+            "model_used": "template_fallback",
+            "quality_tier": "fallback",
+            "fallback_used": True,
+            "provider": "template",
+            "articles_analyzed": len(news_articles),
+            "positive_signals": positive_count,
+            "negative_signals": negative_count
+        }
+    })
 
 
 def strip_code_fence(text: str) -> str:
@@ -557,17 +791,23 @@ Generate the analysis in the **strict JSON format** below. The entire response m
                 last_error = model_error
                 continue  # Try next model in fallback chain
         
-        # All models failed
-        if last_error:
-            raise last_error
-        else:
-            raise ValueError("All fallback models failed without specific error")
+        # All Gemini models failed, try OpenRouter fallback
+        logger.warning(f"All Gemini models failed for {ticker}, trying OpenRouter fallback...")
+        try:
+            openrouter_result = _try_openrouter_fallback(ticker, news_articles, prompt)
+            if openrouter_result:
+                return openrouter_result
+        except Exception as openrouter_error:
+            logger.warning(f"OpenRouter fallback also failed: {openrouter_error}")
+        
+        # All API models failed, use template-based fallback
+        logger.warning(f"All API models failed for {ticker}, using template-based fallback...")
+        return _generate_template_fallback(ticker, news_articles)
 
     except Exception as e:
         logger.error(f"❌ All {max_retries} attempts failed for {ticker}: {e}")
-        return json.dumps({
-            "error": f"Error generating interpretation after {max_retries} attempts: {str(e)}"
-        })
+        # Even if everything fails, return a template-based response
+        return _generate_template_fallback(ticker, news_articles)
 
 
 def save_news_interpretation(ticker: str, news_file_path: str) -> Optional[str]:
