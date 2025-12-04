@@ -20,7 +20,7 @@ gcloud scheduler jobs create http update-scoring-data \
     --http-method=POST \
     --description="Update financial statements, earnings, prices (quarterly)" \
     --time-zone="America/Los_Angeles" \
-    --attempt-deadline=3600s \
+    --attempt-deadline=1800s \
     --project=$PROJECT_ID 2>&1 | grep -v "already exists" || echo "Job already exists"
 
 # 2. Sentiment data (weekly - Monday at 2am PST)
@@ -31,7 +31,7 @@ gcloud scheduler jobs create http update-sentiment-data \
     --http-method=POST \
     --description="Update Reddit and X/Twitter sentiment (weekly)" \
     --time-zone="America/Los_Angeles" \
-    --attempt-deadline=3600s \
+    --attempt-deadline=1800s \
     --project=$PROJECT_ID 2>&1 | grep -v "already exists" || echo "Job already exists"
 
 # 3. News data (daily at 2am PST)
@@ -42,7 +42,7 @@ gcloud scheduler jobs create http update-news-data \
     --http-method=POST \
     --description="Fetch latest news (past 72 hours, refreshed daily)" \
     --time-zone="America/Los_Angeles" \
-    --attempt-deadline=3600s \
+    --attempt-deadline=1800s \
     --project=$PROJECT_ID 2>&1 | grep -v "already exists" || echo "Job already exists"
 
 # 4. Institutional flow (quarterly - 1st day of quarter at 2am PST)
@@ -53,7 +53,7 @@ gcloud scheduler jobs create http update-institutional-flow \
     --http-method=POST \
     --description="Update institutional ownership and flow data (quarterly)" \
     --time-zone="America/Los_Angeles" \
-    --attempt-deadline=3600s \
+    --attempt-deadline=1800s \
     --project=$PROJECT_ID 2>&1 | grep -v "already exists" || echo "Job already exists"
 
 # 5. Momentum data (daily at 2am PST)
@@ -64,7 +64,7 @@ gcloud scheduler jobs create http update-momentum-data \
     --http-method=POST \
     --description="Update price data and technical indicators for momentum strategy (daily)" \
     --time-zone="America/Los_Angeles" \
-    --attempt-deadline=3600s \
+    --attempt-deadline=1800s \
     --project=$PROJECT_ID 2>&1 | grep -v "already exists" || echo "Job already exists"
 
 echo ""
