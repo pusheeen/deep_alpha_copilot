@@ -38,6 +38,8 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from fetch_data import token_usage as token_usage_module
 from fetch_data.token_usage import fetch_and_save_token_usage
+from fetch_data.news_analysis import interpret_news_with_deep_alpha, save_news_interpretation
+from fetch_data.utils import NEWS_INTERPRETATION_DIR
 
 try:
     import google.generativeai as genai
@@ -1668,11 +1670,31 @@ async def get_latest_news(ticker: str):
             payload = fetch_realtime_news(ticker)
             _save_cached_news(ticker, payload)
 
+        # Try to download interpretation files from GCS if in production
+        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
+        interpretation_dir.mkdir(parents=True, exist_ok=True)
+        if os.getenv("K_SERVICE"):
+            from storage_helper import get_storage_manager
+            storage_manager = get_storage_manager()
+            # Try to download latest interpretation file from GCS
+            try:
+                if storage_manager.bucket:
+                    # List files in GCS
+                    prefix = f"data/unstructured/news_interpretation/{ticker}_news_interpretation_"
+                    blobs = list(storage_manager.bucket.list_blobs(prefix=prefix))
+                    if blobs:
+                        # Download the latest one
+                        latest_blob = sorted(blobs, key=lambda b: b.name, reverse=True)[0]
+                        local_path = interpretation_dir / latest_blob.name.split("/")[-1]
+                        storage_manager.download_file(latest_blob.name, local_path)
+            except Exception as e:
+                logger.debug(f"Could not download interpretation from GCS for {ticker}: {e}")
+
         # Attach Deep Alpha interpretation card (new structure) and legacy text fallback if available
         deep_alpha_card: Optional[dict] = None
         interpretation_summary: Optional[str] = None
         card_generated_at: Optional[str] = None
-        interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
+        
         interpretation_files = sorted(
             [
                 file_path
@@ -1726,6 +1748,31 @@ async def get_latest_news(ticker: str):
             except Exception as e:
                 logger.warning(f"Error loading interpretation for {ticker}: {e}")
                 interpretation_summary = None
+        
+        # If no interpretation exists and we have articles, generate one on-the-fly
+        if not deep_alpha_card and not interpretation_summary and payload.get("articles"):
+            try:
+                logger.info(f"Generating interpretation on-the-fly for {ticker}...")
+                loop = asyncio.get_event_loop()
+                interpretation_json = await loop.run_in_executor(
+                    None,
+                    interpret_news_with_deep_alpha,
+                    ticker,
+                    payload.get("articles", [])
+                )
+                if interpretation_json:
+                    try:
+                        parsed = json.loads(interpretation_json)
+                        if isinstance(parsed, dict):
+                            deep_alpha_card = parsed
+                            card_generated_at = datetime.now(timezone.utc).isoformat()
+                            logger.info(f"✅ Generated interpretation for {ticker} on-the-fly")
+                        else:
+                            interpretation_summary = interpretation_json
+                    except json.JSONDecodeError:
+                        interpretation_summary = interpretation_json
+            except Exception as e:
+                logger.warning(f"Failed to generate interpretation for {ticker}: {e}")
 
         payload["deep_alpha_analysis"] = deep_alpha_card
         payload["legacy_analysis"] = interpretation_summary
