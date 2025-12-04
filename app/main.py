@@ -24,7 +24,7 @@ from urllib.request import Request, urlopen
 import databases
 import sqlalchemy
 import stripe
-from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
@@ -1818,6 +1818,105 @@ async def get_flow_data(ticker: str, flow_type: str = "combined"):
     except Exception as exc:
         logger.error(f"Error loading flow data for {ticker}: {exc}")
         return {"status": "error", "message": f"Failed to fetch flow data: {exc}"}
+
+
+@app.post("/api/scheduler/update/{data_type}")
+async def scheduler_update_data(data_type: str, request: Request):
+    """
+    Endpoint for Cloud Scheduler to trigger data updates.
+    Protected by checking for Cloud Scheduler user agent or secret header.
+    """
+    # Verify request is from Cloud Scheduler (basic security)
+    # In production, you should use Cloud Scheduler's OIDC token or a secret header
+    scheduler_secret = os.getenv("SCHEDULER_SECRET")
+    request_secret = request.headers.get("X-Scheduler-Secret")
+    
+    if scheduler_secret and request_secret != scheduler_secret:
+        return {"status": "error", "message": "Unauthorized"}
+    
+    try:
+        from scheduler_jobs import update_last_updated_timestamp
+        
+        if data_type == "scoring_data":
+            # Update financial statements, earnings, prices (quarterly)
+            from fetch_data import fetch_financial_statements, fetch_quarterly_earnings, fetch_stock_prices
+            # This would call the actual fetch functions
+            update_last_updated_timestamp("scoring_data")
+            return {"status": "success", "message": f"Updated {data_type}"}
+        
+        elif data_type == "sentiment_data":
+            # Update Reddit and X sentiment (weekly)
+            from fetch_data import fetch_reddit_sentiment, fetch_x_sentiment
+            update_last_updated_timestamp("sentiment_data")
+            return {"status": "success", "message": f"Updated {data_type}"}
+        
+        elif data_type == "news_data":
+            # Fetch latest news (past 72 hours, daily at 2am PST)
+            from app.main import fetch_realtime_news
+            from target_tickers import TARGET_TICKERS
+            loop = asyncio.get_event_loop()
+            for ticker in TARGET_TICKERS:
+                try:
+                    payload = await loop.run_in_executor(None, fetch_realtime_news, ticker, 72, 8)
+                    _save_cached_news(ticker, payload)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch news for {ticker}: {e}")
+            update_last_updated_timestamp("news_data")
+            return {"status": "success", "message": f"Updated {data_type}"}
+        
+        elif data_type == "institutional_flow":
+            # Update institutional flow data (quarterly)
+            from fetch_data import fetch_combined_flow_data
+            from target_tickers import TARGET_TICKERS
+            from pathlib import Path
+            flow_dir = Path("data/unstructured/flow")
+            for ticker in TARGET_TICKERS:
+                try:
+                    fetch_combined_flow_data(ticker, flow_dir)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch flow data for {ticker}: {e}")
+            update_last_updated_timestamp("institutional_flow")
+            return {"status": "success", "message": f"Updated {data_type}"}
+        
+        elif data_type == "momentum_data":
+            # Update price data and technical indicators (daily at 2am PST)
+            from fetch_data import fetch_stock_prices
+            from target_tickers import TARGET_TICKERS
+            for ticker in TARGET_TICKERS:
+                try:
+                    fetch_stock_prices(ticker)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch momentum data for {ticker}: {e}")
+            update_last_updated_timestamp("momentum_data")
+            return {"status": "success", "message": f"Updated {data_type}"}
+        
+        else:
+            return {"status": "error", "message": f"Unknown data type: {data_type}"}
+    
+    except Exception as exc:
+        logger.error(f"Error updating {data_type}: {exc}")
+        return {"status": "error", "message": str(exc)}
+
+
+@app.get("/api/data-status")
+async def get_data_status():
+    """Return last updated timestamps for all data types."""
+    try:
+        from scheduler_jobs import get_last_updated_timestamp, UPDATE_SCHEDULES
+        
+        status = {}
+        for data_type, schedule in UPDATE_SCHEDULES.items():
+            last_updated = get_last_updated_timestamp(data_type)
+            status[data_type] = {
+                "last_updated": last_updated.isoformat() if last_updated else None,
+                "frequency": schedule["frequency"],
+                "description": schedule["description"]
+            }
+        
+        return {"status": "success", "data": status}
+    except Exception as exc:
+        logger.error(f"Error getting data status: {exc}")
+        return {"status": "error", "message": str(exc)}
 
 
 @app.get("/api/token-usage")

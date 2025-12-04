@@ -263,6 +263,7 @@
             <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
                 <span class="mr-2">📰</span> Latest News & AI Investment Analysis <span class="text-xs text-slate-400 ml-2 font-normal">(Refreshes every 12 hours)</span>
             </h3>
+            <div id="news-last-updated" class="text-xs text-slate-500 mb-2"></div>
             <div id="standalone-news-content" class="text-slate-600 text-sm">
                 <div class="flex items-center justify-center py-8">
                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
@@ -3048,7 +3049,7 @@
             }
         }
 
-        // Render standalone news with Deep Alpha Pillars Assessment
+        // Render standalone news with Investment Analysis
         function renderStandaloneNewsSection(data, ticker) {
             const newsContent = document.getElementById('standalone-news-content');
             if (!newsContent) return;
@@ -3190,7 +3191,7 @@
                     <section class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 shadow-lg text-slate-100 space-y-6">
                         <div class="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Deep Alpha Pillars Assessment</p>
+                                <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Investment Analysis</p>
                                 <h4 class="text-2xl font-semibold mt-2">${escapeHtml(ticker)}</h4>
                                 <p class="text-xs text-slate-400 mt-1">${escapeHtml(analysisGeneratedLabel)}</p>
                             </div>
@@ -3232,7 +3233,7 @@
                             <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Legacy Analysis</span>
                         </div>
                         <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(legacyAnalysis)}</p>
-                        <p class="text-xs text-slate-500 mt-3 italic">Note: This is an older analysis format. Deep Alpha Pillars Assessment coming soon.</p>
+                        <p class="text-xs text-slate-500 mt-3 italic">Note: This is an older analysis format.</p>
                     </div>
                 `;
             } else {
@@ -3880,8 +3881,67 @@
 
         // Load market conditions on page load
         loadMarketConditions();
+        loadDataStatus();
         // Refresh market conditions every 5 minutes
         setInterval(loadMarketConditions, 300000);
+        setInterval(loadDataStatus, 60000); // Refresh data status every minute
+
+        // Load and display data status (last updated times)
+        async function loadDataStatus() {
+            try {
+                const response = await fetch('/api/data-status');
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const status = result.data;
+                    
+                    // Update news section
+                    if (status.news_data && status.news_data.last_updated) {
+                        const newsUpdated = new Date(status.news_data.last_updated);
+                        const newsElement = document.getElementById('news-last-updated');
+                        if (newsElement) {
+                            newsElement.textContent = `Last updated: ${formatDateTime(newsUpdated)} (Updates daily at 2am PST)`;
+                        }
+                    }
+                    
+                    // Update flow data section
+                    if (status.institutional_flow && status.institutional_flow.last_updated) {
+                        const flowUpdated = new Date(status.institutional_flow.last_updated);
+                        const flowElement = document.getElementById('flow-last-updated');
+                        if (flowElement) {
+                            flowElement.textContent = `Last updated: ${formatDateTime(flowUpdated)} (Updates quarterly)`;
+                        }
+                    }
+                    
+                    // Update scoring data (shown in scorecard)
+                    if (status.scoring_data && status.scoring_data.last_updated) {
+                        const scoringUpdated = new Date(status.scoring_data.last_updated);
+                        const scoringElement = document.getElementById('scoring-last-updated');
+                        if (scoringElement) {
+                            scoringElement.textContent = `Data updated: ${formatDateTime(scoringUpdated)} (Updates quarterly)`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading data status:', error);
+            }
+        }
+
+        function formatDateTime(date) {
+            if (!date) return 'N/A';
+            const now = new Date();
+            const diffMs = now.getTime() - date.getTime();
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffDays > 0) {
+                return `${date.toLocaleDateString()} ${date.toLocaleTimeString()} (${diffDays}d ago)`;
+            } else if (diffHours > 0) {
+                return `${date.toLocaleDateString()} ${date.toLocaleTimeString()} (${diffHours}h ago)`;
+            } else {
+                return `${date.toLocaleTimeString()} (just now)`;
+            }
+        }
 
         // Don't load all tickers immediately - wait for user input or start background loading after initial ticker
         (async () => {
