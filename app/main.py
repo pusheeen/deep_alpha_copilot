@@ -1752,23 +1752,61 @@ async def get_latest_news(ticker: str):
                 if not interpretation_summary:
                     interpretation_summary = interpretation_blob.get("analysis")
                 
-                # Check if interpretation is stale (older than news)
+                # Check if interpretation is stale (older than news) or if news articles have changed
+                interpretation_stale = False
+                news_changed = False
+                
                 if card_generated_at and payload.get("fetched_at"):
-                    from datetime import datetime
                     try:
                         interp_time = datetime.fromisoformat(card_generated_at.replace('Z', '+00:00'))
                         news_time = datetime.fromisoformat(payload["fetched_at"].replace('Z', '+00:00'))
-                        # If interpretation is older than news, mark as stale
+                        # If interpretation is older than news, it's stale
                         if interp_time < news_time:
+                            interpretation_stale = True
                             logger.info(f"Interpretation for {ticker} is older than news data (interp: {card_generated_at}, news: {payload['fetched_at']})")
-                            # Still use it, but could add a flag to indicate it's stale
                     except Exception:
                         pass
+                
+                # Check if news articles have changed by comparing article links
+                if not interpretation_stale and deep_alpha_card:
+                    try:
+                        # Get article links from current news
+                        current_article_links = set()
+                        for article in payload.get("articles", []):
+                            link = article.get("link") or article.get("url")
+                            if link:
+                                current_article_links.add(link)
+                        
+                        # Get article links from interpretation metadata
+                        interp_articles = interpretation_blob.get("articles", [])
+                        interp_article_links = set()
+                        for article in interp_articles:
+                            link = article.get("link") or article.get("url")
+                            if link:
+                                interp_article_links.add(link)
+                        
+                        # If article sets differ significantly, news has changed
+                        if current_article_links and interp_article_links:
+                            # Check if more than 30% of articles are different
+                            common_links = current_article_links & interp_article_links
+                            if len(common_links) / max(len(current_article_links), len(interp_article_links)) < 0.7:
+                                news_changed = True
+                                logger.info(f"News articles changed for {ticker}: {len(current_article_links)} current vs {len(interp_article_links)} in interpretation")
+                    except Exception as e:
+                        logger.debug(f"Error comparing articles: {e}")
+                
+                # If interpretation is stale or news changed, clear it to force regeneration
+                if interpretation_stale or news_changed:
+                    logger.info(f"Regenerating interpretation for {ticker} (stale: {interpretation_stale}, news_changed: {news_changed})")
+                    deep_alpha_card = None
+                    interpretation_summary = None
+                    card_generated_at = None
+                    
             except Exception as e:
                 logger.warning(f"Error loading interpretation for {ticker}: {e}")
                 interpretation_summary = None
         
-        # If no interpretation exists and we have articles, generate one on-the-fly
+        # If no interpretation exists (or was cleared due to stale/changed news) and we have articles, generate one on-the-fly
         articles_list = payload.get("articles", [])
         if not deep_alpha_card and not interpretation_summary and articles_list and len(articles_list) > 0:
             try:
@@ -1787,6 +1825,41 @@ async def get_latest_news(ticker: str):
                             deep_alpha_card = parsed
                             card_generated_at = datetime.now(timezone.utc).isoformat()
                             logger.info(f"✅ Generated interpretation for {ticker} on-the-fly")
+                            
+                            # Save the new interpretation to cache and GCS
+                            try:
+                                from fetch_data.news_analysis import save_news_interpretation
+                                from pathlib import Path
+                                import tempfile
+                                
+                                # Create a temporary news file with current payload for save_news_interpretation
+                                news_dir = DATA_ROOT / "unstructured" / "news"
+                                news_dir.mkdir(parents=True, exist_ok=True)
+                                temp_news_file = news_dir / f"{ticker}_news_temp_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                                
+                                # Save current payload as news file format
+                                news_payload = {
+                                    "ticker": ticker,
+                                    "articles": articles_list,
+                                    "fetch_timestamp": payload.get("fetched_at"),
+                                    "fetched_at": payload.get("fetched_at")
+                                }
+                                with temp_news_file.open("w") as f:
+                                    json.dump(news_payload, f, indent=2)
+                                
+                                # Save interpretation
+                                interpretation_path = save_news_interpretation(ticker, str(temp_news_file))
+                                if interpretation_path:
+                                    logger.info(f"✅ Saved new interpretation for {ticker} to {interpretation_path}")
+                                
+                                # Clean up temp file
+                                try:
+                                    temp_news_file.unlink()
+                                except:
+                                    pass
+                                    
+                            except Exception as save_error:
+                                logger.warning(f"Could not save interpretation for {ticker}: {save_error}")
                         else:
                             interpretation_summary = interpretation_json
                     except json.JSONDecodeError:
