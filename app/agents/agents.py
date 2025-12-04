@@ -1260,12 +1260,992 @@ ceo_lookup_subagent = Agent(
     """
 )
 
+
+# ========================================
+# AGENT SUPERVISION & QUALITY ASSURANCE
+# ========================================
+
+# --- AgentSupervisor Tools ---
+
+def validate_data_exists(ticker: str, data_type: str) -> dict:
+    """
+    Validates that required data exists before agents attempt to use it.
+    Prevents agents from being blocked or making up data.
+
+    Args:
+        ticker: Stock ticker symbol (e.g., 'NVDA', 'AVGO')
+        data_type: Type of data to validate:
+            - 'financials': Annual/quarterly financial statements
+            - 'earnings': Quarterly earnings data
+            - 'prices': Historical price data
+            - 'news': News articles and interpretations
+            - 'flow': Institutional/retail flow data
+            - 'reddit': Reddit sentiment data
+            - 'twitter': Twitter/X sentiment data
+            - 'company': Company profile and metadata
+            - 'ceo': CEO profile information
+
+    Returns:
+        dict: Validation status with file paths and data availability
+    """
+    from fetch_data.utils import (
+        FINANCIALS_DIR, EARNINGS_DIR, PRICES_DIR, NEWS_DATA_DIR,
+        NEWS_INTERPRETATION_DIR, FLOW_DATA_DIR, REDDIT_DATA_DIR,
+        X_DATA_DIR, DATA_ROOT, CEO_PROFILE_DIR
+    )
+    import json
+    import glob
+
+    ticker = ticker.upper().strip()
+    validation_result = {
+        "ticker": ticker,
+        "data_type": data_type,
+        "exists": False,
+        "file_path": None,
+        "alternative_options": [],
+        "recommendation": ""
+    }
+
+    try:
+        if data_type == "financials":
+            file_path = os.path.join(FINANCIALS_DIR, f"{ticker}.json")
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "record_count": len(data),
+                    "recommendation": "Data is available - proceed with analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No financial data for {ticker}. Try: 1) Check if ticker is in supported list, 2) Fetch fresh data, 3) Work on other tickers",
+                    "alternative_options": [
+                        "Verify ticker is in supported list",
+                        "Suggest user run data fetching script",
+                        "Analyze other available tickers",
+                        "Check if company data exists instead"
+                    ]
+                })
+
+        elif data_type == "earnings":
+            file_path = os.path.join(EARNINGS_DIR, f"{ticker}_quarterly_earnings.json")
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "record_count": len(data),
+                    "recommendation": "Earnings data is available - proceed with analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No earnings data for {ticker}. Alternative: Use financials data or analyze other tickers",
+                    "alternative_options": [
+                        "Check if financials data exists as alternative",
+                        "Work on other tickers with available data",
+                        "Suggest running data fetch script"
+                    ]
+                })
+
+        elif data_type == "prices":
+            file_path = os.path.join(PRICES_DIR, f"{ticker}_prices.csv")
+            if os.path.exists(file_path):
+                import pandas as pd
+                df = pd.read_csv(file_path)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "record_count": len(df),
+                    "date_range": f"{df['Date'].min()} to {df['Date'].max()}" if 'Date' in df.columns else "Unknown",
+                    "recommendation": "Price data is available - proceed with technical analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No price data for {ticker}. Alternative: Fetch real-time data from MarketData_Agent",
+                    "alternative_options": [
+                        "Use MarketData_Agent for real-time prices",
+                        "Analyze other tickers with price data",
+                        "Focus on fundamental analysis instead"
+                    ]
+                })
+
+        elif data_type == "news":
+            # Check both news_interpretation and runtime news
+            interpretation_path = os.path.join(NEWS_INTERPRETATION_DIR, f"{ticker}_news.json")
+            runtime_path = os.path.join(DATA_ROOT, "runtime", "news", f"{ticker}_realtime_news.json")
+
+            if os.path.exists(runtime_path):
+                with open(runtime_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": runtime_path,
+                    "data_source": "real-time cache",
+                    "article_count": len(data.get('articles', [])),
+                    "recommendation": "Real-time news is available - proceed with news analysis"
+                })
+            elif os.path.exists(interpretation_path):
+                with open(interpretation_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": interpretation_path,
+                    "data_source": "historical interpretation",
+                    "recommendation": "Historical news interpretation available - proceed with analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No news data for {ticker}. Alternative: Use NewsSearch_Agent to fetch live news",
+                    "alternative_options": [
+                        "Use NewsSearch_Agent to fetch live news from Google",
+                        "Check sector news instead",
+                        "Analyze other aspects of the company"
+                    ]
+                })
+
+        elif data_type == "flow":
+            pattern = os.path.join(FLOW_DATA_DIR, f"{ticker}_combined_flow_*.json")
+            files = glob.glob(pattern)
+            if files:
+                latest_file = max(files)
+                with open(latest_file, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": latest_file,
+                    "file_date": os.path.basename(latest_file).split('_')[-1].replace('.json', ''),
+                    "recommendation": "Flow data is available - proceed with institutional analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No flow data for {ticker}. Alternative: Analyze fundamental metrics instead",
+                    "alternative_options": [
+                        "Focus on financial analysis instead",
+                        "Check if data needs to be fetched",
+                        "Analyze other tickers with flow data"
+                    ]
+                })
+
+        elif data_type == "reddit":
+            file_path = os.path.join(REDDIT_DATA_DIR, f"{ticker}_reddit_sentiment.json")
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "recommendation": "Reddit data is available - proceed with sentiment analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No cached Reddit data for {ticker}. Alternative: Use RedditSentiment_Agent for live data",
+                    "alternative_options": [
+                        "Use RedditSentiment_Agent to fetch live Reddit sentiment",
+                        "Focus on other sentiment sources (news, technical indicators)",
+                        "Analyze other social metrics"
+                    ]
+                })
+
+        elif data_type == "twitter":
+            file_path = os.path.join(X_DATA_DIR, f"{ticker}_x_sentiment.json")
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "recommendation": "Twitter data is available - proceed with sentiment analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No Twitter data for {ticker}. Alternative: Focus on other sentiment indicators",
+                    "alternative_options": [
+                        "Use Reddit sentiment as alternative",
+                        "Focus on news sentiment instead",
+                        "Analyze technical indicators"
+                    ]
+                })
+
+        elif data_type == "company":
+            file_path = os.path.join(DATA_ROOT, "company", f"{ticker}.json")
+            runtime_path = os.path.join(DATA_ROOT, "runtime", "company", f"{ticker}.json")
+
+            if os.path.exists(runtime_path):
+                validation_result.update({
+                    "exists": True,
+                    "file_path": runtime_path,
+                    "data_source": "runtime cache",
+                    "recommendation": "Company profile is available in cache - proceed with analysis"
+                })
+            elif os.path.exists(file_path):
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "data_source": "static profile",
+                    "recommendation": "Company profile is available - proceed with analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No company profile for {ticker}. Alternative: Use CompanyData_Agent to generate profile",
+                    "alternative_options": [
+                        "Use CompanyData_Agent to compute company scores",
+                        "Check companies.csv for basic info",
+                        "Work on other available tickers"
+                    ]
+                })
+
+        elif data_type == "ceo":
+            file_path = os.path.join(CEO_PROFILE_DIR, f"{ticker}_ceo_profile.json")
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                validation_result.update({
+                    "exists": True,
+                    "file_path": file_path,
+                    "ceo_name": data.get('ceo_name', 'Unknown'),
+                    "recommendation": "CEO profile is available - proceed with analysis"
+                })
+            else:
+                validation_result.update({
+                    "recommendation": f"No CEO profile for {ticker}. Alternative: Use CEOLookup_Agent to fetch CEO data",
+                    "alternative_options": [
+                        "Use CEOLookup_Agent to fetch CEO information",
+                        "Focus on other aspects of company analysis",
+                        "Check if hardcoded CEO data exists in agents.py"
+                    ]
+                })
+
+        else:
+            validation_result["recommendation"] = f"Unknown data_type '{data_type}'. Supported types: financials, earnings, prices, news, flow, reddit, twitter, company, ceo"
+
+        return validation_result
+
+    except Exception as e:
+        return {
+            "ticker": ticker,
+            "data_type": data_type,
+            "exists": False,
+            "error": str(e),
+            "recommendation": f"Error validating data: {str(e)}. Alternative: Try different data type or ticker"
+        }
+
+
+def log_blocking_issue(agent_name: str, issue_description: str, ticker: str = None, attempted_action: str = None) -> dict:
+    """
+    Logs when an agent is blocked and provides alternative approaches.
+    Creates a persistent log of blocking issues for debugging and optimization.
+
+    Args:
+        agent_name: Name of the agent that's blocked
+        issue_description: Description of the blocking issue
+        ticker: Optional ticker being analyzed when blocked
+        attempted_action: What the agent was trying to do
+
+    Returns:
+        dict: Log entry with timestamp, alternatives, and recommendations
+    """
+    from datetime import datetime
+    import json
+    from fetch_data.utils import DATA_ROOT
+
+    log_dir = os.path.join(DATA_ROOT, "logs", "agent_blocking")
+    os.makedirs(log_dir, exist_ok=True)
+
+    timestamp = datetime.now().isoformat()
+    log_entry = {
+        "timestamp": timestamp,
+        "agent_name": agent_name,
+        "issue_description": issue_description,
+        "ticker": ticker,
+        "attempted_action": attempted_action,
+        "severity": "warning",
+        "alternatives_suggested": [],
+        "resolution_recommendations": []
+    }
+
+    # Analyze the issue and suggest alternatives
+    if "data not found" in issue_description.lower() or "file not found" in issue_description.lower():
+        log_entry["severity"] = "medium"
+        log_entry["alternatives_suggested"] = [
+            "Check if ticker is in supported list using TARGET_TICKERS",
+            "Try fetching real-time data from live API instead",
+            "Work on different ticker with available data",
+            "Use alternative data sources (e.g., news instead of financials)"
+        ]
+        log_entry["resolution_recommendations"] = [
+            "Run data fetching script to populate missing data",
+            "Add ticker to supported list if it's a new company",
+            "Check Cloud Storage for lazy-loaded data"
+        ]
+
+    elif "api" in issue_description.lower() and ("limit" in issue_description.lower() or "quota" in issue_description.lower()):
+        log_entry["severity"] = "high"
+        log_entry["alternatives_suggested"] = [
+            "Use cached data instead of making new API calls",
+            "Switch to alternative API provider",
+            "Implement request queuing and rate limiting",
+            "Work on tasks that don't require this API"
+        ]
+        log_entry["resolution_recommendations"] = [
+            "Wait for API quota to reset",
+            "Upgrade API plan if frequently hitting limits",
+            "Implement better caching to reduce API calls"
+        ]
+
+    elif "waiting" in issue_description.lower() or "input" in issue_description.lower():
+        log_entry["severity"] = "low"
+        log_entry["alternatives_suggested"] = [
+            "Work on other independent tasks in parallel",
+            "Provide partial results with what's available",
+            "Set reasonable defaults and proceed",
+            "Clearly document what input is needed and continue with other work"
+        ]
+        log_entry["resolution_recommendations"] = [
+            "Use AskUserQuestion if clarification needed",
+            "Make reasonable assumptions and document them",
+            "Provide multiple options for user to choose from"
+        ]
+
+    elif "permission" in issue_description.lower() or "access" in issue_description.lower():
+        log_entry["severity"] = "high"
+        log_entry["alternatives_suggested"] = [
+            "Check if running in Cloud Run environment",
+            "Verify environment variables are set",
+            "Try alternative data source with proper permissions",
+            "Work on tasks that don't require this resource"
+        ]
+        log_entry["resolution_recommendations"] = [
+            "Check Cloud Storage permissions",
+            "Verify service account has required roles",
+            "Update environment configuration"
+        ]
+
+    else:
+        log_entry["alternatives_suggested"] = [
+            "Break task into smaller independent sub-tasks",
+            "Work on different aspect of the problem",
+            "Gather more context before proceeding",
+            "Document the blocker and move to next task"
+        ]
+        log_entry["resolution_recommendations"] = [
+            "Review error logs for root cause",
+            "Check system dependencies",
+            "Verify configuration settings"
+        ]
+
+    # Write log entry
+    log_file = os.path.join(log_dir, f"blocking_log_{datetime.now().strftime('%Y%m%d')}.jsonl")
+    try:
+        with open(log_file, 'a') as f:
+            f.write(json.dumps(log_entry) + '\n')
+    except Exception as e:
+        log_entry["log_error"] = f"Failed to write to log file: {str(e)}"
+
+    return {
+        "logged": True,
+        "log_entry": log_entry,
+        "next_steps": log_entry["alternatives_suggested"],
+        "message": f"Blocking issue logged for {agent_name}. Suggested alternatives provided."
+    }
+
+
+def detect_fabricated_data(data: dict, data_type: str, ticker: str = None) -> dict:
+    """
+    Detects if data appears to be fabricated or made up rather than from actual sources.
+    Checks for common patterns of fake data and placeholder values.
+
+    Args:
+        data: The data to validate
+        data_type: Type of data being validated
+        ticker: Optional ticker symbol for context
+
+    Returns:
+        dict: Validation results with suspicion indicators
+    """
+    from datetime import datetime
+    import re
+
+    suspicion_score = 0
+    red_flags = []
+    warnings = []
+
+    # Check for placeholder text patterns
+    placeholder_patterns = [
+        r'\bTODO\b', r'\bFIXME\b', r'\bPLACEHOLDER\b',
+        r'\bTBD\b', r'\bN/A\b', r'\bNot Available\b',
+        r'\bExample\b', r'\bSample\b', r'\bTest\b',
+        r'\bFake\b', r'\bMock\b', r'\bDummy\b'
+    ]
+
+    data_str = json.dumps(data).lower()
+
+    for pattern in placeholder_patterns:
+        if re.search(pattern, data_str, re.IGNORECASE):
+            suspicion_score += 20
+            red_flags.append(f"Contains placeholder text: {pattern}")
+
+    # Check for suspiciously round numbers (common in fake data)
+    if data_type in ['financials', 'earnings', 'prices']:
+        if isinstance(data, dict):
+            numeric_values = []
+            def extract_numbers(obj):
+                if isinstance(obj, dict):
+                    for v in obj.values():
+                        extract_numbers(v)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        extract_numbers(item)
+                elif isinstance(obj, (int, float)) and not isinstance(obj, bool):
+                    numeric_values.append(obj)
+
+            extract_numbers(data)
+
+            if numeric_values:
+                # Check if too many numbers are perfectly round
+                round_numbers = sum(1 for n in numeric_values if n == round(n) and n >= 100)
+                if len(numeric_values) > 5 and (round_numbers / len(numeric_values)) > 0.8:
+                    suspicion_score += 15
+                    warnings.append("Unusually high proportion of round numbers")
+
+                # Check for repeated values (copy-paste indicator)
+                from collections import Counter
+                value_counts = Counter(numeric_values)
+                if value_counts.most_common(1)[0][1] > len(numeric_values) * 0.4:
+                    suspicion_score += 25
+                    red_flags.append("Same value repeated suspiciously often")
+
+    # Check for impossible date values
+    if 'date' in data_str or 'time' in data_str:
+        # Look for dates in the future (for historical data)
+        if data_type in ['financials', 'earnings', 'prices']:
+            current_year = datetime.now().year
+            future_years = [str(y) for y in range(current_year + 2, current_year + 10)]
+            for year in future_years:
+                if year in data_str:
+                    suspicion_score += 30
+                    red_flags.append(f"Contains future date: {year}")
+
+    # Check for missing required fields
+    if data_type == 'financials':
+        required_fields = ['revenue', 'netIncome', 'year']
+        missing = [f for f in required_fields if f not in data_str]
+        if missing:
+            suspicion_score += 10 * len(missing)
+            warnings.append(f"Missing required fields: {', '.join(missing)}")
+
+    # Check for empty or null values
+    if isinstance(data, dict):
+        null_count = sum(1 for v in str(data).split(',') if 'null' in v.lower() or 'none' in v.lower())
+        if null_count > 5:
+            suspicion_score += 10
+            warnings.append(f"Contains {null_count} null/None values")
+
+    # Check for suspiciously consistent patterns
+    if isinstance(data, list) and len(data) > 3:
+        if all(isinstance(item, dict) and len(item) == len(data[0]) for item in data):
+            # Good sign - consistent structure
+            pass
+        elif all(item == data[0] for item in data[1:]):
+            suspicion_score += 40
+            red_flags.append("All list items are identical (copy-paste suspected)")
+
+    # Determine verdict
+    if suspicion_score >= 50:
+        verdict = "HIGH_SUSPICION"
+        recommendation = "REJECT this data - likely fabricated. Request actual data source."
+    elif suspicion_score >= 25:
+        verdict = "MEDIUM_SUSPICION"
+        recommendation = "VERIFY this data with alternative source before using."
+    elif suspicion_score >= 10:
+        verdict = "LOW_SUSPICION"
+        recommendation = "CAUTION advised - validate key fields before proceeding."
+    else:
+        verdict = "APPEARS_LEGITIMATE"
+        recommendation = "Data appears legitimate - proceed with normal validation."
+
+    return {
+        "verdict": verdict,
+        "suspicion_score": suspicion_score,
+        "red_flags": red_flags,
+        "warnings": warnings,
+        "recommendation": recommendation,
+        "data_type": data_type,
+        "ticker": ticker,
+        "is_suspicious": suspicion_score >= 25
+    }
+
+
+# NOTE: AgentSupervisor tools (validate_data_exists, log_blocking_issue, detect_fabricated_data)
+# are now directly integrated into the root agent for more efficient supervision.
+# The root agent will validate data availability before delegating to sub-agents.
+
+
+# --- AgentEvaluator Tools ---
+
+def check_data_freshness(ticker: str, data_type: str) -> dict:
+    """
+    Verifies that data meets freshness guidelines from the architecture documentation.
+
+    Data Freshness Guidelines:
+    - Financial Statements: Quarterly (90 days max)
+    - Earnings Data: Quarterly (90 days max)
+    - Stock Prices: Daily (1 day max for accuracy)
+    - News: 12 hours for real-time cache
+    - Reddit Sentiment: 6 hours cache
+    - Institutional Flow: Quarterly (90 days max)
+    - Company Runtime Cache: 30 minutes
+
+    Args:
+        ticker: Stock ticker symbol
+        data_type: Type of data to check freshness
+
+    Returns:
+        dict: Freshness status, age, and compliance with guidelines
+    """
+    from datetime import datetime, timedelta
+    import json
+    import glob
+    from fetch_data.utils import (
+        FINANCIALS_DIR, EARNINGS_DIR, PRICES_DIR, NEWS_DATA_DIR,
+        NEWS_INTERPRETATION_DIR, FLOW_DATA_DIR, REDDIT_DATA_DIR, DATA_ROOT
+    )
+
+    ticker = ticker.upper().strip()
+
+    freshness_guidelines = {
+        'financials': {'max_age_days': 90, 'frequency': 'Quarterly'},
+        'earnings': {'max_age_days': 90, 'frequency': 'Quarterly'},
+        'prices': {'max_age_days': 1, 'frequency': 'Daily'},
+        'news': {'max_age_hours': 12, 'frequency': 'Every 12 hours'},
+        'reddit': {'max_age_hours': 6, 'frequency': 'Every 6 hours'},
+        'flow': {'max_age_days': 90, 'frequency': 'Quarterly'},
+        'company_runtime': {'max_age_minutes': 30, 'frequency': 'Every 30 minutes'}
+    }
+
+    try:
+        file_path = None
+        file_modified_time = None
+
+        if data_type == 'financials':
+            file_path = os.path.join(FINANCIALS_DIR, f"{ticker}.json")
+        elif data_type == 'earnings':
+            file_path = os.path.join(EARNINGS_DIR, f"{ticker}_quarterly_earnings.json")
+        elif data_type == 'prices':
+            file_path = os.path.join(PRICES_DIR, f"{ticker}_prices.csv")
+        elif data_type == 'news':
+            file_path = os.path.join(DATA_ROOT, "runtime", "news", f"{ticker}_realtime_news.json")
+        elif data_type == 'reddit':
+            file_path = os.path.join(REDDIT_DATA_DIR, f"{ticker}_reddit_sentiment.json")
+        elif data_type == 'flow':
+            pattern = os.path.join(FLOW_DATA_DIR, f"{ticker}_combined_flow_*.json")
+            files = glob.glob(pattern)
+            if files:
+                file_path = max(files)  # Most recent file
+        elif data_type == 'company_runtime':
+            file_path = os.path.join(DATA_ROOT, "runtime", "company", f"{ticker}.json")
+
+        if not file_path or not os.path.exists(file_path):
+            return {
+                "ticker": ticker,
+                "data_type": data_type,
+                "status": "NOT_FOUND",
+                "compliant": False,
+                "message": f"Data file not found for {ticker} - {data_type}",
+                "recommendation": "Data needs to be fetched or generated"
+            }
+
+        # Get file modification time
+        file_modified_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+        current_time = datetime.now()
+        age = current_time - file_modified_time
+
+        guideline = freshness_guidelines.get(data_type, {})
+        is_compliant = True
+        status = "FRESH"
+
+        if 'max_age_days' in guideline:
+            max_age = timedelta(days=guideline['max_age_days'])
+            if age > max_age:
+                is_compliant = False
+                status = "STALE"
+        elif 'max_age_hours' in guideline:
+            max_age = timedelta(hours=guideline['max_age_hours'])
+            if age > max_age:
+                is_compliant = False
+                status = "STALE"
+        elif 'max_age_minutes' in guideline:
+            max_age = timedelta(minutes=guideline['max_age_minutes'])
+            if age > max_age:
+                is_compliant = False
+                status = "STALE"
+
+        age_str = f"{age.days}d {age.seconds//3600}h {(age.seconds//60)%60}m"
+
+        return {
+            "ticker": ticker,
+            "data_type": data_type,
+            "status": status,
+            "compliant": is_compliant,
+            "file_path": file_path,
+            "last_modified": file_modified_time.isoformat(),
+            "age": age_str,
+            "age_seconds": age.total_seconds(),
+            "guideline_frequency": guideline.get('frequency', 'Unknown'),
+            "max_age_allowed": str(max_age) if 'max_age' in locals() else "Unknown",
+            "recommendation": "Data is fresh and compliant" if is_compliant else f"Data is stale - last updated {age_str} ago. Consider refreshing.",
+            "action_required": not is_compliant
+        }
+
+    except Exception as e:
+        return {
+            "ticker": ticker,
+            "data_type": data_type,
+            "status": "ERROR",
+            "compliant": False,
+            "error": str(e),
+            "recommendation": "Unable to verify freshness - treat with caution"
+        }
+
+
+def validate_data_source(data: dict, expected_source: str, data_type: str) -> dict:
+    """
+    Validates that data comes from the correct, legitimate source.
+    Checks metadata and structure to ensure data integrity.
+
+    Args:
+        data: The data to validate
+        expected_source: Expected data source (e.g., 'yfinance', 'SEC EDGAR', 'Reddit API')
+        data_type: Type of data being validated
+
+    Returns:
+        dict: Validation results with source verification
+    """
+    validation_result = {
+        "expected_source": expected_source,
+        "data_type": data_type,
+        "source_verified": False,
+        "issues": [],
+        "warnings": []
+    }
+
+    # Check for source metadata
+    actual_source = None
+    if isinstance(data, dict):
+        # Common source indicators
+        source_fields = ['source', 'data_source', 'provider', 'origin', 'api_source']
+        for field in source_fields:
+            if field in data:
+                actual_source = data[field]
+                break
+
+        # Check for source-specific structures
+        if expected_source.lower() in ['yfinance', 'yahoo finance']:
+            # yfinance data should have specific fields
+            yf_indicators = ['regularMarketPrice', 'previousClose', 'fiftyTwoWeekHigh', 'info']
+            has_yf_indicators = any(ind in str(data) for ind in yf_indicators)
+            if has_yf_indicators:
+                validation_result["source_verified"] = True
+                validation_result["actual_source"] = "yfinance (verified by structure)"
+            else:
+                validation_result["warnings"].append("Expected yfinance structure not found")
+
+        elif expected_source.lower() in ['sec edgar', 'edgar', 'sec']:
+            # SEC data should have CIK, filing type, etc.
+            sec_indicators = ['cik', '10-K', '10-Q', 'accessionNumber', 'filingDate']
+            has_sec_indicators = any(ind in str(data) for ind in sec_indicators)
+            if has_sec_indicators:
+                validation_result["source_verified"] = True
+                validation_result["actual_source"] = "SEC EDGAR (verified by structure)"
+            else:
+                validation_result["warnings"].append("Expected SEC EDGAR structure not found")
+
+        elif expected_source.lower() in ['reddit', 'reddit api', 'praw']:
+            # Reddit data should have subreddit, score, etc.
+            reddit_indicators = ['subreddit', 'score', 'permalink', 'created_utc']
+            has_reddit_indicators = any(ind in str(data) for ind in reddit_indicators)
+            if has_reddit_indicators:
+                validation_result["source_verified"] = True
+                validation_result["actual_source"] = "Reddit API (verified by structure)"
+            else:
+                validation_result["warnings"].append("Expected Reddit API structure not found")
+
+        elif expected_source.lower() in ['google search', 'google custom search']:
+            # Google search results have specific structure
+            google_indicators = ['link', 'snippet', 'title', 'pagemap']
+            has_google_indicators = any(ind in str(data) for ind in google_indicators)
+            if has_google_indicators:
+                validation_result["source_verified"] = True
+                validation_result["actual_source"] = "Google Search API (verified by structure)"
+            else:
+                validation_result["warnings"].append("Expected Google Search structure not found")
+
+        # If source field exists, verify it matches
+        if actual_source:
+            if expected_source.lower() in actual_source.lower():
+                validation_result["source_verified"] = True
+                validation_result["actual_source"] = actual_source
+            else:
+                validation_result["issues"].append(f"Source mismatch: expected '{expected_source}', got '{actual_source}'")
+
+    # Additional validation based on data type
+    if data_type == 'financials':
+        required_fields = ['revenue', 'netIncome', 'totalAssets']
+        missing = [f for f in required_fields if f not in str(data)]
+        if missing:
+            validation_result["issues"].append(f"Missing required financial fields: {', '.join(missing)}")
+
+    elif data_type == 'prices':
+        required_fields = ['Open', 'High', 'Low', 'Close', 'Volume']
+        if isinstance(data, dict) and 'Date' in str(data):
+            # Looks like price data
+            pass
+        else:
+            validation_result["warnings"].append("Expected price data structure (OHLCV) not found")
+
+    # Final verdict
+    if validation_result["source_verified"] and not validation_result["issues"]:
+        validation_result["verdict"] = "VERIFIED"
+        validation_result["recommendation"] = "Data source verified - safe to use"
+    elif validation_result["issues"]:
+        validation_result["verdict"] = "FAILED"
+        validation_result["recommendation"] = "Data source verification failed - do not use without further validation"
+    else:
+        validation_result["verdict"] = "UNVERIFIED"
+        validation_result["recommendation"] = "Unable to verify data source - use with caution"
+
+    return validation_result
+
+
+def fact_check_agent_output(agent_name: str, output: dict, ticker: str = None) -> dict:
+    """
+    Fact-checks output from other agents to ensure accuracy and consistency.
+    Cross-references claims with available data sources.
+
+    Args:
+        agent_name: Name of the agent whose output is being checked
+        output: The output/response from the agent
+        ticker: Optional ticker symbol for context
+
+    Returns:
+        dict: Fact-check results with verified/unverified claims
+    """
+    from app.scoring import compute_company_scores
+
+    fact_check_result = {
+        "agent_name": agent_name,
+        "ticker": ticker,
+        "verified_facts": [],
+        "unverified_facts": [],
+        "contradictions": [],
+        "confidence_score": 0
+    }
+
+    try:
+        # Convert output to string for analysis
+        output_str = json.dumps(output) if isinstance(output, dict) else str(output)
+
+        # If ticker is provided, cross-reference with actual data
+        if ticker:
+            ticker = ticker.upper().strip()
+
+            # Get ground truth data
+            try:
+                actual_data = compute_company_scores(ticker)
+
+                # Check numerical claims
+                if isinstance(output, dict):
+                    # Verify scores if agent is reporting scores
+                    if 'score' in output_str.lower() or agent_name == 'CompanyData_Agent':
+                        if 'overall' in output and 'score' in str(output.get('overall')):
+                            reported_score = output.get('overall', {}).get('score')
+                            actual_score = actual_data.get('overall', {}).get('score')
+
+                            if reported_score and actual_score:
+                                if abs(reported_score - actual_score) < 0.1:
+                                    fact_check_result["verified_facts"].append(
+                                        f"Overall score {reported_score} matches actual data ({actual_score})"
+                                    )
+                                else:
+                                    fact_check_result["contradictions"].append(
+                                        f"Score mismatch: agent reported {reported_score}, actual is {actual_score}"
+                                    )
+
+                    # Verify recommendation if present
+                    if 'recommendation' in output_str.lower():
+                        reported_rec = output.get('recommendation', {}).get('rating') or output.get('recommendation')
+                        actual_rec = actual_data.get('recommendation', {}).get('rating')
+
+                        if reported_rec and actual_rec:
+                            if reported_rec == actual_rec or reported_rec.lower() == actual_rec.lower():
+                                fact_check_result["verified_facts"].append(
+                                    f"Recommendation '{reported_rec}' matches actual data"
+                                )
+                            else:
+                                fact_check_result["contradictions"].append(
+                                    f"Recommendation mismatch: agent said '{reported_rec}', actual is '{actual_rec}'"
+                                )
+
+            except Exception as e:
+                fact_check_result["unverified_facts"].append(
+                    f"Unable to cross-reference with actual data: {str(e)}"
+                )
+
+        # Check for suspicious patterns
+        fabrication_check = detect_fabricated_data(output if isinstance(output, dict) else {"data": output}, "general")
+        if fabrication_check["is_suspicious"]:
+            fact_check_result["contradictions"].extend(fabrication_check["red_flags"])
+
+        # Check for consistency in the output itself
+        if isinstance(output, dict):
+            # Check date consistency
+            dates_in_output = []
+            def extract_dates(obj, prefix=""):
+                if isinstance(obj, dict):
+                    for k, v in obj.items():
+                        if 'date' in k.lower() or 'time' in k.lower():
+                            dates_in_output.append((f"{prefix}.{k}" if prefix else k, v))
+                        extract_dates(v, f"{prefix}.{k}" if prefix else k)
+
+            extract_dates(output)
+
+            # Verify dates are reasonable
+            from datetime import datetime
+            current_year = datetime.now().year
+            for field, date_val in dates_in_output:
+                if isinstance(date_val, str) and str(current_year + 5) in date_val:
+                    fact_check_result["contradictions"].append(
+                        f"Suspicious future date in {field}: {date_val}"
+                    )
+
+        # Calculate confidence score
+        total_checks = len(fact_check_result["verified_facts"]) + len(fact_check_result["unverified_facts"]) + len(fact_check_result["contradictions"])
+        if total_checks > 0:
+            fact_check_result["confidence_score"] = int((len(fact_check_result["verified_facts"]) / total_checks) * 100)
+        else:
+            fact_check_result["confidence_score"] = 50  # Neutral if no checks performed
+
+        # Determine verdict
+        if fact_check_result["contradictions"]:
+            fact_check_result["verdict"] = "FAILED"
+            fact_check_result["recommendation"] = f"Output contains {len(fact_check_result['contradictions'])} contradiction(s) - requires correction"
+        elif fact_check_result["verified_facts"]:
+            fact_check_result["verdict"] = "VERIFIED"
+            fact_check_result["recommendation"] = "Output verified against actual data - appears accurate"
+        else:
+            fact_check_result["verdict"] = "UNVERIFIED"
+            fact_check_result["recommendation"] = "Unable to verify output - treat with caution"
+
+        return fact_check_result
+
+    except Exception as e:
+        return {
+            "agent_name": agent_name,
+            "ticker": ticker,
+            "verdict": "ERROR",
+            "error": str(e),
+            "recommendation": "Fact-check failed - manual verification required"
+        }
+
+
+# Create AgentEvaluator sub-agent
+agent_evaluator_subagent = Agent(
+    name="AgentEvaluator",
+    model=llm,
+    tools=[check_data_freshness, validate_data_source, fact_check_agent_output],
+    description="Quality assurance agent that validates data freshness, verifies data sources, and fact-checks other agents' outputs. Use AFTER agents produce results.",
+    instruction=f"""
+    You are the AgentEvaluator - a quality assurance meta-agent responsible for validating the work of other agents.
+
+    PRIMARY RESPONSIBILITIES:
+    1. VERIFY DATA FRESHNESS: Ensure data meets architecture freshness guidelines
+    2. VALIDATE SOURCES: Confirm data comes from legitimate, correct sources
+    3. FACT-CHECK OUTPUTS: Cross-reference agent outputs with actual data
+    4. QUALITY ASSURANCE: Ensure agents provide accurate, factual information
+
+    DATA FRESHNESS GUIDELINES (from architecture docs):
+    - Financial Statements: Quarterly (max 90 days old)
+    - Earnings Data: Quarterly (max 90 days old)
+    - Stock Prices: Daily (max 1 day old)
+    - News: 12 hours for real-time cache
+    - Reddit Sentiment: 6 hours cache
+    - Institutional Flow: Quarterly (max 90 days old)
+    - Company Runtime Cache: 30 minutes
+
+    WHEN TO USE EACH TOOL:
+
+    1. check_data_freshness(ticker, data_type):
+       - Use AFTER an agent retrieves data to verify it's current
+       - Supported data_types: financials, earnings, prices, news, reddit, flow, company_runtime
+       - Returns: whether data meets freshness guidelines
+       - Example: After CompanyData_Agent returns NVDA scores, verify financial data is fresh
+
+    2. validate_data_source(data, expected_source, data_type):
+       - Use to verify data comes from the correct source
+       - Expected sources: 'yfinance', 'SEC EDGAR', 'Reddit API', 'Google Search', etc.
+       - Returns: whether source is verified
+       - Example: Verify MarketData_Agent data actually comes from yfinance
+
+    3. fact_check_agent_output(agent_name, output, ticker):
+       - Use to cross-check agent outputs against actual data
+       - Detects contradictions and verifies numerical claims
+       - Returns: verification status with confidence score
+       - Example: Check if CompanyData_Agent's reported score matches actual computed score
+
+    WORKFLOW EXAMPLES:
+
+    Example 1 - Data Freshness Validation:
+    CompanyData_Agent returns financial analysis for NVDA
+    1. check_data_freshness("NVDA", "financials")
+    2. If STALE: Flag that data is >90 days old, suggest refresh
+    3. If FRESH: Approve for use
+
+    Example 2 - Source Verification:
+    MarketData_Agent returns price data
+    1. validate_data_source(price_data, "yfinance", "prices")
+    2. If VERIFIED: Data is from correct source
+    3. If FAILED: Alert that source is incorrect or unknown
+
+    Example 3 - Fact-Checking Agent Output:
+    CompanyData_Agent reports NVDA overall score = 8.5
+    1. fact_check_agent_output("CompanyData_Agent", output, "NVDA")
+    2. Cross-reference with compute_company_scores("NVDA")
+    3. If scores match: VERIFIED
+    4. If mismatch: CONTRADICTION found
+
+    CRITICAL VALIDATION RULES:
+    - REJECT data that's significantly stale (>2x freshness guideline)
+    - FLAG unverified sources as "use with caution"
+    - BLOCK outputs with contradictions until corrected
+    - REQUIRE source metadata for all external data
+    - VERIFY numerical claims by cross-referencing
+
+    QUALITY METRICS:
+    - Freshness Compliance: Data must meet guideline age limits
+    - Source Verification: Data must come from documented sources
+    - Fact Accuracy: Claims must match actual data within tolerance
+    - Confidence Score: Minimum 70% for approval
+
+    SUPPORTED TICKERS: {TICKER_LIST_STR}
+
+    IMPORTANT:
+    - Always provide specific details (file path, age, source)
+    - Flag issues clearly with severity (HIGH/MEDIUM/LOW)
+    - Suggest corrective actions when validation fails
+    - Log all quality issues for continuous improvement
+    - Be thorough but don't block agents unnecessarily
+    """
+)
+
 # --- Root Agent Definition ---
 root_agent = Agent(
     name="Financial_Root_Agent",
     model=llm,
-    sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, sector_news_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent, market_indices_subagent, twitter_subagent, sector_metrics_subagent, token_usage_subagent, flow_data_subagent],
-    description="The main financial assistant that analyzes user queries and delegates to specialized agents for financial data analysis, CEO information lookup, and flow data analysis.",
+    tools=[validate_data_exists, log_blocking_issue, detect_fabricated_data],
+    sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, sector_news_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent, market_indices_subagent, twitter_subagent, sector_metrics_subagent, token_usage_subagent, flow_data_subagent, agent_evaluator_subagent],
+    description="The main financial assistant with built-in supervision capabilities. Validates data availability before delegating and ensures agents never get blocked or use fabricated data.",
     instruction=f"""
     You are a knowledgeable financial data assistant with access to data for {len(TARGET_TICKERS)} companies including: {', '.join(TARGET_TICKERS)}.
 
@@ -1333,6 +2313,48 @@ root_agent = Agent(
       * Inflow/outflow indicators and investor behavior patterns
       * Questions about who owns a stock or how ownership is changing
       * Questions about institutional buying or selling activity
+
+    - Use 'AgentEvaluator' AFTER other agents complete to:
+      * Verify data freshness meets architecture guidelines
+      * Validate that data comes from correct sources
+      * Fact-check agent outputs against actual data
+      * Ensure quality and accuracy of responses
+      * Detect contradictions or inconsistencies
+      * Example: After CompanyData_Agent returns scores, verify the data is fresh and accurate
+
+    BUILT-IN SUPERVISION TOOLS (YOU HAVE ACCESS TO):
+    You have direct access to these supervision tools - use them BEFORE delegating:
+
+    1. validate_data_exists(ticker, data_type):
+       - ALWAYS use BEFORE delegating to data agents
+       - Checks if required data exists for the ticker
+       - data_types: financials, earnings, prices, news, flow, reddit, twitter, company, ceo
+       - Returns: existence status + alternative options if missing
+       - Example: Before calling CompanyData_Agent for NVDA, validate_data_exists("NVDA", "financials")
+
+    2. log_blocking_issue(agent_name, issue_description, ticker, attempted_action):
+       - Use WHEN an agent would be blocked
+       - Logs the issue and returns alternative approaches
+       - Example: If data missing, log the issue and get productive alternatives
+
+    3. detect_fabricated_data(data, data_type, ticker):
+       - Use AFTER receiving data from any source
+       - Detects placeholder text, fake values, impossible data
+       - Example: Before accepting agent output, verify it's not fabricated
+
+    SUPERVISION WORKFLOW (CRITICAL - YOU MUST FOLLOW THIS):
+    1. BEFORE delegating: validate_data_exists() to check availability
+    2. IF data missing: log_blocking_issue() and pursue alternatives (different ticker, different analysis type, etc.)
+    3. DELEGATE to appropriate specialized agent only if data exists
+    4. AFTER receiving results: detect_fabricated_data() to verify legitimacy
+    5. FINALLY: Delegate to AgentEvaluator for quality checks
+    6. NEVER allow fake/assumed/placeholder data - if data doesn't exist, say so clearly
+
+    CRITICAL RULES (from CLAUDE.md):
+    - NEVER make up data - if it doesn't exist, flag it clearly and suggest alternatives
+    - NEVER wait indefinitely - always have alternative productive tasks
+    - NEVER use fake/assumed/placeholder data
+    - NEVER delete all code without permission
 
     IMPORTANT NOTES:
     - Available companies: {len(TARGET_TICKERS)} tickers across semiconductor, energy, crypto-mining, and tech verticals ({TICKER_LIST_STR})
