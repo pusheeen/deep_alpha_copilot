@@ -1667,6 +1667,25 @@ async def get_latest_news(ticker: str):
 
         payload = _load_cached_news(ticker)
         if not payload:
+            # Try to download news file from GCS if in production
+            if os.getenv("K_SERVICE"):
+                from storage_helper import get_storage_manager
+                storage_manager = get_storage_manager()
+                try:
+                    if storage_manager.bucket:
+                        # Try to download latest news file for this ticker
+                        prefix = f"data/unstructured/news/{ticker}_news_"
+                        blobs = list(storage_manager.bucket.list_blobs(prefix=prefix))
+                        if blobs:
+                            latest_blob = sorted(blobs, key=lambda b: b.name, reverse=True)[0]
+                            news_dir = DATA_ROOT / "unstructured" / "news"
+                            news_dir.mkdir(parents=True, exist_ok=True)
+                            local_path = news_dir / latest_blob.name.split("/")[-1]
+                            storage_manager.download_file(latest_blob.name, local_path)
+                            logger.info(f"Downloaded news file from GCS: {latest_blob.name}")
+                except Exception as e:
+                    logger.debug(f"Could not download news file from GCS for {ticker}: {e}")
+            
             payload = fetch_realtime_news(ticker)
             _save_cached_news(ticker, payload)
 
@@ -1750,15 +1769,16 @@ async def get_latest_news(ticker: str):
                 interpretation_summary = None
         
         # If no interpretation exists and we have articles, generate one on-the-fly
-        if not deep_alpha_card and not interpretation_summary and payload.get("articles"):
+        articles_list = payload.get("articles", [])
+        if not deep_alpha_card and not interpretation_summary and articles_list and len(articles_list) > 0:
             try:
-                logger.info(f"Generating interpretation on-the-fly for {ticker}...")
+                logger.info(f"Generating interpretation on-the-fly for {ticker} with {len(articles_list)} articles...")
                 loop = asyncio.get_event_loop()
                 interpretation_json = await loop.run_in_executor(
                     None,
                     interpret_news_with_deep_alpha,
                     ticker,
-                    payload.get("articles", [])
+                    articles_list
                 )
                 if interpretation_json:
                     try:
@@ -1773,6 +1793,8 @@ async def get_latest_news(ticker: str):
                         interpretation_summary = interpretation_json
             except Exception as e:
                 logger.warning(f"Failed to generate interpretation for {ticker}: {e}")
+                import traceback
+                logger.debug(f"Traceback: {traceback.format_exc()}")
 
         payload["deep_alpha_analysis"] = deep_alpha_card
         payload["legacy_analysis"] = interpretation_summary
