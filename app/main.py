@@ -1666,7 +1666,9 @@ async def get_latest_news(ticker: str):
         ticker = ticker.upper()
 
         payload = _load_cached_news(ticker)
-        if not payload:
+        
+        # If no cached news OR cached news has no articles, fetch realtime
+        if not payload or not payload.get("articles") or len(payload.get("articles", [])) == 0:
             # Try to download news file from GCS if in production
             if os.getenv("K_SERVICE"):
                 from storage_helper import get_storage_manager
@@ -1683,11 +1685,17 @@ async def get_latest_news(ticker: str):
                             local_path = news_dir / latest_blob.name.split("/")[-1]
                             storage_manager.download_file(latest_blob.name, local_path)
                             logger.info(f"Downloaded news file from GCS: {latest_blob.name}")
+                            # Reload from cache after download
+                            payload = _load_cached_news(ticker)
                 except Exception as e:
                     logger.debug(f"Could not download news file from GCS for {ticker}: {e}")
             
-            payload = fetch_realtime_news(ticker)
-            _save_cached_news(ticker, payload)
+            # If still no articles, fetch realtime
+            if not payload or not payload.get("articles") or len(payload.get("articles", [])) == 0:
+                logger.info(f"Fetching realtime news for {ticker} (no cached articles)")
+                payload = fetch_realtime_news(ticker)
+                if payload and payload.get("articles"):
+                    _save_cached_news(ticker, payload)
 
         # Try to download interpretation files from GCS if in production
         interpretation_dir = DATA_ROOT / "unstructured" / "news_interpretation"
@@ -2294,11 +2302,48 @@ async def _handle_chat_fallback(question: str, include_reasoning: bool = False) 
         if any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception']):
             if ticker:
                 try:
+                    # Actually call Reddit and Twitter agents for sentiment
+                    from app.agents.agents import query_reddit_sentiment, query_twitter_data
+                    
+                    reddit_data = None
+                    twitter_data = None
+                    
+                    # Fetch Reddit sentiment
+                    try:
+                        reddit_data = query_reddit_sentiment(ticker, limit=20)
+                    except Exception as e:
+                        logger.debug(f"Reddit sentiment fetch failed for {ticker}: {e}")
+                    
+                    # Fetch Twitter sentiment
+                    try:
+                        twitter_data = query_twitter_data(ticker)
+                    except Exception as e:
+                        logger.debug(f"Twitter sentiment fetch failed for {ticker}: {e}")
+                    
+                    # Also get overall sentiment score
                     from app.scoring import compute_company_scores
                     data = compute_company_scores(ticker)
                     sentiment_score = data.get("scores", {}).get("sentiment", {}).get("score", 0)
                     overall_score = data.get("overall", {}).get("score", 0)
                     
+                    # Build comprehensive answer
+                    answer_parts = [f"Current sentiment for {ticker}:"]
+                    
+                    # Add Reddit sentiment if available
+                    if reddit_data and not reddit_data.get("error"):
+                        reddit_sentiment = reddit_data.get("sentiment_summary", "")
+                        avg_sentiment = reddit_data.get("average_sentiment", 0)
+                        post_count = reddit_data.get("total_posts", 0)
+                        if post_count > 0:
+                            answer_parts.append(f"Reddit: {reddit_sentiment} ({post_count} posts analyzed)")
+                    
+                    # Add Twitter sentiment if available
+                    if twitter_data and not twitter_data.get("error"):
+                        twitter_sentiment = twitter_data.get("sentiment_summary", "")
+                        if twitter_sentiment:
+                            answer_parts.append(f"Twitter/X: {twitter_sentiment}")
+                    
+                    # Add overall sentiment score
                     if sentiment_score >= 7:
                         sentiment_desc = "very positive"
                     elif sentiment_score >= 5:
@@ -2308,10 +2353,22 @@ async def _handle_chat_fallback(question: str, include_reasoning: bool = False) 
                     else:
                         sentiment_desc = "negative"
                     
-                    answer = f"The sentiment for {ticker} is {sentiment_desc} with a sentiment score of {sentiment_score:.1f}/10. Overall Deep Alpha score is {overall_score:.1f}/10. This reflects market perception, news sentiment, and social media discussions."
+                    answer_parts.append(f"Overall sentiment score: {sentiment_desc} ({sentiment_score:.1f}/10)")
+                    answer_parts.append(f"Deep Alpha overall score: {overall_score:.1f}/10")
+                    
+                    answer = " ".join(answer_parts)
                     return {'answer': answer, 'status': 'success'}
                 except Exception as e:
                     logger.error(f"Error getting sentiment for {ticker}: {e}")
+                    # Fallback to basic answer
+                    try:
+                        from app.scoring import compute_company_scores
+                        data = compute_company_scores(ticker)
+                        sentiment_score = data.get("scores", {}).get("sentiment", {}).get("score", 0)
+                        answer = f"The sentiment for {ticker} is {sentiment_score:.1f}/10 based on news and market data."
+                        return {'answer': answer, 'status': 'success'}
+                    except:
+                        pass
         
         # Handle general company questions
         if ticker:

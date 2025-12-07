@@ -2272,25 +2272,41 @@ def test_ui_feature(feature_name: str, ticker: str = None, test_params: dict = N
                 test_result["issues"].append(str(e))
         
         elif feature_name == "news_section":
-            if not ticker:
-                ticker = "NVDA"
-            
-            url = f"{base_url}/api/latest-news/{ticker}"
-            try:
-                response = requests.get(url, timeout=15)
-                if response.status_code == 200:
-                    data = response.json()
-                    if "articles" not in data:
-                        test_result["issues"].append("Missing 'articles' field in response")
-                    elif len(data.get("articles", [])) == 0:
-                        test_result["warnings"].append("No articles returned (may be normal if no recent news)")
-                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
-                else:
-                    test_result["status"] = "FAIL"
-                    test_result["issues"].append(f"API returned status code {response.status_code}")
-            except Exception as e:
-                test_result["status"] = "ERROR"
-                test_result["issues"].append(str(e))
+                   if not ticker:
+                       ticker = "NVDA"
+
+                   url = f"{base_url}/api/latest-news/{ticker}"
+                   try:
+                       response = requests.get(url, timeout=15)
+                       if response.status_code == 200:
+                           result = response.json()
+                           # Check response structure
+                           if result.get("status") != "success":
+                               test_result["issues"].append(f"API returned non-success status: {result.get('status')}")
+                               test_result["status"] = "FAIL"
+                               return test_result
+                           
+                           data = result.get("data", {})
+                           if not data:
+                               test_result["issues"].append("Missing 'data' field in response")
+                               test_result["status"] = "FAIL"
+                               return test_result
+                           
+                           articles = data.get("articles", [])
+                           if not isinstance(articles, list):
+                               test_result["issues"].append("'articles' field is not a list")
+                           elif len(articles) == 0:
+                               test_result["issues"].append("No articles returned - news should be fetched even if empty")
+                               test_result["recommendation"] = "Check if fetch_realtime_news is being called when cached news is empty"
+                           
+                           test_result["test_details"]["article_count"] = len(articles)
+                           test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                       else:
+                           test_result["status"] = "FAIL"
+                           test_result["issues"].append(f"API returned status code {response.status_code}")
+                   except Exception as e:
+                       test_result["status"] = "ERROR"
+                       test_result["issues"].append(str(e))
         
         elif feature_name == "market_conditions":
             url = f"{base_url}/api/market-conditions"
@@ -2747,38 +2763,62 @@ def test_chatbot_query(query: str, expected_agents: list = None, expected_data_s
             
             # Test 3: Data Source Test
             if test_type in ["comprehensive", "data_source"]:
-                answer_lower = answer.lower()
-                reasoning_lower = (reasoning or "").lower()
-                combined_text = answer_lower + " " + reasoning_lower
-                
-                sources_used = []
-                if expected_data_sources:
-                    if "reddit" in expected_data_sources:
-                        if any(word in combined_text for word in ["reddit", "r/wallstreetbets", "r/stocks", "subreddit"]):
-                            sources_used.append("reddit")
-                        else:
-                            test_result["data_source_test"]["issues"].append(
-                                "Expected Reddit data but no Reddit mentions found in answer/reasoning"
-                            )
-                    
-                    if "twitter" in expected_data_sources:
-                        if any(word in combined_text for word in ["twitter", "x.com", "tweet", "social media"]):
-                            sources_used.append("twitter")
-                        else:
-                            test_result["data_source_test"]["issues"].append(
-                                "Expected Twitter data but no Twitter mentions found in answer/reasoning"
-                            )
-                    
-                    if "news" in expected_data_sources:
-                        if any(word in combined_text for word in ["news", "article", "headline", "reuters", "bloomberg"]):
-                            sources_used.append("news")
-                    
-                    all_sources_used = all(source in sources_used for source in expected_data_sources)
-                    test_result["data_source_test"]["sources_used"] = sources_used
-                    test_result["data_source_test"]["all_sources_used"] = all_sources_used
-                    test_result["data_source_test"]["status"] = "PASS" if all_sources_used else "FAIL"
-                else:
-                    test_result["data_source_test"]["status"] = "SKIPPED"
+                   answer_lower = answer.lower()
+                   reasoning_lower = (reasoning or "").lower()
+                   combined_text = answer_lower + " " + reasoning_lower
+                   
+                   sources_used = []
+                   if expected_data_sources:
+                       if "reddit" in expected_data_sources:
+                           if any(word in combined_text for word in ["reddit", "r/wallstreetbets", "r/stocks", "subreddit"]):
+                               sources_used.append("reddit")
+                           else:
+                               test_result["data_source_test"]["issues"].append(
+                                   "Expected Reddit data but no Reddit mentions found in answer/reasoning. "
+                                   "Chatbot fallback may not be calling RedditSentiment_Agent."
+                               )
+                               # Report bug
+                               report_bug(
+                                   bug_type="api",
+                                   severity="HIGH",
+                                   description=f"Chatbot sentiment query for {ticker} does not use Reddit data",
+                                   feature="chat",
+                                   ticker=ticker,
+                                   expected_behavior="Answer should mention Reddit sentiment data",
+                                   actual_behavior="Answer does not mention Reddit",
+                                   suggested_fix="Ensure _handle_chat_fallback calls query_reddit_sentiment for sentiment queries"
+                               )
+                       
+                       if "twitter" in expected_data_sources:
+                           if any(word in combined_text for word in ["twitter", "x.com", "tweet", "social media"]):
+                               sources_used.append("twitter")
+                           else:
+                               test_result["data_source_test"]["issues"].append(
+                                   "Expected Twitter data but no Twitter mentions found in answer/reasoning. "
+                                   "Chatbot fallback may not be calling Twitter_Agent."
+                               )
+                               # Report bug
+                               report_bug(
+                                   bug_type="api",
+                                   severity="HIGH",
+                                   description=f"Chatbot sentiment query for {ticker} does not use Twitter data",
+                                   feature="chat",
+                                   ticker=ticker,
+                                   expected_behavior="Answer should mention Twitter sentiment data",
+                                   actual_behavior="Answer does not mention Twitter",
+                                   suggested_fix="Ensure _handle_chat_fallback calls query_twitter_data for sentiment queries"
+                               )
+                       
+                       if "news" in expected_data_sources:
+                           if any(word in combined_text for word in ["news", "article", "headline", "reuters", "bloomberg"]):
+                               sources_used.append("news")
+                       
+                       all_sources_used = all(source in sources_used for source in expected_data_sources)
+                       test_result["data_source_test"]["sources_used"] = sources_used
+                       test_result["data_source_test"]["all_sources_used"] = all_sources_used
+                       test_result["data_source_test"]["status"] = "PASS" if all_sources_used else "FAIL"
+                   else:
+                       test_result["data_source_test"]["status"] = "SKIPPED"
             
             # Test 4: Accuracy Test
             if test_type in ["comprehensive", "accuracy"] and ticker:
