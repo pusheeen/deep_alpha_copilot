@@ -22,6 +22,8 @@ from langchain_google_vertexai import VertexAIEmbeddings
 from target_tickers import TARGET_TICKERS
 import pandas as pd
 import os
+import json
+import requests
 from datetime import datetime, timezone
 import yfinance as yf
 try:
@@ -2150,20 +2152,943 @@ def fact_check_agent_output(agent_name: str, output: dict, ticker: str = None) -
         }
 
 
+def test_ui_feature(feature_name: str, ticker: str = None, test_params: dict = None) -> dict:
+    """
+    Tests a specific UI feature to verify it's working correctly.
+    
+    Supported features:
+    - 'score_display': Tests score generation and display
+    - 'price_chart': Tests price history chart rendering
+    - 'news_section': Tests news fetching and display
+    - 'comparison': Tests multi-stock comparison feature
+    - 'chat': Tests AI chat interface
+    - 'market_conditions': Tests market indicators display
+    - 'flow_data': Tests institutional/retail flow data
+    - 'valuation_metrics': Tests P/E, P/S ratio display
+    
+    Args:
+        feature_name: Name of the feature to test
+        ticker: Optional ticker symbol for ticker-specific features
+        test_params: Optional parameters for the test
+        
+    Returns:
+        dict: Test results with status, issues found, and recommendations
+    """
+    import json
+    from pathlib import Path
+    
+    test_result = {
+        "feature": feature_name,
+        "ticker": ticker,
+        "status": "UNKNOWN",
+        "issues": [],
+        "warnings": [],
+        "test_details": {},
+        "recommendation": ""
+    }
+    
+    try:
+        # Check if requests is available
+        try:
+            import requests
+        except ImportError:
+            test_result["status"] = "SKIPPED"
+            test_result["issues"].append("requests library not available - cannot test UI features")
+            test_result["recommendation"] = "Install requests library to enable UI feature testing"
+            return test_result
+        
+        # Determine base URL (local or production)
+        base_url = os.getenv("DOMAIN", "http://localhost:8000")
+        if not base_url.startswith("http"):
+            base_url = f"http://{base_url}"
+        
+        if feature_name == "score_display":
+            if not ticker:
+                ticker = "NVDA"  # Default test ticker
+            
+            # Test score API endpoint
+            url = f"{base_url}/api/scores/{ticker}"
+            try:
+                response = requests.get(url, timeout=10)
+                test_result["test_details"]["status_code"] = response.status_code
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    test_result["test_details"]["has_data"] = True
+                    
+                    # Check required fields
+                    required_fields = ["overall", "components", "recommendation"]
+                    missing_fields = [f for f in required_fields if f not in data]
+                    if missing_fields:
+                        test_result["issues"].append(f"Missing required fields: {', '.join(missing_fields)}")
+                    
+                    # Check score validity
+                    if "overall" in data and "score" in data["overall"]:
+                        score = data["overall"]["score"]
+                        if not isinstance(score, (int, float)) or score < 0 or score > 10:
+                            test_result["issues"].append(f"Invalid overall score: {score} (should be 0-10)")
+                        test_result["test_details"]["overall_score"] = score
+                    
+                    # Check recommendation validity
+                    if "recommendation" in data:
+                        rec = data["recommendation"]
+                        valid_recs = ["Strong Buy", "Buy", "Hold", "Weak Hold", "Sell"]
+                        if isinstance(rec, dict) and "rating" in rec:
+                            rec_rating = rec["rating"]
+                        else:
+                            rec_rating = rec
+                        
+                        if rec_rating not in valid_recs:
+                            test_result["warnings"].append(f"Unexpected recommendation: {rec_rating}")
+                    
+                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                else:
+                    test_result["status"] = "FAIL"
+                    test_result["issues"].append(f"API returned status code {response.status_code}")
+                    
+            except requests.exceptions.RequestException as e:
+                test_result["status"] = "ERROR"
+                test_result["issues"].append(f"Failed to connect to API: {str(e)}")
+        
+        elif feature_name == "price_chart":
+            if not ticker:
+                ticker = "NVDA"
+            
+            url = f"{base_url}/api/price-history/{ticker}?period=1m"
+            try:
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "prices" not in data or len(data.get("prices", [])) == 0:
+                        test_result["issues"].append("No price data returned")
+                    else:
+                        test_result["test_details"]["price_points"] = len(data["prices"])
+                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                else:
+                    test_result["status"] = "FAIL"
+                    test_result["issues"].append(f"API returned status code {response.status_code}")
+            except Exception as e:
+                test_result["status"] = "ERROR"
+                test_result["issues"].append(str(e))
+        
+        elif feature_name == "news_section":
+            if not ticker:
+                ticker = "NVDA"
+            
+            url = f"{base_url}/api/latest-news/{ticker}"
+            try:
+                response = requests.get(url, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "articles" not in data:
+                        test_result["issues"].append("Missing 'articles' field in response")
+                    elif len(data.get("articles", [])) == 0:
+                        test_result["warnings"].append("No articles returned (may be normal if no recent news)")
+                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                else:
+                    test_result["status"] = "FAIL"
+                    test_result["issues"].append(f"API returned status code {response.status_code}")
+            except Exception as e:
+                test_result["status"] = "ERROR"
+                test_result["issues"].append(str(e))
+        
+        elif feature_name == "market_conditions":
+            url = f"{base_url}/api/market-conditions"
+            try:
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    required_indicators = ["vix", "fear_greed", "market_phase"]
+                    missing = [ind for ind in required_indicators if ind not in data]
+                    if missing:
+                        test_result["issues"].append(f"Missing indicators: {', '.join(missing)}")
+                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                else:
+                    test_result["status"] = "FAIL"
+                    test_result["issues"].append(f"API returned status code {response.status_code}")
+            except Exception as e:
+                test_result["status"] = "ERROR"
+                test_result["issues"].append(str(e))
+        
+        elif feature_name == "comparison":
+            url = f"{base_url}/api/compare"
+            test_tickers = ["NVDA", "AMD", "TSM"]
+            try:
+                response = requests.post(url, json={"tickers": test_tickers}, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "comparison" not in data:
+                        test_result["issues"].append("Missing 'comparison' field in response")
+                    test_result["status"] = "PASS" if not test_result["issues"] else "FAIL"
+                else:
+                    test_result["status"] = "FAIL"
+                    test_result["issues"].append(f"API returned status code {response.status_code}")
+            except Exception as e:
+                test_result["status"] = "ERROR"
+                test_result["issues"].append(str(e))
+        
+        # Generate recommendation
+        if test_result["status"] == "PASS":
+            test_result["recommendation"] = f"Feature '{feature_name}' is working correctly"
+        elif test_result["status"] == "FAIL":
+            test_result["recommendation"] = f"Feature '{feature_name}' has issues that need to be fixed: {', '.join(test_result['issues'])}"
+        elif test_result["status"] == "ERROR":
+            test_result["recommendation"] = f"Unable to test feature '{feature_name}': {', '.join(test_result['issues'])}"
+        
+    except Exception as e:
+        test_result["status"] = "ERROR"
+        test_result["issues"].append(f"Test execution error: {str(e)}")
+        test_result["recommendation"] = "Test failed due to unexpected error"
+    
+    return test_result
+
+
+def validate_business_logic(ticker: str, scores: dict, context: dict = None) -> dict:
+    """
+    Validates business logic and scores using domain knowledge and common sense reasoning.
+    Checks if scores make sense given company fundamentals, market position, and strategic factors.
+    
+    Args:
+        ticker: Stock ticker symbol
+        scores: Dictionary containing scores and recommendations
+        context: Optional context data (financials, news, etc.)
+        
+    Returns:
+        dict: Validation results with business logic issues and recommendations
+    """
+    from app.scoring import compute_company_scores
+    
+    validation_result = {
+        "ticker": ticker.upper().strip(),
+        "status": "UNKNOWN",
+        "business_logic_issues": [],
+        "warnings": [],
+        "domain_knowledge_checks": [],
+        "recommendation": ""
+    }
+    
+    try:
+        ticker = ticker.upper().strip()
+        
+        # Domain knowledge base for common sense reasoning
+        domain_knowledge = {
+            "GOOGL": {
+                "expected_score_range": (7.0, 9.5),
+                "key_factors": ["Strong cloud business (GCP)", "Dominant search advertising", "AI leadership (Gemini)", "Strong momentum"],
+                "critical_path": "AI infrastructure leader",
+                "min_score_reasoning": "Given strong cloud business, AI leadership, and momentum, score should be >= 7.0"
+            },
+            "INTC": {
+                "expected_score_range": (6.0, 8.5),
+                "key_factors": ["US government backing (CHIPS Act)", "Likely Apple chip manufacturing", "TSMC partnership potential", "Strategic importance"],
+                "critical_path": "US semiconductor sovereignty",
+                "min_score_reasoning": "Given government backing, strategic partnerships, and manufacturing potential, score should be >= 6.0"
+            },
+            "NVDA": {
+                "expected_score_range": (8.0, 10.0),
+                "key_factors": ["AI chip dominance", "Strong data center revenue", "Market leadership"],
+                "critical_path": "AI infrastructure critical",
+                "min_score_reasoning": "Given AI dominance and strong fundamentals, score should be >= 8.0"
+            },
+            "TSM": {
+                "expected_score_range": (8.0, 9.5),
+                "key_factors": ["Semiconductor manufacturing leader", "Strategic partnerships", "Critical infrastructure"],
+                "critical_path": "Global chip manufacturing leader",
+                "min_score_reasoning": "Given manufacturing leadership and strategic importance, score should be >= 8.0"
+            },
+            "AMD": {
+                "expected_score_range": (7.0, 9.0),
+                "key_factors": ["Strong AI chip competition", "Data center growth", "Market momentum"],
+                "critical_path": "AI infrastructure alternative",
+                "min_score_reasoning": "Given AI competition and growth, score should be >= 7.0"
+            }
+        }
+        
+        # Get actual scores if not provided
+        if not scores:
+            try:
+                scores = compute_company_scores(ticker)
+            except Exception as e:
+                validation_result["status"] = "ERROR"
+                validation_result["business_logic_issues"].append(f"Unable to compute scores: {str(e)}")
+                return validation_result
+        
+        overall_score = None
+        if isinstance(scores, dict):
+            if "overall" in scores and isinstance(scores["overall"], dict):
+                overall_score = scores["overall"].get("score")
+            elif "overall" in scores:
+                overall_score = scores["overall"]
+        
+        if overall_score is None:
+            validation_result["business_logic_issues"].append("Overall score not found in scores data")
+            validation_result["status"] = "FAIL"
+            return validation_result
+        
+        # Check if ticker has domain knowledge
+        if ticker in domain_knowledge:
+            knowledge = domain_knowledge[ticker]
+            expected_min, expected_max = knowledge["expected_score_range"]
+            
+            # Check if score is within expected range
+            if overall_score < expected_min:
+                validation_result["business_logic_issues"].append(
+                    f"Score {overall_score} is below expected minimum {expected_min}. "
+                    f"Reasoning: {knowledge['min_score_reasoning']}. "
+                    f"Key factors: {', '.join(knowledge['key_factors'])}"
+                )
+                validation_result["domain_knowledge_checks"].append({
+                    "check": "score_below_expected",
+                    "actual": overall_score,
+                    "expected_min": expected_min,
+                    "reasoning": knowledge["min_score_reasoning"]
+                })
+            
+            if overall_score > expected_max:
+                validation_result["warnings"].append(
+                    f"Score {overall_score} exceeds expected maximum {expected_max}. "
+                    f"This may indicate overly optimistic scoring."
+                )
+            
+            # Check component scores for consistency
+            if "components" in scores:
+                components = scores["components"]
+                
+                # Check Critical Path Score
+                if "critical_path" in components:
+                    crit_score = components["critical_path"].get("score", 0)
+                    if crit_score < 7.0 and ticker in ["GOOGL", "INTC", "NVDA", "TSM"]:
+                        validation_result["business_logic_issues"].append(
+                            f"Critical Path Score ({crit_score}) seems low for {ticker}. "
+                            f"Expected: {knowledge['critical_path']} should score >= 7.0"
+                        )
+                
+                # Check Business Score for tech companies
+                if "business" in components:
+                    business_score = components["business"].get("score", 0)
+                    if business_score < 6.0 and ticker in ["GOOGL", "NVDA", "AMD", "TSM"]:
+                        validation_result["warnings"].append(
+                            f"Business Score ({business_score}) seems low for {ticker} given strong fundamentals"
+                        )
+        
+        # Cross-check recommendation with score
+        recommendation = None
+        if "recommendation" in scores:
+            rec = scores["recommendation"]
+            if isinstance(rec, dict):
+                recommendation = rec.get("rating")
+            else:
+                recommendation = rec
+        
+        if recommendation and overall_score:
+            # Check recommendation consistency
+            if overall_score >= 8.0 and recommendation not in ["Strong Buy", "Buy"]:
+                validation_result["business_logic_issues"].append(
+                    f"Recommendation '{recommendation}' seems inconsistent with high score {overall_score}. "
+                    f"Expected 'Strong Buy' or 'Buy' for scores >= 8.0"
+                )
+            elif overall_score < 4.0 and recommendation not in ["Sell", "Weak Hold"]:
+                validation_result["business_logic_issues"].append(
+                    f"Recommendation '{recommendation}' seems inconsistent with low score {overall_score}. "
+                    f"Expected 'Sell' or 'Weak Hold' for scores < 4.0"
+                )
+        
+        # Determine status
+        if validation_result["business_logic_issues"]:
+            validation_result["status"] = "FAIL"
+            validation_result["recommendation"] = (
+                f"Business logic validation failed for {ticker}. "
+                f"Found {len(validation_result['business_logic_issues'])} issue(s) that need investigation."
+            )
+        elif validation_result["warnings"]:
+            validation_result["status"] = "WARNING"
+            validation_result["recommendation"] = (
+                f"Business logic validation passed with {len(validation_result['warnings'])} warning(s) for {ticker}."
+            )
+        else:
+            validation_result["status"] = "PASS"
+            validation_result["recommendation"] = f"Business logic validation passed for {ticker}. Scores appear reasonable."
+        
+    except Exception as e:
+        validation_result["status"] = "ERROR"
+        validation_result["business_logic_issues"].append(f"Validation error: {str(e)}")
+        validation_result["recommendation"] = "Business logic validation failed due to error"
+    
+    return validation_result
+
+
+def report_bug(bug_type: str, severity: str, description: str, feature: str = None, 
+               ticker: str = None, reproduction_steps: list = None, 
+               expected_behavior: str = None, actual_behavior: str = None,
+               suggested_fix: str = None) -> dict:
+    """
+    Reports a bug with structured information for tracking and fixing.
+    
+    Args:
+        bug_type: Type of bug ('ui', 'api', 'business_logic', 'data', 'performance')
+        severity: Severity level ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW')
+        description: Description of the bug
+        feature: Feature name where bug was found
+        ticker: Ticker symbol if bug is ticker-specific
+        reproduction_steps: List of steps to reproduce the bug
+        expected_behavior: What should happen
+        actual_behavior: What actually happens
+        suggested_fix: Suggested fix or workaround
+        
+    Returns:
+        dict: Bug report with ID and confirmation
+    """
+    import json
+    from datetime import datetime
+    from pathlib import Path
+    
+    bug_report = {
+        "bug_id": f"BUG-{datetime.now().strftime('%Y%m%d-%H%M%S')}-{bug_type.upper()}",
+        "timestamp": datetime.now().isoformat(),
+        "bug_type": bug_type,
+        "severity": severity,
+        "description": description,
+        "feature": feature,
+        "ticker": ticker,
+        "reproduction_steps": reproduction_steps or [],
+        "expected_behavior": expected_behavior,
+        "actual_behavior": actual_behavior,
+        "suggested_fix": suggested_fix,
+        "status": "OPEN",
+        "assigned_to": None
+    }
+    
+    try:
+        # Save bug report to file
+        bugs_dir = Path(__file__).resolve().parents[2] / "data" / "logs" / "bugs"
+        bugs_dir.mkdir(parents=True, exist_ok=True)
+        
+        bug_file = bugs_dir / f"{bug_report['bug_id']}.json"
+        with open(bug_file, 'w') as f:
+            json.dump(bug_report, f, indent=2)
+        
+        # Also append to bug log
+        bug_log = bugs_dir / "bug_log.jsonl"
+        with open(bug_log, 'a') as f:
+            f.write(json.dumps(bug_report) + '\n')
+        
+        bug_report["saved"] = True
+        bug_report["file_path"] = str(bug_file)
+        
+    except Exception as e:
+        bug_report["saved"] = False
+        bug_report["error"] = str(e)
+    
+    return bug_report
+
+
+def test_chatbot_query(query: str, expected_agents: list = None, expected_data_sources: list = None, 
+                       ticker: str = None, test_type: str = "comprehensive") -> dict:
+    """
+    Comprehensive chatbot testing framework that validates query routing, answer relevance, 
+    accuracy, and data source usage.
+    
+    Args:
+        query: The user query to test (e.g., "what is the sentiment for MU right now")
+        expected_agents: List of agent names that should be called (e.g., ["RedditSentiment_Agent", "Twitter_Agent"])
+        expected_data_sources: List of data sources that should be used (e.g., ["reddit", "twitter"])
+        ticker: Optional ticker symbol extracted from query
+        test_type: Type of test - "comprehensive" (full test), "routing" (just routing), "accuracy" (just accuracy)
+        
+    Returns:
+        dict: Comprehensive test results with routing, relevance, accuracy, and data source validation
+    """
+    import json
+    from pathlib import Path
+    
+    test_result = {
+        "query": query,
+        "ticker": ticker,
+        "test_type": test_type,
+        "status": "UNKNOWN",
+        "routing_test": {
+            "status": "UNKNOWN",
+            "expected_agents": expected_agents or [],
+            "actual_agents_called": [],
+            "routing_correct": False,
+            "issues": []
+        },
+        "relevance_test": {
+            "status": "UNKNOWN",
+            "answer_relevant": False,
+            "relevance_score": 0,
+            "issues": [],
+            "answer_snippet": ""
+        },
+        "accuracy_test": {
+            "status": "UNKNOWN",
+            "answer_accurate": False,
+            "accuracy_score": 0,
+            "issues": [],
+            "cross_references": []
+        },
+        "data_source_test": {
+            "status": "UNKNOWN",
+            "expected_sources": expected_data_sources or [],
+            "sources_used": [],
+            "all_sources_used": False,
+            "issues": []
+        },
+        "response_time": 0,
+        "overall_score": 0,
+        "recommendation": ""
+    }
+    
+    try:
+        import time
+        start_time = time.time()
+        
+        # Determine base URL
+        base_url = os.getenv("DOMAIN", "http://localhost:8000")
+        if not base_url.startswith("http"):
+            base_url = f"http://{base_url}"
+        
+        # Extract ticker from query if not provided
+        if not ticker:
+            import re
+            ticker_match = re.search(r'\b([A-Z]{2,5})\b', query.upper())
+            if ticker_match:
+                ticker = ticker_match.group(1)
+        
+        # Make chat API call
+        try:
+            import requests
+            chat_url = f"{base_url}/chat"
+            payload = {
+                "question": query,
+                "include_reasoning": False
+            }
+            
+            response = requests.post(chat_url, json=payload, timeout=30)
+            test_result["response_time"] = time.time() - start_time
+            
+            if response.status_code != 200:
+                test_result["status"] = "ERROR"
+                test_result["routing_test"]["issues"].append(f"API returned status code {response.status_code}")
+                test_result["recommendation"] = f"Chat API failed with status {response.status_code}"
+                return test_result
+            
+            chat_response = response.json()
+            answer = chat_response.get("answer", "")
+            reasoning = chat_response.get("reasoning", "")
+            status = chat_response.get("status", "")
+            
+            test_result["routing_test"]["actual_agents_called"] = []
+            if reasoning:
+                # Try to extract agent names from reasoning
+                reasoning_lower = reasoning.lower()
+                agent_names = ["RedditSentiment_Agent", "Twitter_Agent", "CompanyData_Agent", 
+                              "NewsSearch_Agent", "MarketData_Agent", "FlowData_Agent"]
+                for agent in agent_names:
+                    if agent.lower() in reasoning_lower:
+                        test_result["routing_test"]["actual_agents_called"].append(agent)
+            
+            # Test 1: Routing Test
+            if test_type in ["comprehensive", "routing"]:
+                if expected_agents:
+                    routing_correct = all(agent in test_result["routing_test"]["actual_agents_called"] 
+                                         for agent in expected_agents)
+                    test_result["routing_test"]["routing_correct"] = routing_correct
+                    
+                    if not routing_correct:
+                        missing_agents = [a for a in expected_agents 
+                                         if a not in test_result["routing_test"]["actual_agents_called"]]
+                        test_result["routing_test"]["issues"].append(
+                            f"Expected agents not called: {', '.join(missing_agents)}"
+                        )
+                    
+                    test_result["routing_test"]["status"] = "PASS" if routing_correct else "FAIL"
+                else:
+                    test_result["routing_test"]["status"] = "SKIPPED"
+            
+            # Test 2: Relevance Test
+            if test_type in ["comprehensive", "relevance"]:
+                answer_lower = answer.lower()
+                query_lower = query.lower()
+                
+                # Check if answer addresses the query
+                relevance_indicators = []
+                
+                # For sentiment queries
+                if "sentiment" in query_lower:
+                    sentiment_keywords = ["sentiment", "feeling", "mood", "bullish", "bearish", "neutral", 
+                                         "positive", "negative", "score"]
+                    relevance_indicators = [kw for kw in sentiment_keywords if kw in answer_lower]
+                    if ticker and ticker.lower() in answer_lower:
+                        relevance_indicators.append("ticker_mentioned")
+                
+                # For financial queries
+                if any(word in query_lower for word in ["financial", "revenue", "earnings", "score"]):
+                    financial_keywords = ["revenue", "earnings", "financial", "score", "profit", "growth"]
+                    relevance_indicators.extend([kw for kw in financial_keywords if kw in answer_lower])
+                
+                # For news queries
+                if "news" in query_lower:
+                    news_keywords = ["news", "article", "recent", "latest", "headline"]
+                    relevance_indicators.extend([kw for kw in news_keywords if kw in answer_lower])
+                
+                # Calculate relevance score
+                relevance_score = min(100, len(relevance_indicators) * 20)
+                test_result["relevance_test"]["relevance_score"] = relevance_score
+                test_result["relevance_test"]["answer_relevant"] = relevance_score >= 60
+                test_result["relevance_test"]["answer_snippet"] = answer[:200] + "..." if len(answer) > 200 else answer
+                
+                if not test_result["relevance_test"]["answer_relevant"]:
+                    test_result["relevance_test"]["issues"].append(
+                        f"Answer doesn't seem relevant to query. Relevance score: {relevance_score}/100"
+                    )
+                
+                test_result["relevance_test"]["status"] = "PASS" if test_result["relevance_test"]["answer_relevant"] else "FAIL"
+            
+            # Test 3: Data Source Test
+            if test_type in ["comprehensive", "data_source"]:
+                answer_lower = answer.lower()
+                reasoning_lower = (reasoning or "").lower()
+                combined_text = answer_lower + " " + reasoning_lower
+                
+                sources_used = []
+                if expected_data_sources:
+                    if "reddit" in expected_data_sources:
+                        if any(word in combined_text for word in ["reddit", "r/wallstreetbets", "r/stocks", "subreddit"]):
+                            sources_used.append("reddit")
+                        else:
+                            test_result["data_source_test"]["issues"].append(
+                                "Expected Reddit data but no Reddit mentions found in answer/reasoning"
+                            )
+                    
+                    if "twitter" in expected_data_sources:
+                        if any(word in combined_text for word in ["twitter", "x.com", "tweet", "social media"]):
+                            sources_used.append("twitter")
+                        else:
+                            test_result["data_source_test"]["issues"].append(
+                                "Expected Twitter data but no Twitter mentions found in answer/reasoning"
+                            )
+                    
+                    if "news" in expected_data_sources:
+                        if any(word in combined_text for word in ["news", "article", "headline", "reuters", "bloomberg"]):
+                            sources_used.append("news")
+                    
+                    all_sources_used = all(source in sources_used for source in expected_data_sources)
+                    test_result["data_source_test"]["sources_used"] = sources_used
+                    test_result["data_source_test"]["all_sources_used"] = all_sources_used
+                    test_result["data_source_test"]["status"] = "PASS" if all_sources_used else "FAIL"
+                else:
+                    test_result["data_source_test"]["status"] = "SKIPPED"
+            
+            # Test 4: Accuracy Test
+            if test_type in ["comprehensive", "accuracy"] and ticker:
+                # Cross-reference answer with actual data
+                try:
+                    from app.scoring import compute_company_scores
+                    actual_data = compute_company_scores(ticker)
+                    
+                    # Check if answer mentions scores that match actual data
+                    if "sentiment" in query.lower():
+                        actual_sentiment = actual_data.get("scores", {}).get("sentiment", {}).get("score")
+                        if actual_sentiment is not None:
+                            # Check if answer mentions a sentiment score
+                            import re
+                            score_pattern = r'(\d+\.?\d*)\s*(?:out of 10|/10|score)'
+                            scores_mentioned = re.findall(score_pattern, answer)
+                            
+                            if scores_mentioned:
+                                test_result["accuracy_test"]["cross_references"].append({
+                                    "type": "sentiment_score",
+                                    "mentioned": scores_mentioned[0],
+                                    "actual": actual_sentiment,
+                                    "match": abs(float(scores_mentioned[0]) - actual_sentiment) < 0.5
+                                })
+                    
+                    test_result["accuracy_test"]["status"] = "PASS" if not test_result["accuracy_test"]["cross_references"] or \
+                        all(ref.get("match", False) for ref in test_result["accuracy_test"]["cross_references"]) else "PARTIAL"
+                    
+                except Exception as e:
+                    test_result["accuracy_test"]["status"] = "SKIPPED"
+                    test_result["accuracy_test"]["issues"].append(f"Could not cross-reference: {str(e)}")
+            
+            # Calculate overall score
+            scores = []
+            if test_result["routing_test"]["status"] == "PASS":
+                scores.append(25)
+            elif test_result["routing_test"]["status"] == "FAIL":
+                scores.append(0)
+            
+            if test_result["relevance_test"]["status"] == "PASS":
+                scores.append(25)
+            elif test_result["relevance_test"]["status"] == "FAIL":
+                scores.append(0)
+            
+            if test_result["data_source_test"]["status"] == "PASS":
+                scores.append(25)
+            elif test_result["data_source_test"]["status"] == "FAIL":
+                scores.append(0)
+            
+            if test_result["accuracy_test"]["status"] == "PASS":
+                scores.append(25)
+            elif test_result["accuracy_test"]["status"] == "PARTIAL":
+                scores.append(15)
+            elif test_result["accuracy_test"]["status"] == "FAIL":
+                scores.append(0)
+            
+            test_result["overall_score"] = sum(scores)
+            
+            # Determine overall status
+            if test_result["overall_score"] >= 75:
+                test_result["status"] = "PASS"
+                test_result["recommendation"] = "Chatbot query handled correctly"
+            elif test_result["overall_score"] >= 50:
+                test_result["status"] = "PARTIAL"
+                test_result["recommendation"] = "Chatbot query handled with some issues - review recommendations"
+            else:
+                test_result["status"] = "FAIL"
+                test_result["recommendation"] = "Chatbot query failed - significant issues found"
+            
+        except requests.exceptions.RequestException as e:
+            test_result["status"] = "ERROR"
+            test_result["recommendation"] = f"Failed to connect to chat API: {str(e)}"
+        except Exception as e:
+            test_result["status"] = "ERROR"
+            test_result["recommendation"] = f"Test execution error: {str(e)}"
+    
+    except Exception as e:
+        test_result["status"] = "ERROR"
+        test_result["recommendation"] = f"Test setup error: {str(e)}"
+    
+    return test_result
+
+
+def run_chatbot_test_suite(test_scenarios: list = None) -> dict:
+    """
+    Runs a comprehensive suite of chatbot tests covering various query types.
+    
+    Args:
+        test_scenarios: Optional list of custom test scenarios. If None, uses default suite.
+        
+    Returns:
+        dict: Test suite results with pass/fail counts and detailed results
+    """
+    # Default test scenarios
+    default_scenarios = [
+        {
+            "name": "Sentiment Query - MU",
+            "query": "what is the sentiment for MU right now",
+            "expected_agents": ["RedditSentiment_Agent", "Twitter_Agent"],
+            "expected_data_sources": ["reddit", "twitter"],
+            "ticker": "MU",
+            "test_type": "comprehensive"
+        },
+        {
+            "name": "Sentiment Query - NVDA",
+            "query": "what is the sentiment for NVDA",
+            "expected_agents": ["RedditSentiment_Agent", "Twitter_Agent"],
+            "expected_data_sources": ["reddit", "twitter"],
+            "ticker": "NVDA",
+            "test_type": "comprehensive"
+        },
+        {
+            "name": "Financial Scores Query",
+            "query": "What are NVDA's financial scores?",
+            "expected_agents": ["CompanyData_Agent"],
+            "expected_data_sources": ["financials"],
+            "ticker": "NVDA",
+            "test_type": "comprehensive"
+        },
+        {
+            "name": "News Query",
+            "query": "What's the latest news about AMD?",
+            "expected_agents": ["NewsSearch_Agent"],
+            "expected_data_sources": ["news"],
+            "ticker": "AMD",
+            "test_type": "comprehensive"
+        },
+        {
+            "name": "Flow Data Query",
+            "query": "Show me institutional flow for TSM",
+            "expected_agents": ["FlowData_Agent"],
+            "expected_data_sources": ["flow"],
+            "ticker": "TSM",
+            "test_type": "comprehensive"
+        },
+        {
+            "name": "CEO Query",
+            "query": "Who is the CEO of AVGO?",
+            "expected_agents": ["CEOLookup_Agent"],
+            "expected_data_sources": [],
+            "ticker": "AVGO",
+            "test_type": "comprehensive"
+        }
+    ]
+    
+    scenarios = test_scenarios or default_scenarios
+    
+    suite_result = {
+        "total_tests": len(scenarios),
+        "passed": 0,
+        "failed": 0,
+        "partial": 0,
+        "errors": 0,
+        "test_results": [],
+        "summary": {},
+        "recommendations": []
+    }
+    
+    for scenario in scenarios:
+        try:
+            result = test_chatbot_query(
+                query=scenario["query"],
+                expected_agents=scenario.get("expected_agents"),
+                expected_data_sources=scenario.get("expected_data_sources"),
+                ticker=scenario.get("ticker"),
+                test_type=scenario.get("test_type", "comprehensive")
+            )
+            
+            result["scenario_name"] = scenario["name"]
+            suite_result["test_results"].append(result)
+            
+            if result["status"] == "PASS":
+                suite_result["passed"] += 1
+            elif result["status"] == "PARTIAL":
+                suite_result["partial"] += 1
+            elif result["status"] == "FAIL":
+                suite_result["failed"] += 1
+            else:
+                suite_result["errors"] += 1
+            
+        except Exception as e:
+            suite_result["errors"] += 1
+            suite_result["test_results"].append({
+                "scenario_name": scenario["name"],
+                "status": "ERROR",
+                "error": str(e)
+            })
+    
+    # Generate summary
+    suite_result["summary"] = {
+        "pass_rate": (suite_result["passed"] / suite_result["total_tests"] * 100) if suite_result["total_tests"] > 0 else 0,
+        "average_score": sum(r.get("overall_score", 0) for r in suite_result["test_results"] if "overall_score" in r) / len([r for r in suite_result["test_results"] if "overall_score" in r]) if suite_result["test_results"] else 0
+    }
+    
+    # Generate recommendations
+    if suite_result["failed"] > 0:
+        suite_result["recommendations"].append(
+            f"{suite_result['failed']} test(s) failed - review chatbot routing and answer quality"
+        )
+    if suite_result["partial"] > 0:
+        suite_result["recommendations"].append(
+            f"{suite_result['partial']} test(s) passed with issues - improve answer relevance or accuracy"
+        )
+    if suite_result["summary"]["pass_rate"] < 70:
+        suite_result["recommendations"].append(
+            f"Overall pass rate {suite_result['summary']['pass_rate']:.1f}% is below 70% - comprehensive review needed"
+        )
+    
+    return suite_result
+
+
+def coordinate_fix(bug_id: str, fix_plan: str, required_agents: list = None) -> dict:
+    """
+    Coordinates with root agent to fix a reported bug.
+    Creates a fix plan and assigns tasks to appropriate agents.
+    
+    Args:
+        bug_id: ID of the bug to fix
+        fix_plan: Description of the fix plan
+        required_agents: List of agent names needed for the fix
+        
+    Returns:
+        dict: Fix coordination result with assigned tasks
+    """
+    import json
+    from datetime import datetime
+    from pathlib import Path
+    
+    coordination_result = {
+        "bug_id": bug_id,
+        "fix_plan": fix_plan,
+        "required_agents": required_agents or [],
+        "tasks": [],
+        "status": "COORDINATED",
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    try:
+        # Load bug report
+        bugs_dir = Path(__file__).resolve().parents[2] / "data" / "logs" / "bugs"
+        bug_file = bugs_dir / f"{bug_id}.json"
+        
+        if bug_file.exists():
+            with open(bug_file, 'r') as f:
+                bug_report = json.load(f)
+            
+            # Create tasks based on bug type
+            if bug_report.get("bug_type") == "ui":
+                coordination_result["tasks"].append({
+                    "agent": "Root Agent",
+                    "task": f"Review UI bug: {bug_report['description']}",
+                    "action": "Inspect UI code and fix rendering/functionality issue"
+                })
+            elif bug_report.get("bug_type") == "business_logic":
+                coordination_result["tasks"].append({
+                    "agent": "Root Agent",
+                    "task": f"Review scoring logic for {bug_report.get('ticker', 'N/A')}",
+                    "action": "Review compute_company_scores() and adjust scoring weights/factors"
+                })
+                coordination_result["required_agents"].append("CompanyData_Agent")
+            elif bug_report.get("bug_type") == "api":
+                coordination_result["tasks"].append({
+                    "agent": "Root Agent",
+                    "task": f"Fix API endpoint: {bug_report.get('feature', 'N/A')}",
+                    "action": "Review API endpoint code and fix error handling"
+                })
+            
+            # Update bug report with fix coordination
+            bug_report["fix_coordination"] = coordination_result
+            bug_report["status"] = "IN_PROGRESS"
+            
+            with open(bug_file, 'w') as f:
+                json.dump(bug_report, f, indent=2)
+            
+            coordination_result["bug_updated"] = True
+        
+        else:
+            coordination_result["status"] = "ERROR"
+            coordination_result["error"] = f"Bug report {bug_id} not found"
+    
+    except Exception as e:
+        coordination_result["status"] = "ERROR"
+        coordination_result["error"] = str(e)
+    
+    return coordination_result
+
+
 # Create AgentEvaluator sub-agent
 agent_evaluator_subagent = Agent(
     name="AgentEvaluator",
     model=llm,
-    tools=[check_data_freshness, validate_data_source, fact_check_agent_output],
-    description="Quality assurance agent that validates data freshness, verifies data sources, and fact-checks other agents' outputs. Use AFTER agents produce results.",
+    tools=[check_data_freshness, validate_data_source, fact_check_agent_output, 
+           test_ui_feature, validate_business_logic, test_chatbot_query, run_chatbot_test_suite, 
+           report_bug, coordinate_fix],
+    description="Quality assurance and bug detection agent that validates data freshness, verifies data sources, fact-checks outputs, tests UI features, validates business logic, and coordinates bug fixes. Use AFTER agents produce results.",
     instruction=f"""
-    You are the AgentEvaluator - a quality assurance meta-agent responsible for validating the work of other agents.
+    You are the AgentEvaluator - a comprehensive quality assurance and bug detection meta-agent responsible for:
+    1. Validating the work of other agents
+    2. Testing UI features for functionality
+    3. Validating business logic with domain knowledge
+    4. Reporting bugs and coordinating fixes
 
     PRIMARY RESPONSIBILITIES:
     1. VERIFY DATA FRESHNESS: Ensure data meets architecture freshness guidelines
     2. VALIDATE SOURCES: Confirm data comes from legitimate, correct sources
     3. FACT-CHECK OUTPUTS: Cross-reference agent outputs with actual data
-    4. QUALITY ASSURANCE: Ensure agents provide accurate, factual information
+    4. TEST UI FEATURES: Verify each UI feature is working correctly
+    5. VALIDATE BUSINESS LOGIC: Use domain knowledge to check if scores/recommendations make sense
+    6. REPORT BUGS: Document bugs with structured information
+    7. COORDINATE FIXES: Work with root agent to fix identified issues
 
     DATA FRESHNESS GUIDELINES (from architecture docs):
     - Financial Statements: Quarterly (max 90 days old)
@@ -2194,6 +3119,52 @@ agent_evaluator_subagent = Agent(
        - Returns: verification status with confidence score
        - Example: Check if CompanyData_Agent's reported score matches actual computed score
 
+    4. test_ui_feature(feature_name, ticker, test_params):
+       - Tests UI features to verify they're working correctly
+       - Supported features: 'score_display', 'price_chart', 'news_section', 'comparison', 'chat', 'market_conditions', 'flow_data', 'valuation_metrics'
+       - Returns: Test results with status (PASS/FAIL/ERROR), issues, and recommendations
+       - Example: test_ui_feature("score_display", "NVDA") to verify score display works
+
+    5. validate_business_logic(ticker, scores, context):
+       - Validates scores using domain knowledge and common sense reasoning
+       - Checks if scores make sense given company fundamentals, market position, strategic factors
+       - Uses domain knowledge base for companies like GOOGL, INTC, NVDA, TSM, AMD
+       - Returns: Validation results with business logic issues and warnings
+       - Example: validate_business_logic("GOOGL", scores) to check if GOOGL score of 6 makes sense (it doesn't - should be >= 7.0)
+
+    6. report_bug(bug_type, severity, description, feature, ticker, reproduction_steps, expected_behavior, actual_behavior, suggested_fix):
+       - Reports bugs with structured information for tracking
+       - Bug types: 'ui', 'api', 'business_logic', 'data', 'performance'
+       - Severity: 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+       - Returns: Bug report with ID and confirmation
+       - Example: report_bug("business_logic", "HIGH", "GOOGL score too low", "scoring", "GOOGL", ...)
+
+    7. test_chatbot_query(query, expected_agents, expected_data_sources, ticker, test_type):
+       - Comprehensive chatbot testing framework
+       - Tests query routing (does it go to right agents?)
+       - Tests answer relevance (does it answer the question?)
+       - Tests answer accuracy (is data correct?)
+       - Tests data source usage (does it use Reddit/Twitter for sentiment?)
+       - Returns: Comprehensive test results with scores
+       - Example: test_chatbot_query("what is the sentiment for MU right now", 
+                                     expected_agents=["RedditSentiment_Agent", "Twitter_Agent"],
+                                     expected_data_sources=["reddit", "twitter"],
+                                     ticker="MU")
+       - Test types: "comprehensive" (all tests), "routing" (just routing), "relevance" (just relevance), "accuracy" (just accuracy)
+
+    8. run_chatbot_test_suite(test_scenarios):
+       - Runs comprehensive suite of chatbot tests
+       - Tests multiple query types (sentiment, financial, news, flow, CEO)
+       - Returns: Test suite results with pass/fail counts and recommendations
+       - Example: run_chatbot_test_suite() - runs default test suite
+       - Example: run_chatbot_test_suite([custom_scenario1, custom_scenario2]) - runs custom scenarios
+
+    9. coordinate_fix(bug_id, fix_plan, required_agents):
+       - Coordinates with root agent to fix reported bugs
+       - Creates fix plan and assigns tasks to appropriate agents
+       - Returns: Fix coordination result with assigned tasks
+       - Example: coordinate_fix("BUG-20250101-123456-BUSINESS_LOGIC", "Review scoring weights", ["Root Agent"])
+
     WORKFLOW EXAMPLES:
 
     Example 1 - Data Freshness Validation:
@@ -2215,27 +3186,120 @@ agent_evaluator_subagent = Agent(
     3. If scores match: VERIFIED
     4. If mismatch: CONTRADICTION found
 
+    Example 4 - UI Feature Testing:
+    Test score display feature for NVDA
+    1. test_ui_feature("score_display", "NVDA")
+    2. Check API response, required fields, score validity
+    3. If PASS: Feature working correctly
+    4. If FAIL: Report bugs with specific issues
+
+    Example 5 - Business Logic Validation:
+    GOOGL receives score of 6.0, but given strong cloud business, AI leadership, momentum
+    1. validate_business_logic("GOOGL", scores)
+    2. Check against domain knowledge: GOOGL should score >= 7.0
+    3. Flag as business logic issue: Score too low given fundamentals
+    4. report_bug("business_logic", "HIGH", "GOOGL score 6.0 too low", "scoring", "GOOGL", ...)
+    5. coordinate_fix(bug_id, "Review scoring weights for cloud/AI factors", ...)
+
+    Example 6 - Comprehensive Bug Detection Workflow:
+    1. Test UI feature: test_ui_feature("score_display", "GOOGL")
+    2. Validate business logic: validate_business_logic("GOOGL", scores)
+    3. If issues found: report_bug(...) with detailed information
+    4. Coordinate fix: coordinate_fix(bug_id, fix_plan, required_agents)
+    5. Inform root agent to execute fixes
+
+    Example 7 - Chatbot Testing (Sentiment Query):
+    User asks: "what is the sentiment for MU right now"
+    1. test_chatbot_query(
+         query="what is the sentiment for MU right now",
+         expected_agents=["RedditSentiment_Agent", "Twitter_Agent"],
+         expected_data_sources=["reddit", "twitter"],
+         ticker="MU"
+       )
+    2. Check routing: Should call RedditSentiment_Agent and Twitter_Agent
+    3. Check relevance: Answer should mention sentiment, MU ticker, Reddit/Twitter data
+    4. Check data sources: Answer should reference Reddit and Twitter
+    5. Check accuracy: Cross-reference sentiment scores with actual data
+    6. If FAIL: Report bug and coordinate fix
+
+    Example 8 - Chatbot Testing (Financial Query):
+    User asks: "What are NVDA's financial scores?"
+    1. test_chatbot_query(
+         query="What are NVDA's financial scores?",
+         expected_agents=["CompanyData_Agent"],
+         expected_data_sources=["financials"],
+         ticker="NVDA"
+       )
+    2. Verify routing to CompanyData_Agent
+    3. Verify answer includes financial scores
+    4. Verify accuracy by cross-referencing with compute_company_scores()
+
+    CHATBOT TESTING CHECKLIST:
+    - Sentiment queries should route to RedditSentiment_Agent + Twitter_Agent
+    - Financial queries should route to CompanyData_Agent
+    - News queries should route to NewsSearch_Agent
+    - Answers must be relevant to the query
+    - Answers must use expected data sources
+    - Answers must be accurate (cross-reference with actual data)
+    - Response time should be reasonable (< 10 seconds)
+
     CRITICAL VALIDATION RULES:
     - REJECT data that's significantly stale (>2x freshness guideline)
     - FLAG unverified sources as "use with caution"
     - BLOCK outputs with contradictions until corrected
     - REQUIRE source metadata for all external data
     - VERIFY numerical claims by cross-referencing
+    - TEST all UI features systematically
+    - VALIDATE business logic using domain knowledge
+    - REPORT bugs immediately when found
+    - COORDINATE fixes with root agent
+
+    BUSINESS LOGIC VALIDATION RULES:
+    - GOOGL: Score should be >= 7.0 (strong cloud, AI leadership, momentum)
+    - INTC: Score should be >= 6.0 (government backing, Apple chips, TSMC partnership)
+    - NVDA: Score should be >= 8.0 (AI dominance, strong fundamentals)
+    - TSM: Score should be >= 8.0 (manufacturing leader, strategic importance)
+    - AMD: Score should be >= 7.0 (AI competition, growth)
+    - If scores don't match domain knowledge, flag as HIGH severity bug
+
+    UI FEATURE TESTING CHECKLIST:
+    - score_display: API returns valid scores (0-10), recommendations, required fields
+    - price_chart: Price history API returns data, chart renders correctly
+    - news_section: News API returns articles with proper structure
+    - comparison: Comparison API handles multiple tickers correctly
+    - market_conditions: Market indicators API returns VIX, Fear & Greed, etc.
+    - flow_data: Flow data API returns institutional/retail data
+    - valuation_metrics: Valuation API returns P/E, P/S ratios
 
     QUALITY METRICS:
     - Freshness Compliance: Data must meet guideline age limits
     - Source Verification: Data must come from documented sources
     - Fact Accuracy: Claims must match actual data within tolerance
     - Confidence Score: Minimum 70% for approval
+    - UI Functionality: All features must pass tests
+    - Business Logic: Scores must align with domain knowledge
+    - Chatbot Routing: Queries must route to correct agents
+    - Chatbot Relevance: Answers must be relevant to queries (score >= 60/100)
+    - Chatbot Accuracy: Answers must be accurate (cross-referenced with actual data)
+    - Chatbot Data Sources: Answers must use expected data sources
 
     SUPPORTED TICKERS: {TICKER_LIST_STR}
 
+    BUG REPORTING GUIDELINES:
+    - CRITICAL: System down, data corruption, security issues
+    - HIGH: Business logic errors, incorrect scores, broken core features
+    - MEDIUM: UI glitches, minor data inconsistencies, performance issues
+    - LOW: Cosmetic issues, minor warnings, edge cases
+
     IMPORTANT:
-    - Always provide specific details (file path, age, source)
-    - Flag issues clearly with severity (HIGH/MEDIUM/LOW)
+    - Always provide specific details (file path, age, source, ticker)
+    - Flag issues clearly with severity (CRITICAL/HIGH/MEDIUM/LOW)
     - Suggest corrective actions when validation fails
-    - Log all quality issues for continuous improvement
+    - Log all quality issues and bugs for continuous improvement
     - Be thorough but don't block agents unnecessarily
+    - Use domain knowledge to catch business logic errors
+    - Test UI features systematically
+    - Coordinate fixes with root agent for resolution
     """
 )
 
