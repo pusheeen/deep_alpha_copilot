@@ -2242,6 +2242,33 @@ async def chat(request: QueryRequest, http_request: Request):
                 user_message=request.question,
                 include_reasoning=request.include_reasoning
             )
+            
+            # Check if response is generic/unhelpful - if so, use fallback
+            answer = response.get("answer", "")
+            question_lower = request.question.lower()
+            
+            # Generic response patterns that indicate the agent didn't properly route
+            generic_patterns = [
+                "I can help answer questions about stocks",
+                "Please include a ticker symbol",
+                "I can help with questions about",
+                "Try asking about"
+            ]
+            
+            # If it's a sentiment query and response is generic, use fallback
+            is_sentiment_query = any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception'])
+            is_generic = any(pattern.lower() in answer.lower() for pattern in generic_patterns)
+            
+            # Also check if answer doesn't mention expected data sources for sentiment queries
+            if is_sentiment_query:
+                has_reddit_mention = any(word in answer.lower() for word in ["reddit", "r/wallstreetbets", "r/stocks", "subreddit"])
+                has_twitter_mention = any(word in answer.lower() for word in ["twitter", "x.com", "tweet", "social media"])
+                
+                # If sentiment query but no Reddit/Twitter mentions and answer is generic, use fallback
+                if (is_generic or (not has_reddit_mention and not has_twitter_mention)) and len(answer) < 100:
+                    logger.info(f"ADK agent returned generic response for sentiment query, using fallback handler")
+                    return await _handle_chat_fallback(request.question, request.include_reasoning)
+            
             return response
         except Exception as e:
             logger.warning(f"ADK agent call failed: {e}, falling back to direct tools")

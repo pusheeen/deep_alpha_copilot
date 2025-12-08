@@ -24,8 +24,11 @@ import pandas as pd
 import os
 import json
 import requests
+import logging
 from datetime import datetime, timezone
 import yfinance as yf
+
+logger = logging.getLogger(__name__)
 try:
     from googleapiclient.discovery import build
     from googleapiclient.errors import HttpError
@@ -182,26 +185,167 @@ def query_graph_database(question: str) -> dict:
     # return graphdb.send_query(cypher_query)
     return {"status": "disabled", "message": "Neo4j functionality disabled - using JSON files"}
 
-def retrieve_from_documents(question: str) -> dict:
+def retrieve_from_documents(question: str, ticker: str = None) -> dict:
     """
-    Performs vector search on 10-K filing chunks and synthesizes an answer.
+    Performs RAG (Retrieval Augmented Generation) on 10-K filing documents using GCP.
+    
+    Uses Vertex AI Embeddings for semantic search and Gemini for answer synthesis.
+    Documents are loaded from GCS (production) or local files (development).
+    
+    Args:
+        question: User's question about SEC filings
+        ticker: Optional ticker symbol to filter filings
+        
+    Returns:
+        dict: Answer synthesized from relevant filing chunks
     """
-    question_embedding = embeddings.embed_query(question)
+    import re
+    from pathlib import Path
+    from bs4 import BeautifulSoup
+    import numpy as np
     
-    search_query = """
-    CALL db.index.vector.queryNodes('filings', 5, $embedding) YIELD node, score
-    RETURN node.text AS text, score
-    ORDER BY score DESC
-    """
+    # Extract ticker from question if not provided
+    if not ticker:
+        ticker_match = re.search(r'\b([A-Z]{2,5})\b', question.upper())
+        if ticker_match:
+            ticker = ticker_match.group(1)
     
-    # search_results = graphdb.send_query(search_query, {"embedding": question_embedding})
-    # Disabled Neo4j functionality
-    return {"answer": "Document retrieval disabled - using JSON files instead of Neo4j", "status": "disabled"}
+    try:
+        # Get question embedding for semantic search
+        question_embedding = embeddings.embed_query(question)
     
-    context = "\n".join([r['text'] for r in search_results['query_result']])
-    
-    synthesis_prompt = f"""
-    Based on the following context from SEC 10-K filings, answer the question comprehensively.
+        # Determine data directory (GCS in production, local in dev)
+        if os.getenv("K_SERVICE"):
+            # Production: Use GCS
+            from storage_helper import get_storage_manager
+            storage_manager = get_storage_manager()
+            filings_dir = Path("/tmp/data/unstructured/10k")
+            filings_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Download filings from GCS if needed
+            if storage_manager and storage_manager.bucket:
+                prefix = "data/unstructured/10k/"
+                if ticker:
+                    prefix += f"{ticker}_"
+                blobs = list(storage_manager.bucket.list_blobs(prefix=prefix))
+                for blob in blobs[:10]:  # Limit to recent 10 filings
+                    local_path = filings_dir / blob.name.split("/")[-1]
+                    if not local_path.exists():
+                        try:
+                            blob.download_to_filename(str(local_path))
+                        except Exception as e:
+                            logger.debug(f"Could not download {blob.name}: {e}")
+        else:
+            # Local development
+            filings_dir = Path("data/unstructured/10k")
+        
+        # Load and process 10-K filings
+        filing_chunks = []
+        if filings_dir.exists():
+            # Find relevant filing files
+            if ticker:
+                pattern = f"{ticker}_*.html"
+            else:
+                pattern = "*.html"
+            
+            filing_files = list(filings_dir.glob(pattern))[:5]  # Limit to 5 most recent
+            
+            for filing_path in filing_files:
+                try:
+                    # Extract text from HTML
+                    with filing_path.open('r', encoding='utf-8') as f:
+                        html_content = f.read()
+                    
+                    soup = BeautifulSoup(html_content, 'html.parser')
+                    text = soup.get_text(separator=' ', strip=True)
+                    
+                    # Chunk the document (1500 chars with 150 overlap)
+                    chunk_size = 1500
+                    chunk_overlap = 150
+                    chunks = []
+                    for i in range(0, len(text), chunk_size - chunk_overlap):
+                        chunk = text[i:i + chunk_size]
+                        if len(chunk.strip()) > 100:  # Only keep substantial chunks
+                            chunks.append({
+                                'text': chunk,
+                                'source': filing_path.name,
+                                'ticker': ticker or filing_path.stem.split('_')[0]
+                            })
+                    
+                    filing_chunks.extend(chunks)
+                except Exception as e:
+                    logger.debug(f"Error processing {filing_path}: {e}")
+                    continue
+        
+        if not filing_chunks:
+            # Fallback: Use company data if no filings available
+            if ticker:
+                try:
+                    from app.scoring import compute_company_scores
+                    data = compute_company_scores(ticker)
+                    risks = data.get("recommendation", {}).get("risks", [])
+                    main_risks = data.get("recommendation", {}).get("main_risks", "")
+                    
+                    return {
+                        "answer": f"SEC 10-K filings are not currently available for {ticker}. "
+                                f"However, based on available data: {main_risks}. "
+                                f"Key risks include: {', '.join(risks[:3]) if risks else 'See company data for details'}.",
+                        "status": "success",
+                        "source": "company_data_fallback"
+                    }
+                except Exception:
+                    pass
+            
+            return {
+                "answer": "SEC 10-K filing documents are not currently available. "
+                         "Please use CompanyData_Agent for structured financial data and analysis.",
+                "status": "no_documents",
+                "suggestion": "Try querying company financials, risks, or scores instead"
+            }
+        
+        # Perform semantic search using embeddings
+        chunk_embeddings = []
+        for chunk in filing_chunks:
+            try:
+                chunk_emb = embeddings.embed_query(chunk['text'])
+                chunk_embeddings.append(chunk_emb)
+            except Exception as e:
+                logger.debug(f"Error embedding chunk: {e}")
+                chunk_embeddings.append(None)
+        
+        # Calculate cosine similarity
+        similarities = []
+        for chunk_emb in chunk_embeddings:
+            if chunk_emb is not None:
+                # Cosine similarity
+                dot_product = np.dot(question_embedding, chunk_emb)
+                norm_q = np.linalg.norm(question_embedding)
+                norm_c = np.linalg.norm(chunk_emb)
+                similarity = dot_product / (norm_q * norm_c) if (norm_q * norm_c) > 0 else 0
+                similarities.append(similarity)
+            else:
+                similarities.append(0)
+        
+        # Get top 5 most relevant chunks
+        top_indices = np.argsort(similarities)[-5:][::-1]
+        top_chunks = [filing_chunks[i] for i in top_indices if similarities[i] > 0.3]  # Threshold: 0.3
+        
+        if not top_chunks:
+            return {
+                "answer": "No relevant information found in SEC 10-K filings for this question. "
+                         "The filings may not contain information related to your query.",
+                "status": "no_relevant_chunks"
+            }
+        
+        # Combine top chunks as context
+        context = "\n\n---\n\n".join([
+            f"[Source: {chunk['source']}]\n{chunk['text']}"
+            for chunk in top_chunks
+        ])
+        
+        # Synthesize answer using Gemini
+        if llm:
+            synthesis_prompt = f"""Based on the following context from SEC 10-K filings, answer the question comprehensively.
     
     Context from filings:
     {context}
@@ -211,19 +355,52 @@ def retrieve_from_documents(question: str) -> dict:
     Instructions:
     - Provide a detailed answer based on the context
     - If the context doesn't contain relevant information, say so
-    - Cite specific information from the filings when possible
+- Cite specific information from the filings when possible (mention the source file)
     - Focus on the financial and strategic aspects mentioned
+- Be concise but thorough
     
-    Answer:
-    """
+Answer:"""
     
-    response = llm.llm_client.completion(
+            try:
+                answer = llm.llm_client.completion(
         model=llm.model,
         messages=[{"role": "user", "content": synthesis_prompt}],
-        tools=[], # <-- ADD THIS LINE
-    ).choices[0].message.content
+                    tools=[],
+                ).choices[0].message.content.strip()
+                
+                return {
+                    "answer": answer,
+                    "status": "success",
+                    "sources": list(set(chunk['source'] for chunk in top_chunks)),
+                    "chunks_used": len(top_chunks)
+                }
+            except Exception as e:
+                logger.error(f"Error synthesizing answer with LLM: {e}")
+                # Fallback: return top chunk directly
+                return {
+                    "answer": f"Based on SEC filings ({top_chunks[0]['source']}):\n\n{top_chunks[0]['text'][:500]}...",
+                    "status": "partial",
+                    "sources": [top_chunks[0]['source']],
+                    "note": "LLM synthesis failed, showing raw chunk"
+                }
+        else:
+            # No LLM available, return top chunk
+            return {
+                "answer": f"Based on SEC filings ({top_chunks[0]['source']}):\n\n{top_chunks[0]['text']}",
+                "status": "success",
+                "sources": [top_chunks[0]['source']],
+                "note": "LLM not available, showing raw chunk"
+            }
     
-    return {"answer": response}
+    except Exception as e:
+        logger.error(f"Error in retrieve_from_documents: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return {
+            "answer": f"Error retrieving documents: {str(e)}. Please try querying company data instead.",
+            "status": "error",
+            "error": str(e)
+        }
 
 def _discover_trained_tickers() -> set:
     from pathlib import Path
@@ -437,16 +614,27 @@ document_rag_subagent = Agent(
     name="DocumentRAG_Agent",
     model=llm,
     tools=[retrieve_from_documents],
-    description="Use for qualitative questions about company strategy, management outlook, detailed business descriptions, or any information that requires reading through SEC 10-K filing text.",
+    description="Use for qualitative questions about company strategy, management outlook, detailed business descriptions, or any information that requires reading through SEC 10-K filing text. Uses GCP-based RAG with Vertex AI Embeddings and Gemini synthesis.",
     instruction="""
-    Your task is to use the `retrieve_from_documents` tool to find detailed, qualitative information from SEC filings including:
-    - Management's discussion and analysis
+    Your task is to use the `retrieve_from_documents` tool to find detailed, qualitative information from SEC 10-K filings stored in Google Cloud Storage.
+    
+    The tool performs semantic search using Vertex AI Embeddings and synthesizes answers using Gemini.
+    
+    Use this agent for:
+    - Management's discussion and analysis (MD&A)
     - Business strategy and outlook
     - Detailed risk descriptions
     - Product and service descriptions
     - Market analysis and competitive positioning
+    - Qualitative insights from SEC filings
     
-    Provide comprehensive answers based on the retrieved document chunks.
+    IMPORTANT:
+    - The tool automatically extracts ticker from question if not provided
+    - Documents are loaded from GCS in production or local files in development
+    - Answers are synthesized from the most relevant filing chunks
+    - If no filings are available, the tool will suggest using CompanyData_Agent instead
+    
+    Provide comprehensive answers based on the retrieved document chunks, citing source files when possible.
     """
 )
 
