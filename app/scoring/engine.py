@@ -54,10 +54,16 @@ class ScoreComputationError(Exception):
     """Raised when score computation fails for a ticker."""
 
 
-DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
-# Fix for Docker container deployment
-if not DATA_ROOT.exists():
-    DATA_ROOT = Path("/app/data")
+# Determine data root based on environment
+if os.getenv("K_SERVICE"):
+    # Production/Cloud Run: use /tmp/data (where GCS downloads to)
+    DATA_ROOT = Path("/tmp/data")
+else:
+    # Local development: use project data directory
+    DATA_ROOT = Path(__file__).resolve().parents[2] / "data"
+    # Fix for Docker container deployment
+    if not DATA_ROOT.exists():
+        DATA_ROOT = Path("/app/data")
 FINANCIALS_DIR = DATA_ROOT / "structured" / "financials"
 EARNINGS_DIR = DATA_ROOT / "structured" / "earnings"
 PRICES_DIR = DATA_ROOT / "structured" / "prices"

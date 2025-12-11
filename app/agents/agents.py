@@ -26,6 +26,7 @@ import json
 import requests
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 import yfinance as yf
 
 logger = logging.getLogger(__name__)
@@ -587,26 +588,94 @@ graph_qa_subagent = Agent(
     tools=[query_company_data],
     description=f"Use for questions about company financials, risks, scores, and investment analysis from JSON data. Works with tickers: {TICKER_LIST_STR}.",
     instruction=f"""
-    Your task is to use the `query_company_data` tool to answer questions about companies.
-    
+    Your task is to use the `query_company_data` tool to answer questions about companies and provide intelligent, actionable investment insights.
+
     CAPABILITIES:
     - Financial metrics and scores (use data_type='financials')
     - Investment risks and concerns (use data_type='risks')
-    - All scoring categories (use data_type='scores')  
+    - All scoring categories (use data_type='scores')
     - Buy/hold/sell recommendations (use data_type='recommendation')
     - Complete company analysis (use data_type='all')
-    
-    IMPORTANT:
+
+    CRITICAL - INVESTMENT RECOMMENDATION QUESTIONS:
+    When users ask "should I buy [TICKER]?" or similar investment questions, you MUST:
+    1. Call query_company_data(ticker="TICKER", data_type="all") to get complete analysis
+    2. Extract the recommendation object which contains: rating, action, timing, why_buy, strengths, weaknesses, risks
+    3. Format your response as follows:
+
+    **[Company Name] ([TICKER]) Investment Recommendation:**
+
+    **Action:** [recommendation.action - e.g., "Consider buying immediately"]
+    **Rating:** [recommendation.recommendation - e.g., "Strong Buy"] (Deep Alpha Score: [overall.score]/10)
+    **Timeframe:** [recommendation.timing - e.g., "Now - Strong fundamentals with reasonable valuation"]
+
+    **Analysis Based on Deep Alpha 7-Pillar Framework:**
+    • Business Model: [Interpret scores.business.score - Strong/Moderate/Weak] ([score]/10)
+    • Financial Health: [Interpret scores.financial.score] ([score]/10)
+    • Momentum: [Interpret scores.technical.score - Strong upward/Moderate/Weak downward] ([score]/10)
+    • Market Sentiment: [Interpret scores.sentiment.score] ([score]/10)
+    • Valuation: [Interpret scores.valuation.score] ([score]/10)
+    • Growth: [Interpret scores.growth.score] ([score]/10)
+    • Leadership: [Interpret scores.leadership.score] ([score]/10)
+
+    **Key Strengths:**
+    [List top 3 from recommendation.strengths]
+
+    **Key Risks:**
+    [List top 3 from recommendation.risks]
+
+    **Bottom Line:** [Synthesize the recommendation in 1-2 sentences explaining WHY this is the right action]
+
+    IMPORTANT FORMATTING RULES:
+    - Always provide CLEAR action (Buy/Hold/Sell) upfront
+    - Always include SPECIFIC timeframe
+    - Always explain reasoning based on Deep Alpha pillars
+    - Always include momentum analysis (technical score)
+    - Always list key risks
+    - Be concise but comprehensive - aim for 200-300 words total
+
+    TICKER SYMBOLS:
     - Always use exact ticker symbols: {TICKER_LIST_STR}
-    - For risk questions, use data_type='risks' to get comprehensive risk analysis
-    - For financial health questions, use data_type='financials'
-    - For investment decisions, use data_type='recommendation'
-    - Provide detailed, actionable insights based on the returned data
-    
-    EXAMPLES:
+
+    DATA TYPE MAPPING:
+    - "Should I buy/invest/hold/sell?" → data_type='all' (get complete analysis)
+    - "What are the risks?" → data_type='risks'
+    - "Financial health?" → data_type='financials'
+    - "Overall scores?" → data_type='scores'
+
+    EXAMPLES - INVESTMENT RECOMMENDATION QUESTIONS (use data_type='all'):
+    - "Should I buy TSLA?" → query_company_data(ticker="TSLA", data_type="all") + format recommendation
+    - "Is MU a good buy?" → query_company_data(ticker="MU", data_type="all") + format recommendation
+    - "Should I invest in NVDA now or wait?" → query_company_data(ticker="NVDA", data_type="all") + format recommendation
+    - "Is AMD worth buying at current prices?" → query_company_data(ticker="AMD", data_type="all") + format recommendation
+    - "What's your recommendation on AVGO?" → query_company_data(ticker="AVGO", data_type="all") + format recommendation
+    - "Should I hold or sell my INTC position?" → query_company_data(ticker="INTC", data_type="all") + format recommendation
+    - "Is it a good time to buy AAPL?" → query_company_data(ticker="AAPL", data_type="all") + format recommendation
+    - "Buy, hold, or sell MSFT?" → query_company_data(ticker="MSFT", data_type="all") + format recommendation
+    - "Is GOOGL undervalued right now?" → query_company_data(ticker="GOOGL", data_type="all") + format recommendation
+    - "Should I add more META to my portfolio?" → query_company_data(ticker="META", data_type="all") + format recommendation
+
+    EXAMPLES - RISK & CONCERN QUESTIONS (use data_type='risks'):
     - "What are the risks for AVGO?" → query_company_data(ticker="AVGO", data_type="risks")
+    - "What concerns should I have about MU?" → query_company_data(ticker="MU", data_type="risks")
+    - "What are the main risks of investing in NVDA?" → query_company_data(ticker="NVDA", data_type="risks")
+    - "Any red flags with TSLA?" → query_company_data(ticker="TSLA", data_type="risks")
+
+    EXAMPLES - FINANCIAL HEALTH QUESTIONS (use data_type='financials'):
     - "How is NVDA's financial health?" → query_company_data(ticker="NVDA", data_type="financials")
-    - "Should I buy TSLA?" → query_company_data(ticker="TSLA", data_type="recommendation")
+    - "Is AMD financially stable?" → query_company_data(ticker="AMD", data_type="financials")
+    - "Does INTC have a strong balance sheet?" → query_company_data(ticker="INTC", data_type="financials")
+    - "What's the financial condition of MU?" → query_company_data(ticker="MU", data_type="financials")
+
+    EXAMPLES - SCORING QUESTIONS (use data_type='scores'):
+    - "What's NVDA's Deep Alpha score?" → query_company_data(ticker="NVDA", data_type="scores")
+    - "How does AMD score across the 7 pillars?" → query_company_data(ticker="AMD", data_type="scores")
+    - "Show me all the scores for MU" → query_company_data(ticker="MU", data_type="scores")
+
+    EXAMPLES - GENERAL QUESTIONS (use data_type='all'):
+    - "Tell me about NVDA" → query_company_data(ticker="NVDA", data_type="all")
+    - "Give me a full analysis of AMD" → query_company_data(ticker="AMD", data_type="all")
+    - "What's the outlook for MU?" → query_company_data(ticker="MU", data_type="all")
     """
 )
 
@@ -1498,7 +1567,7 @@ def validate_data_exists(ticker: str, data_type: str) -> dict:
 
     try:
         if data_type == "financials":
-            file_path = os.path.join(FINANCIALS_DIR, f"{ticker}.json")
+            file_path = os.path.join(FINANCIALS_DIR, f"{ticker}_financials.json")
             if os.path.exists(file_path):
                 with open(file_path, 'r') as f:
                     data = json.load(f)
@@ -1723,7 +1792,7 @@ def validate_data_exists(ticker: str, data_type: str) -> dict:
         }
 
 
-def log_blocking_issue(agent_name: str, issue_description: str, ticker: str = None, attempted_action: str = None) -> dict:
+def log_blocking_issue(agent_name: str, issue_description: str, ticker: Optional[str] = None, attempted_action: Optional[str] = None) -> dict:
     """
     Logs when an agent is blocked and provides alternative approaches.
     Creates a persistent log of blocking issues for debugging and optimization.
@@ -1842,7 +1911,7 @@ def log_blocking_issue(agent_name: str, issue_description: str, ticker: str = No
     }
 
 
-def detect_fabricated_data(data: dict, data_type: str, ticker: str = None) -> dict:
+def detect_fabricated_data(data: dict, data_type: str, ticker: Optional[str] = None) -> dict:
     """
     Detects if data appears to be fabricated or made up rather than from actual sources.
     Checks for common patterns of fake data and placeholder values.
@@ -3543,10 +3612,12 @@ root_agent = Agent(
 
     DELEGATION GUIDELINES:
     - Use 'CompanyData_Agent' for:
+      * Investment recommendation questions (e.g., "Should I buy MU?", "Is NVDA a good buy?")
       * Specific financial numbers and scores
       * Company risks, concerns, and weaknesses
-      * Investment recommendations and analysis
+      * Deep Alpha 7-Pillar analysis and scoring
       * All structured company data from JSON files
+      * CRITICAL: For ANY "should I buy/sell/invest" question, delegate to CompanyData_Agent
 
     - Use 'DocumentRAG_Agent' for:
       * Qualitative analysis and detailed explanations
@@ -3641,6 +3712,14 @@ root_agent = Agent(
     4. AFTER receiving results: detect_fabricated_data() to verify legitimacy
     5. FINALLY: Delegate to AgentEvaluator for quality checks
     6. NEVER allow fake/assumed/placeholder data - if data doesn't exist, say so clearly
+
+    CRITICAL RULES FOR INVESTMENT RECOMMENDATIONS:
+    When user asks "Should I buy [TICKER]?" or similar investment questions:
+    1. First, validate data exists: validate_data_exists(ticker, "financials")
+    2. Delegate to CompanyData_Agent - it will intelligently format the response
+    3. CompanyData_Agent will provide: Clear action, timeframe, Deep Alpha pillar analysis, momentum, and risks
+    4. Simply return the CompanyData_Agent's response - it's already well-formatted
+    5. Do NOT add extra commentary or change the formatting - the agent is trained to format it correctly
 
     CRITICAL RULES (from CLAUDE.md):
     - NEVER make up data - if it doesn't exist, flag it clearly and suggest alternatives
