@@ -27,118 +27,291 @@
         </nav>
       </div>
       <p class="mt-4 text-sm text-slate-300 max-w-3xl">
-        DeepAlpha Copilot is designed for clarity, consistency, and disciplined reasoning—built as a multi-agent system that produces decision-ready equity research.
+        A visual overview of how DeepAlpha Copilot turns market signals into decision-ready research.
       </p>
     </header>
 
     <main class="mt-6 space-y-6">
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">System overview</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          DeepAlpha Copilot combines deterministic analytics (scoring + benchmarks) with an agent-based reasoning layer that routes each question to specialized tools.
-          The goal is to make outputs <strong>comparable across tickers</strong> while remaining <strong>adaptive to context</strong> and new information.
-        </p>
-        <div class="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
-          <pre class="text-xs text-slate-700 leading-relaxed"><code>Presentation layer (web UI, /chat)
-  ↓
-Intelligence layer (root agent + specialist sub-agents)
-  ↓
-Analytics layer (scoring engine + helpers)
-  ↓
-Data layer (structured + unstructured artifacts, runtime cache)</code></pre>
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">At a glance</h2>
+            <p class="mt-2 text-sm text-slate-600 max-w-3xl">
+              DeepAlpha Copilot combines <strong>deterministic analytics</strong> (scoring, benchmarks) with <strong>agent orchestration</strong> (tool routing + synthesis) to produce outputs that are both <strong>consistent</strong> and <strong>context-aware</strong>.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <a href="/about" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold px-4 py-2 rounded-lg transition border border-slate-200 text-sm">About</a>
+            <a href="/" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-4 py-2 rounded-lg transition text-sm">Try it</a>
+          </div>
+        </div>
+
+        <div class="mt-5 grid md:grid-cols-4 gap-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Outcome</div>
+            <div class="mt-2 font-semibold text-slate-900">Decision-ready summary</div>
+            <p class="mt-2 text-sm text-slate-600">Thesis, risks, and what to monitor next.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Method</div>
+            <div class="mt-2 font-semibold text-slate-900">Hybrid reasoning</div>
+            <p class="mt-2 text-sm text-slate-600">Scores + evidence + synthesis in one flow.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">System</div>
+            <div class="mt-2 font-semibold text-slate-900">Multi-agent orchestration</div>
+            <p class="mt-2 text-sm text-slate-600">A router delegates to specialist tools.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Design</div>
+            <div class="mt-2 font-semibold text-slate-900">Low-latency runtime</div>
+            <p class="mt-2 text-sm text-slate-600">Fast cache reads; durable cloud storage.</p>
+          </div>
         </div>
       </section>
 
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Agent architecture</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          At the core is a <strong>root orchestrator</strong> that interprets intent, delegates to specialist agents, and synthesizes one coherent answer.
-          Specialist agents expose tools for company scoring, news retrieval, sentiment, flow data, and document retrieval.
-        </p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Diagram 1 — From question to answer</h2>
+            <p class="mt-2 text-sm text-slate-600">One user question triggers multiple internal tool calls, then one synthesized response.</p>
+          </div>
+          <span class="text-xs text-slate-500">Non-technical friendly</span>
+        </div>
+
+        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+          <svg width="980" height="180" viewBox="0 0 980 180" role="img" aria-label="Flow diagram: user question to synthesized answer" class="block">
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#475569"></path>
+              </marker>
+            </defs>
+
+            <!-- Nodes -->
+            <rect x="20" y="50" width="150" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="95" y="85" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">User</text>
+            <text x="95" y="104" text-anchor="middle" fill="#475569" font-size="12">Question</text>
+
+            <rect x="210" y="50" width="190" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="305" y="85" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">Product API</text>
+            <text x="305" y="104" text-anchor="middle" fill="#475569" font-size="12">/chat + UI</text>
+
+            <rect x="440" y="38" width="210" height="94" rx="12" fill="#0f172a" stroke="#0f172a"></rect>
+            <text x="545" y="78" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Root orchestrator</text>
+            <text x="545" y="99" text-anchor="middle" fill="#cbd5e1" font-size="12">Routes → tools → synthesis</text>
+
+            <rect x="690" y="20" width="130" height="50" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="755" y="48" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="600">Scoring</text>
+
+            <rect x="690" y="80" width="130" height="50" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="755" y="108" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="600">News / Sentiment</text>
+
+            <rect x="840" y="50" width="120" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="900" y="85" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">Answer</text>
+            <text x="900" y="104" text-anchor="middle" fill="#475569" font-size="12">Thesis + risks</text>
+
+            <!-- Arrows -->
+            <line x1="170" y1="85" x2="210" y2="85" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow)"></line>
+            <line x1="400" y1="85" x2="440" y2="85" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow)"></line>
+            <line x1="650" y1="85" x2="690" y2="45" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow)"></line>
+            <line x1="650" y1="95" x2="690" y2="105" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow)"></line>
+            <line x1="820" y1="45" x2="840" y2="85" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow)"></line>
+          </svg>
+        </div>
+
         <div class="mt-4 grid md:grid-cols-3 gap-4">
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Root orchestrator</h3>
-            <p class="mt-2 text-sm text-slate-600">Understands intent, chooses tools, and produces a single integrated response.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Why agents?</h3>
+            <p class="mt-2 text-sm text-slate-600">They break complex requests into smaller tasks and pull evidence from the right tools.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Specialist agents</h3>
-            <p class="mt-2 text-sm text-slate-600">Each agent is narrowly scoped and calls one or more tools against known data sources.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Why tool-first?</h3>
+            <p class="mt-2 text-sm text-slate-600">Structured tool outputs keep conclusions grounded and comparable across tickers.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Tool-first design</h3>
-            <p class="mt-2 text-sm text-slate-600">Tools return structured outputs; the model synthesizes, prioritizes, and communicates tradeoffs.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">What you receive</h3>
+            <p class="mt-2 text-sm text-slate-600">A concise thesis, key risks, and the signals to monitor next.</p>
           </div>
         </div>
       </section>
 
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Reasoning model</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          DeepAlpha Copilot uses a hybrid approach:
-        </p>
-        <div class="mt-4 grid md:grid-cols-2 gap-4">
-          <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">1) Deterministic analytics</h3>
-            <p class="mt-2 text-sm text-slate-600">A standardized scoring framework produces stable factor scores and recommendation bands—ensuring comparability across companies.</p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Diagram 2 — Hybrid reasoning</h2>
+            <p class="mt-2 text-sm text-slate-600">Deterministic scoring ensures consistency; synthesis adds prioritization and narrative clarity.</p>
           </div>
-          <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">2) LLM synthesis</h3>
-            <p class="mt-2 text-sm text-slate-600">The model contextualizes results, resolves conflicts between signals, and explains what matters most for the thesis.</p>
-          </div>
+          <span class="text-xs text-slate-500">Mixed audience</span>
         </div>
-        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
-          <h3 class="font-semibold text-slate-900">Why this matters</h3>
-          <p class="mt-2 text-sm text-slate-600">The system stays grounded in structured outputs while still producing the kind of prioritization and narrative clarity analysts need to make decisions.</p>
-        </div>
-      </section>
 
-      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Deep Alpha Score</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          The Deep Alpha Score (0–10) evaluates companies across seven pillars—business quality, financial strength, sentiment, strategic positioning, leadership, earnings, and technicals.
-          Scores are mapped into a recommendation band and paired with a risk map and monitoring points.
-        </p>
+        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+          <svg width="980" height="220" viewBox="0 0 980 220" role="img" aria-label="Diagram: deterministic analytics plus evidence plus synthesis produces decision-ready outputs" class="block">
+            <defs>
+              <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#475569"></path>
+              </marker>
+            </defs>
+
+            <!-- Inputs -->
+            <rect x="30" y="30" width="250" height="60" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="155" y="58" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">Deterministic analytics</text>
+            <text x="155" y="77" text-anchor="middle" fill="#475569" font-size="12">Scores • benchmarks • heuristics</text>
+
+            <rect x="30" y="120" width="250" height="60" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="155" y="148" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">Evidence retrieval</text>
+            <text x="155" y="167" text-anchor="middle" fill="#475569" font-size="12">News • filings (RAG) • sentiment</text>
+
+            <!-- Synthesis -->
+            <rect x="350" y="70" width="280" height="90" rx="14" fill="#0f172a" stroke="#0f172a"></rect>
+            <text x="490" y="110" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Synthesis & prioritization</text>
+            <text x="490" y="132" text-anchor="middle" fill="#cbd5e1" font-size="12">What matters • what changed • tradeoffs</text>
+
+            <!-- Output -->
+            <rect x="700" y="55" width="250" height="120" rx="14" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="825" y="92" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="800">Decision-ready output</text>
+            <text x="825" y="116" text-anchor="middle" fill="#475569" font-size="12">Thesis + risks</text>
+            <text x="825" y="136" text-anchor="middle" fill="#475569" font-size="12">Recommendation band</text>
+            <text x="825" y="156" text-anchor="middle" fill="#475569" font-size="12">Monitoring plan</text>
+
+            <!-- Arrows -->
+            <line x1="280" y1="60" x2="350" y2="105" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow2)"></line>
+            <line x1="280" y1="150" x2="350" y2="125" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow2)"></line>
+            <line x1="630" y1="115" x2="700" y2="115" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow2)"></line>
+          </svg>
+        </div>
+
         <div class="mt-4 grid md:grid-cols-3 gap-4">
           <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Comparable</h3>
-            <p class="mt-2 text-sm text-slate-600">One framework across tickers for faster relative analysis.</p>
+            <h3 class="font-semibold text-slate-900">Consistency</h3>
+            <p class="mt-2 text-sm text-slate-600">The scoring framework keeps comparisons stable across tickers and time.</p>
           </div>
           <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Actionable</h3>
-            <p class="mt-2 text-sm text-slate-600">Outputs include thesis, risks, and what to watch next.</p>
+            <h3 class="font-semibold text-slate-900">Context</h3>
+            <p class="mt-2 text-sm text-slate-600">Evidence (news/filings) updates the narrative and highlights what changed.</p>
           </div>
           <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Evolvable</h3>
-            <p class="mt-2 text-sm text-slate-600">New tools and data sources can be added without changing the product surface.</p>
+            <h3 class="font-semibold text-slate-900">Clarity</h3>
+            <p class="mt-2 text-sm text-slate-600">Outputs are structured to support decisions, not just summarize data.</p>
           </div>
         </div>
       </section>
 
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Document intelligence (RAG)</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          For filing-based questions, the system performs semantic retrieval over document chunks and synthesizes answers grounded in the retrieved passages.
-          This helps users move from “searching” to “reasoning” while still keeping evidence reviewable.
-        </p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Diagram 3 — Agent team (simplified)</h2>
+            <p class="mt-2 text-sm text-slate-600">A single router coordinates specialist “workers” behind the scenes.</p>
+          </div>
+          <span class="text-xs text-slate-500">Technical friendly</span>
+        </div>
+
+        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+          <svg width="980" height="260" viewBox="0 0 980 260" role="img" aria-label="Diagram: root orchestrator and specialist agents" class="block">
+            <defs>
+              <marker id="arrow3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#475569"></path>
+              </marker>
+            </defs>
+
+            <!-- Root -->
+            <rect x="315" y="25" width="350" height="70" rx="14" fill="#0f172a" stroke="#0f172a"></rect>
+            <text x="490" y="60" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="800">Financial Root Agent</text>
+            <text x="490" y="82" text-anchor="middle" fill="#cbd5e1" font-size="12">Intent → routing → synthesis</text>
+
+            <!-- Specialists row -->
+            <rect x="70" y="145" width="160" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="150" y="175" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">Company Data</text>
+            <text x="150" y="196" text-anchor="middle" fill="#475569" font-size="11">scores • risks • rec</text>
+
+            <rect x="250" y="145" width="160" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="330" y="175" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">News</text>
+            <text x="330" y="196" text-anchor="middle" fill="#475569" font-size="11">headlines • impact</text>
+
+            <rect x="430" y="145" width="160" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="510" y="175" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">Document RAG</text>
+            <text x="510" y="196" text-anchor="middle" fill="#475569" font-size="11">filings • evidence</text>
+
+            <rect x="610" y="145" width="160" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="690" y="175" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">Sentiment</text>
+            <text x="690" y="196" text-anchor="middle" fill="#475569" font-size="11">social signals</text>
+
+            <rect x="790" y="145" width="160" height="70" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="870" y="175" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">Flows</text>
+            <text x="870" y="196" text-anchor="middle" fill="#475569" font-size="11">institutional context</text>
+
+            <!-- Arrows root to specialists -->
+            <line x1="490" y1="95" x2="150" y2="145" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow3)"></line>
+            <line x1="490" y1="95" x2="330" y2="145" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow3)"></line>
+            <line x1="490" y1="95" x2="510" y2="145" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow3)"></line>
+            <line x1="490" y1="95" x2="690" y2="145" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow3)"></line>
+            <line x1="490" y1="95" x2="870" y2="145" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow3)"></line>
+          </svg>
+        </div>
+
+        <details class="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+          <summary class="cursor-pointer font-semibold text-slate-900">Technical notes (optional)</summary>
+          <div class="mt-3 text-sm text-slate-600 space-y-2">
+            <p>DeepAlpha Copilot uses a hierarchical agent system: a root agent routes requests to specialized agents, then synthesizes a single response.</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li><strong>Tool-first design:</strong> tools return structured outputs; synthesis focuses on prioritization and explanation.</li>
+              <li><strong>Multi-tool queries:</strong> one user request can trigger multiple internal calls (scores + news + filings + sentiment).</li>
+              <li><strong>Graceful degradation:</strong> if a tool is unavailable, the system continues with available evidence and communicates limitations.</li>
+            </ul>
+          </div>
+        </details>
       </section>
 
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Production design</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          DeepAlpha Copilot is designed for low-latency responses by keeping real-time queries on a local cache, while using durable storage for persistence and analytics.
-        </p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Diagram 4 — Production design</h2>
+            <p class="mt-2 text-sm text-slate-600">Fast reads at runtime, durable storage behind the scenes.</p>
+          </div>
+          <span class="text-xs text-slate-500">Ops friendly</span>
+        </div>
+
+        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+          <svg width="980" height="220" viewBox="0 0 980 220" role="img" aria-label="Diagram: cloud storage to runtime cache to API, with warehouse for analytics" class="block">
+            <defs>
+              <marker id="arrow4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#475569"></path>
+              </marker>
+            </defs>
+
+            <rect x="40" y="70" width="220" height="80" rx="14" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="150" y="105" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">Cloud Storage</text>
+            <text x="150" y="127" text-anchor="middle" fill="#475569" font-size="12">durable artifacts</text>
+
+            <rect x="330" y="55" width="260" height="110" rx="14" fill="#0f172a" stroke="#0f172a"></rect>
+            <text x="460" y="95" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="800">Cloud Run service</text>
+            <text x="460" y="118" text-anchor="middle" fill="#cbd5e1" font-size="12">reads from local cache</text>
+            <text x="460" y="140" text-anchor="middle" fill="#cbd5e1" font-size="12">serves UI + /chat</text>
+
+            <rect x="660" y="70" width="260" height="80" rx="14" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="790" y="105" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">Runtime cache</text>
+            <text x="790" y="127" text-anchor="middle" fill="#475569" font-size="12">/tmp (low latency)</text>
+
+            <rect x="660" y="15" width="260" height="45" rx="12" fill="#ffffff" stroke="#cbd5e1"></rect>
+            <text x="790" y="42" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700">BigQuery (analytics)</text>
+
+            <line x1="260" y1="110" x2="330" y2="110" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow4)"></line>
+            <line x1="590" y1="110" x2="660" y2="110" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow4)"></line>
+            <line x1="590" y1="80" x2="660" y2="37" stroke="#475569" stroke-width="2.2" marker-end="url(#arrow4)"></line>
+          </svg>
+        </div>
+
         <div class="mt-4 grid md:grid-cols-3 gap-4">
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Cloud storage</h3>
-            <p class="mt-2 text-sm text-slate-600">Durable source of truth for production artifacts.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Fast user path</h3>
+            <p class="mt-2 text-sm text-slate-600">Real-time queries read from local cache for speed.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Local runtime cache</h3>
-            <p class="mt-2 text-sm text-slate-600">Fast reads for the scoring engine and agent tools.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Durable foundation</h3>
+            <p class="mt-2 text-sm text-slate-600">Cloud storage persists artifacts across restarts and deployments.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Warehouse (analytics)</h3>
-            <p class="mt-2 text-sm text-slate-600">Historical analysis and audits without slowing the user path.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Analytics layer</h3>
+            <p class="mt-2 text-sm text-slate-600">Warehouse supports reporting without slowing production reads.</p>
           </div>
         </div>
       </section>
