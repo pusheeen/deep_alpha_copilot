@@ -8,11 +8,18 @@ try:
     from google.adk.agents import Agent
     from google.adk.models.lite_llm import LiteLlm
     ADK_CORE_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     ADK_CORE_AVAILABLE = False
+    print(f"Warning: ADK import failed: {e}")
     # Mock classes to allow file to load
     class Agent:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            self.name = kwargs.get('name', 'MockAgent')
+            self.model = kwargs.get('model')
+            self.tools = kwargs.get('tools', [])
+            self.sub_agents = kwargs.get('sub_agents', [])
+            self.description = kwargs.get('description', '')
+            self.instruction = kwargs.get('instruction', '')
     class LiteLlm:
         def __init__(self, **kwargs): pass
 
