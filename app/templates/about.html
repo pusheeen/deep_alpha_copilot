@@ -25,74 +25,93 @@
           <a href="/team" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Team</a>
         </nav>
       </div>
-      <p class="mt-4 text-sm text-slate-300 max-w-3xl">
-        DeepAlpha Copilot is an AI financial analyst built to turn fragmented market information into a clear, decision-ready outlook.
-      </p>
+      <div class="mt-4 grid lg:grid-cols-3 gap-6 items-end">
+        <div class="lg:col-span-2">
+          <h2 class="text-2xl md:text-3xl font-semibold leading-tight">
+            Decision-ready equity research—without the clutter.
+          </h2>
+          <p class="mt-3 text-sm text-slate-300 max-w-3xl">
+            DeepAlpha Copilot turns scattered signals—fundamentals, news, filings, sentiment, and technicals—into a clear thesis, key risks, and what to monitor next.
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row lg:flex-col gap-2 lg:items-end">
+          <a href="/" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-3 rounded-lg transition">
+            Try it with a ticker
+          </a>
+          <a href="/research" class="inline-flex items-center justify-center bg-slate-800/60 hover:bg-slate-800 text-slate-100 font-semibold px-5 py-3 rounded-lg transition">
+            See how it works
+          </a>
+        </div>
+      </div>
     </header>
 
     <main class="mt-6 space-y-6">
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">What DeepAlpha Copilot does</h2>
-        <p class="mt-3 text-slate-700 leading-relaxed">
-          <strong>DeepAlpha Copilot translates fundamentals, financials, sentiment, leadership, events, and technical signals into a concise thesis</strong>—so investors can move from information gathering to decision-making faster.
-          It combines structured metrics (scores, benchmarks, valuation context) with unstructured evidence (news, filings, narrative shifts) and produces outputs that are easy to compare across tickers.
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1">
+            <h2 class="text-xl font-semibold text-slate-900">What it is</h2>
+            <p class="mt-2 text-sm text-slate-600">
+              An AI financial analyst designed for clarity and consistency.
+            </p>
+          </div>
+          <div class="lg:col-span-2 grid md:grid-cols-3 gap-4">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <h3 class="font-semibold text-slate-900">Unifies signals</h3>
+              <p class="mt-2 text-sm text-slate-600">Scores + evidence in one view, across tickers.</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <h3 class="font-semibold text-slate-900">Compresses work</h3>
+              <p class="mt-2 text-sm text-slate-600">From research sprawl to a thesis in minutes.</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <h3 class="font-semibold text-slate-900">Stays grounded</h3>
+              <p class="mt-2 text-sm text-slate-600">Tool-backed analysis with clear drivers and risks.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Built for decision-making</h2>
+        <p class="mt-2 text-sm text-slate-600 max-w-3xl">
+          DeepAlpha Copilot is optimized for one thing: helping you decide what matters, what’s noise, and what to watch next.
         </p>
-      </section>
-
-      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">The problems we solve</h2>
         <div class="mt-4 grid md:grid-cols-3 gap-4">
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Signal overload</h3>
-            <p class="mt-2 text-sm text-slate-600">Market information is scattered across sources and formats. We unify it into a single research view.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Output</div>
+            <div class="mt-2 font-semibold text-slate-900">Thesis + risk map</div>
+            <p class="mt-2 text-sm text-slate-600">A clear view of the upside case and the failure modes.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Slow synthesis</h3>
-            <p class="mt-2 text-sm text-slate-600">Building a coherent thesis takes time. We compress the workflow from hours to minutes.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Structure</div>
+            <div class="mt-2 font-semibold text-slate-900">Comparable scores</div>
+            <p class="mt-2 text-sm text-slate-600">Standardized pillars so you can compare across tickers.</p>
           </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <h3 class="font-semibold text-slate-900">Inconsistent reasoning</h3>
-            <p class="mt-2 text-sm text-slate-600">Point-in-time takes often lack a repeatable framework. We standardize analysis with explicit scoring and traceable tool calls.</p>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Speed</div>
+            <div class="mt-2 font-semibold text-slate-900">Minutes, not hours</div>
+            <p class="mt-2 text-sm text-slate-600">Get to a decision-ready summary quickly.</p>
           </div>
         </div>
       </section>
 
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">Who it’s for</h2>
-        <div class="mt-4 grid md:grid-cols-3 gap-4">
-          <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Active investors</h3>
-            <p class="mt-2 text-sm text-slate-600">Get a structured thesis, risk map, and monitoring plan—without starting from scratch.</p>
+        <div class="grid md:grid-cols-2 gap-6 items-start">
+          <div>
+            <h2 class="text-xl font-semibold text-slate-900">Who it’s for</h2>
+            <p class="mt-2 text-sm text-slate-600">
+              Built for investors and teams who value speed <em>and</em> disciplined reasoning.
+            </p>
           </div>
-          <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Analysts & research teams</h3>
-            <p class="mt-2 text-sm text-slate-600">Standardize coverage and iterate faster with comparable outputs across tickers.</p>
-          </div>
-          <div class="rounded-xl border border-slate-200 p-4">
-            <h3 class="font-semibold text-slate-900">Portfolio decision-makers</h3>
-            <p class="mt-2 text-sm text-slate-600">Pressure-test assumptions and track thesis drivers with clear, decision-ready summaries.</p>
-          </div>
-        </div>
-      </section>
-
-      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <h2 class="text-xl font-semibold text-slate-900">What you get</h2>
-        <div class="mt-4 grid md:grid-cols-2 gap-4">
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl p-5">
-            <h3 class="font-semibold">Deep Alpha Score (0–10)</h3>
-            <p class="mt-2 text-sm text-blue-100">A standardized, multi-factor score mapped into a clear recommendation band.</p>
-          </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-            <h3 class="font-semibold text-slate-900">Thesis + risk map</h3>
-            <p class="mt-2 text-sm text-slate-600">A crisp thesis, key risks, and the signals that would confirm—or break—the case.</p>
-          </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-            <h3 class="font-semibold text-slate-900">News & narrative interpreter</h3>
-            <p class="mt-2 text-sm text-slate-600">Recent developments summarized with materiality assessment and expected impact.</p>
-          </div>
-          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-            <h3 class="font-semibold text-slate-900">Compare mode</h3>
-            <p class="mt-2 text-sm text-slate-600">Side-by-side comparisons to quickly identify relative strength and positioning.</p>
+          <div class="grid gap-3">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <div class="font-semibold text-slate-900">Active investors</div>
+              <div class="mt-1 text-sm text-slate-600">A structured thesis you can act on.</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <div class="font-semibold text-slate-900">Analysts & research teams</div>
+              <div class="mt-1 text-sm text-slate-600">Standardized coverage across tickers.</div>
+            </div>
           </div>
         </div>
       </section>
@@ -100,8 +119,8 @@
       <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 class="text-xl font-semibold text-slate-900">Start with a ticker</h2>
-            <p class="mt-2 text-sm text-slate-600">Generate an analysis and ask follow-ups to refine your view.</p>
+            <h2 class="text-xl font-semibold text-slate-900">Start in one minute</h2>
+            <p class="mt-2 text-sm text-slate-600">Enter a ticker and get a decision-ready summary.</p>
           </div>
           <a href="/" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-5 py-3 rounded-lg transition">
             Open the product
