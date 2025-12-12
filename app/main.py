@@ -1597,6 +1597,24 @@ async def get_index(request: Request):
     )
 
 
+@app.get("/about", response_class=HTMLResponse)
+async def get_about(request: Request):
+    """Serves the marketing about page."""
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
+@app.get("/research", response_class=HTMLResponse)
+async def get_research(request: Request):
+    """Serves the research/architecture page."""
+    return templates.TemplateResponse("research.html", {"request": request})
+
+
+@app.get("/team", response_class=HTMLResponse)
+async def get_team(request: Request):
+    """Serves the team page."""
+    return templates.TemplateResponse("team.html", {"request": request})
+
+
 @app.get("/api/scores/{ticker}")
 async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] = None):
     """Return the latest computed scorecard for a company or fetch news snippets for a query."""

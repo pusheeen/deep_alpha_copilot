@@ -85,6 +85,20 @@
 
     <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
         <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
+            <!-- Top Navigation -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.3em] text-slate-400">DeepAlpha Copilot</p>
+                    </div>
+                </div>
+                <nav class="flex flex-wrap gap-2 text-sm">
+                    <a href="/" class="px-3 py-2 rounded-lg bg-cyan-500 text-slate-900 font-semibold">Product</a>
+                    <a href="/about" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">About</a>
+                    <a href="/research" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Research</a>
+                    <a href="/team" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Team</a>
+                </nav>
+            </div>
             <!-- Market Conditions Bar -->
             <div id="market-conditions" class="bg-slate-800/50 rounded-lg p-3 mb-4 flex flex-wrap items-center gap-4 text-xs">
                 <div class="flex items-center gap-2">
@@ -112,7 +126,7 @@
             
             <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">deepAlpha Copilot</p>
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">AI financial analyst</p>
                     <h1 class="text-3xl md:text-4xl font-semibold">Deep Alpha</h1>
                     <p class="mt-3 text-sm text-slate-300">
                         We translate fundamentals, financials, sentiment, leadership, events, and technical signals into a concise outlook so you can act with conviction.
@@ -136,6 +150,44 @@
                 </div>
             </div>
         </header>
+
+        <!-- Product Overview (Landing Content) -->
+        <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+            <div class="grid lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1">
+                    <h2 class="text-xl font-semibold text-slate-900">Decision-ready equity research—on demand.</h2>
+                    <p class="mt-3 text-sm text-slate-600 leading-relaxed">
+                        DeepAlpha Copilot turns fragmented market information into a clear outlook by combining structured fundamentals with narrative signals like news, filings, and sentiment.
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <a href="/research" class="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg transition">
+                            Read the research
+                        </a>
+                        <a href="/team" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold px-4 py-2 rounded-lg transition border border-slate-200">
+                            Meet the team
+                        </a>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 grid md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <h3 class="font-semibold text-slate-900">Standardized scoring</h3>
+                        <p class="mt-2 text-sm text-slate-600">Comparable factor scores and recommendation bands across tickers.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <h3 class="font-semibold text-slate-900">Thesis + risk map</h3>
+                        <p class="mt-2 text-sm text-slate-600">A crisp thesis, key risks, and what to monitor next.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <h3 class="font-semibold text-slate-900">News interpreter</h3>
+                        <p class="mt-2 text-sm text-slate-600">Recent events summarized with materiality and expected impact.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <h3 class="font-semibold text-slate-900">Agent-based reasoning</h3>
+                        <p class="mt-2 text-sm text-slate-600">Specialist tools + synthesis to answer complex questions in one flow.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Multi-Stock Comparison Section -->
         <section id="comparison-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hidden">
@@ -439,6 +491,18 @@
             </div>
                 </div>
     </div>
+
+    <footer class="max-w-6xl mx-auto px-4 pb-10">
+        <div class="mt-8 text-xs text-slate-500 flex flex-wrap gap-3 items-center justify-between">
+            <span>© DeepAlpha Copilot</span>
+            <div class="flex flex-wrap gap-3">
+                <a class="hover:text-slate-700" href="/about">About</a>
+                <a class="hover:text-slate-700" href="/research">Research</a>
+                <a class="hover:text-slate-700" href="/team">Team</a>
+            </div>
+            <span><strong>Disclaimer:</strong> Informational analysis only — not investment advice.</span>
+        </div>
+    </footer>
 
     <script>
         // Helper function to escape HTML for safe rendering

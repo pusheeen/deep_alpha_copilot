@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research • DeepAlpha Copilot</title>
+  <meta name="description" content="DeepAlpha Copilot research: agent architecture, reasoning model, and production design for decision-ready equity research." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-900">
+  <div class="max-w-6xl mx-auto py-6 px-4">
+    <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-slate-400">DeepAlpha Copilot</p>
+          <h1 class="text-2xl md:text-3xl font-semibold mt-2">Research</h1>
+        </div>
+        <nav class="flex flex-wrap gap-2 text-sm">
+          <a href="/" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Product</a>
+          <a href="/about" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">About</a>
+          <a href="/research" class="px-3 py-2 rounded-lg bg-cyan-500 text-slate-900 font-semibold">Research</a>
+          <a href="/team" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Team</a>
+        </nav>
+      </div>
+      <p class="mt-4 text-sm text-slate-300 max-w-3xl">
+        DeepAlpha Copilot is designed for clarity, consistency, and disciplined reasoning—built as a multi-agent system that produces decision-ready equity research.
+      </p>
+    </header>
+
+    <main class="mt-6 space-y-6">
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">System overview</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          DeepAlpha Copilot combines deterministic analytics (scoring + benchmarks) with an agent-based reasoning layer that routes each question to specialized tools.
+          The goal is to make outputs <strong>comparable across tickers</strong> while remaining <strong>adaptive to context</strong> and new information.
+        </p>
+        <div class="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+          <pre class="text-xs text-slate-700 leading-relaxed"><code>Presentation layer (web UI, /chat)
+  ↓
+Intelligence layer (root agent + specialist sub-agents)
+  ↓
+Analytics layer (scoring engine + helpers)
+  ↓
+Data layer (structured + unstructured artifacts, runtime cache)</code></pre>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Agent architecture</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          At the core is a <strong>root orchestrator</strong> that interprets intent, delegates to specialist agents, and synthesizes one coherent answer.
+          Specialist agents expose tools for company scoring, news retrieval, sentiment, flow data, and document retrieval.
+        </p>
+        <div class="mt-4 grid md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Root orchestrator</h3>
+            <p class="mt-2 text-sm text-slate-600">Understands intent, chooses tools, and produces a single integrated response.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Specialist agents</h3>
+            <p class="mt-2 text-sm text-slate-600">Each agent is narrowly scoped and calls one or more tools against known data sources.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Tool-first design</h3>
+            <p class="mt-2 text-sm text-slate-600">Tools return structured outputs; the model synthesizes, prioritizes, and communicates tradeoffs.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Reasoning model</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          DeepAlpha Copilot uses a hybrid approach:
+        </p>
+        <div class="mt-4 grid md:grid-cols-2 gap-4">
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">1) Deterministic analytics</h3>
+            <p class="mt-2 text-sm text-slate-600">A standardized scoring framework produces stable factor scores and recommendation bands—ensuring comparability across companies.</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">2) LLM synthesis</h3>
+            <p class="mt-2 text-sm text-slate-600">The model contextualizes results, resolves conflicts between signals, and explains what matters most for the thesis.</p>
+          </div>
+        </div>
+        <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <h3 class="font-semibold text-slate-900">Why this matters</h3>
+          <p class="mt-2 text-sm text-slate-600">The system stays grounded in structured outputs while still producing the kind of prioritization and narrative clarity analysts need to make decisions.</p>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Deep Alpha Score</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          The Deep Alpha Score (0–10) evaluates companies across seven pillars—business quality, financial strength, sentiment, strategic positioning, leadership, earnings, and technicals.
+          Scores are mapped into a recommendation band and paired with a risk map and monitoring points.
+        </p>
+        <div class="mt-4 grid md:grid-cols-3 gap-4">
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Comparable</h3>
+            <p class="mt-2 text-sm text-slate-600">One framework across tickers for faster relative analysis.</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Actionable</h3>
+            <p class="mt-2 text-sm text-slate-600">Outputs include thesis, risks, and what to watch next.</p>
+          </div>
+          <div class="rounded-xl border border-slate-200 p-4">
+            <h3 class="font-semibold text-slate-900">Evolvable</h3>
+            <p class="mt-2 text-sm text-slate-600">New tools and data sources can be added without changing the product surface.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Document intelligence (RAG)</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          For filing-based questions, the system performs semantic retrieval over document chunks and synthesizes answers grounded in the retrieved passages.
+          This helps users move from “searching” to “reasoning” while still keeping evidence reviewable.
+        </p>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <h2 class="text-xl font-semibold text-slate-900">Production design</h2>
+        <p class="mt-3 text-slate-700 leading-relaxed">
+          DeepAlpha Copilot is designed for low-latency responses by keeping real-time queries on a local cache, while using durable storage for persistence and analytics.
+        </p>
+        <div class="mt-4 grid md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Cloud storage</h3>
+            <p class="mt-2 text-sm text-slate-600">Durable source of truth for production artifacts.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Local runtime cache</h3>
+            <p class="mt-2 text-sm text-slate-600">Fast reads for the scoring engine and agent tools.</p>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+            <h3 class="font-semibold text-slate-900">Warehouse (analytics)</h3>
+            <p class="mt-2 text-sm text-slate-600">Historical analysis and audits without slowing the user path.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="text-xs text-slate-500 px-1">
+        <p><strong>Disclaimer:</strong> DeepAlpha Copilot provides informational analysis and does not constitute investment advice.</p>
+      </section>
+    </main>
+
+    <footer class="mt-10 text-xs text-slate-500">
+      <div class="flex flex-wrap gap-3 items-center justify-between">
+        <span>© DeepAlpha Copilot</span>
+        <div class="flex gap-3">
+          <a class="hover:text-slate-700" href="/about">About</a>
+          <a class="hover:text-slate-700" href="/research">Research</a>
+          <a class="hover:text-slate-700" href="/team">Team</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
