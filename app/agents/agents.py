@@ -6,7 +6,7 @@ for graph querying, document retrieval, and stock price predictions.
 """
 try:
     from google.adk.agents import Agent
-    from google.adk.models.lite_llm import LiteLlm
+    from google.adk.models import Gemini
     ADK_CORE_AVAILABLE = True
 except ImportError as e:
     ADK_CORE_AVAILABLE = False
@@ -20,7 +20,7 @@ except ImportError as e:
             self.sub_agents = kwargs.get('sub_agents', [])
             self.description = kwargs.get('description', '')
             self.instruction = kwargs.get('instruction', '')
-    class LiteLlm:
+    class Gemini:
         def __init__(self, **kwargs): pass
 
 # from ..neo4j_for_adk import graphdb  # Disabled - using JSON files instead
@@ -47,8 +47,9 @@ except ImportError:
 # --- Setup ---
 if ADK_CORE_AVAILABLE:
     try:
-        llm = LiteLlm(model="gemini-2.5-pro")
-    except Exception:
+        llm = Gemini(model_name="gemini-2.0-flash-exp")
+    except Exception as e:
+        print(f"Warning: Failed to initialize Gemini model: {e}")
         llm = None
 else:
     llm = None
