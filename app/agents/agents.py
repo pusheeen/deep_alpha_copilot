@@ -6,12 +6,9 @@ for graph querying, document retrieval, and stock price predictions.
 """
 try:
     from google.adk.agents import Agent
-    from google.adk.models import Gemini
-    import vertexai
     ADK_CORE_AVAILABLE = True
 except ImportError as e:
     ADK_CORE_AVAILABLE = False
-    vertexai = None  # type: ignore
     print(f"Warning: ADK import failed: {e}")
     # Mock classes to allow file to load
     class Agent:
@@ -22,8 +19,14 @@ except ImportError as e:
             self.sub_agents = kwargs.get('sub_agents', [])
             self.description = kwargs.get('description', '')
             self.instruction = kwargs.get('instruction', '')
-    class Gemini:
-        def __init__(self, **kwargs): pass
+
+# Import google.generativeai for direct LLM access
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
+    genai = None  # type: ignore
 
 # from ..neo4j_for_adk import graphdb  # Disabled - using JSON files instead
 from app.models.predict import predict_next_day_price
@@ -46,21 +49,25 @@ except ImportError:
     build = None  # type: ignore[assignment]
     HttpError = Exception  # type: ignore[assignment]
 
-# --- Setup ---
-if ADK_CORE_AVAILABLE:
+# --- Setup LLM ---
+if ADK_CORE_AVAILABLE and GENAI_AVAILABLE:
     try:
-        # Use Google AI API with API key
+        # Use google.generativeai directly (bypasses ADK Gemini issues)
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
-            llm = Gemini(model="models/gemini-1.5-flash-latest", api_key=api_key)
-            print(f"✅ Gemini model initialized with API key (models/gemini-1.5-flash-latest)")
+            genai.configure(api_key=api_key)
+            llm = genai.GenerativeModel('gemini-1.5-flash')
+            print(f"✅ Gemini model initialized with google.generativeai (gemini-1.5-flash)")
         else:
             print("Warning: GEMINI_API_KEY not set")
             llm = None
     except Exception as e:
         print(f"Warning: Failed to initialize Gemini model: {e}")
+        import traceback
+        traceback.print_exc()
         llm = None
 else:
+    print(f"ADK_CORE_AVAILABLE: {ADK_CORE_AVAILABLE}, GENAI_AVAILABLE: {GENAI_AVAILABLE}")
     llm = None
 
 embeddings = VertexAIEmbeddings(model_name="text-embedding-005")
