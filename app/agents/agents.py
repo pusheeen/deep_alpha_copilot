@@ -590,7 +590,9 @@ def fetch_intraday_price_and_events(ticker: str, max_events: int = 5) -> dict:
     }
 
 # --- Sub-Agent Definitions ---
-graph_qa_subagent = Agent(
+# Skip agent creation if llm is None (agents disabled)
+if llm and ADK_CORE_AVAILABLE:
+    graph_qa_subagent = Agent(
     name="CompanyData_Agent",
     model=llm,
     tools=[query_company_data],
@@ -3746,3 +3748,21 @@ root_agent = Agent(
     - If uncertain about which agent to use, explain your reasoning
     """
 )
+else:
+    # Agents disabled - set dummy values
+    graph_qa_subagent = None
+    document_rag_subagent = None
+    news_search_subagent = None
+    sector_news_subagent = None
+    market_data_subagent = None
+    prediction_subagent = None
+    reddit_sentiment_subagent = None
+    ceo_lookup_subagent = None
+    market_indices_subagent = None
+    twitter_subagent = None
+    sector_metrics_subagent = None
+    token_usage_subagent = None
+    flow_data_subagent = None
+    agent_evaluator_subagent = None
+    root_agent = None
+    print("ℹ️ All ADK agents disabled (llm=None). Using direct Gemini chatbot instead.")
