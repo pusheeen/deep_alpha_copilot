@@ -50,25 +50,9 @@ except ImportError:
     HttpError = Exception  # type: ignore[assignment]
 
 # --- Setup LLM ---
-if ADK_CORE_AVAILABLE and GENAI_AVAILABLE:
-    try:
-        # Use google.generativeai directly (bypasses ADK Gemini issues)
-        api_key = os.getenv("GEMINI_API_KEY")
-        if api_key:
-            genai.configure(api_key=api_key)
-            llm = genai.GenerativeModel('gemini-1.5-flash')
-            print(f"✅ Gemini model initialized with google.generativeai (gemini-1.5-flash)")
-        else:
-            print("Warning: GEMINI_API_KEY not set")
-            llm = None
-    except Exception as e:
-        print(f"Warning: Failed to initialize Gemini model: {e}")
-        import traceback
-        traceback.print_exc()
-        llm = None
-else:
-    print(f"ADK_CORE_AVAILABLE: {ADK_CORE_AVAILABLE}, GENAI_AVAILABLE: {GENAI_AVAILABLE}")
-    llm = None
+# ADK agents disabled - using direct Gemini integration in main.py instead
+llm = None  # Prevents ADK agent initialization errors
+print("ℹ️ ADK agents disabled. Using direct Gemini chatbot in main.py")
 
 embeddings = VertexAIEmbeddings(model_name="text-embedding-005")
 

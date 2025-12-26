@@ -2237,11 +2237,125 @@ async def compare_stocks(request: ComparisonRequest):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+
+async def _handle_intelligent_chat(question: str, include_reasoning: bool = False) -> dict:
+    """
+    Intelligent chatbot using google.generativeai directly.
+    Uses Gemini to understand intent, route to tools, and format responses.
+    """
+    try:
+        import google.generativeai as genai
+
+        # Configure Gemini
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            # Fall back to simple handler if no API key
+            return await _handle_chat_fallback(question, include_reasoning)
+
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+
+        # Step 1: Use Gemini to understand the question and extract intent + ticker
+        analysis_prompt = f"""Analyze this stock market question and extract key information:
+
+Question: "{question}"
+
+Provide a JSON response with:
+{{
+    "intent": "investment_recommendation" | "momentum" | "sentiment" | "news" | "financials" | "general",
+    "ticker": "STOCK_SYMBOL or null",
+    "data_needed": ["company_data", "news", "reddit", "twitter"] (what data sources are needed)
+}}
+
+Only extract ticker symbols that are clearly mentioned (2-5 uppercase letters).
+"""
+
+        response = model.generate_content(analysis_prompt)
+        analysis_text = response.text.strip()
+
+        # Extract JSON from response (handle markdown code blocks)
+        if "```json" in analysis_text:
+            analysis_text = analysis_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in analysis_text:
+            analysis_text = analysis_text.split("```")[1].split("```")[0].strip()
+
+        import json
+        analysis = json.loads(analysis_text)
+
+        ticker = analysis.get("ticker")
+        intent = analysis.get("intent", "general")
+
+        # Validate ticker is supported
+        if ticker:
+            supported_tickers = load_supported_tickers()
+            if ticker not in supported_tickers:
+                ticker = None
+
+        # Step 2: Get data based on intent
+        tool_data = {}
+
+        if ticker:
+            # Get company data for most queries
+            if intent in ["investment_recommendation", "financials", "general"]:
+                from app.agents.agents import query_company_data
+                tool_data["company_data"] = query_company_data(ticker, "all")
+
+            # Get momentum data
+            if intent == "momentum":
+                tool_data["momentum"] = compute_company_scores(ticker)
+
+            # Get news
+            if intent == "news" or "news" in analysis.get("data_needed", []):
+                try:
+                    from app.agents.agents import search_latest_news
+                    tool_data["news"] = search_latest_news(ticker)
+                except:
+                    pass
+
+            # Get sentiment
+            if intent == "sentiment" or "reddit" in analysis.get("data_needed", []):
+                try:
+                    from app.agents.agents import query_reddit_sentiment
+                    tool_data["reddit"] = query_reddit_sentiment(ticker, limit=10)
+                except:
+                    pass
+
+        # Step 3: Use Gemini to format a natural response
+        if not tool_data:
+            return await _handle_chat_fallback(question, include_reasoning)
+
+        format_prompt = f"""You are a financial analyst assistant. Based on the user's question and the data provided, give a helpful, natural answer.
+
+User Question: "{question}"
+
+Data Available:
+{json.dumps(tool_data, indent=2, default=str)[:3000]}
+
+Provide a clear, concise answer focusing on what the user asked. If they asked for investment recommendations, provide a structured recommendation with rating, action, reasoning, and risks. Keep the response under 300 words."""
+
+        final_response = model.generate_content(format_prompt)
+        answer = final_response.text.strip()
+
+        return {
+            'answer': answer,
+            'status': 'success',
+            'intent': intent if include_reasoning else None,
+            'ticker': ticker if include_reasoning else None
+        }
+
+    except Exception as e:
+        logger.error(f"Intelligent chat failed: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        # Fall back to simple handler
+        return await _handle_chat_fallback(question, include_reasoning)
+
+
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
     """
-    Receives a question, processes it through the ADK agent, and returns the response.
-    Falls back to direct tool calls if ADK is not available.
+    Intelligent chatbot powered by Gemini.
+    Uses google.generativeai to understand questions and route to appropriate tools.
     """
     # Basic validation
     if not request.question or len(request.question.strip()) < 5:
@@ -2250,56 +2364,15 @@ async def chat(request: QueryRequest, http_request: Request):
             'status': 'validation_error'
         }
 
-    # Access the agent_caller initialized at startup
-    agent_caller = http_request.app.state.agent_caller
-
-    if agent_caller:
-        # Use ADK agent if available
-        try:
-            response = await agent_caller.call(
-                user_message=request.question,
-                include_reasoning=request.include_reasoning
-            )
-            
-            # Check if response is generic/unhelpful - if so, use fallback
-            answer = response.get("answer", "")
-            question_lower = request.question.lower()
-            
-            # Generic response patterns that indicate the agent didn't properly route
-            generic_patterns = [
-                "I can help answer questions about stocks",
-                "Please include a ticker symbol",
-                "I can help with questions about",
-                "Try asking about"
-            ]
-            
-            # If it's a sentiment query and response is generic, use fallback
-            is_sentiment_query = any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception'])
-            is_generic = any(pattern.lower() in answer.lower() for pattern in generic_patterns)
-            
-            # Also check if answer doesn't mention expected data sources for sentiment queries
-            if is_sentiment_query:
-                has_reddit_mention = any(word in answer.lower() for word in ["reddit", "r/wallstreetbets", "r/stocks", "subreddit"])
-                has_twitter_mention = any(word in answer.lower() for word in ["twitter", "x.com", "tweet", "social media"])
-                
-                # If sentiment query but no Reddit/Twitter mentions and answer is generic, use fallback
-                if (is_generic or (not has_reddit_mention and not has_twitter_mention)) and len(answer) < 100:
-                    logger.info(f"ADK agent returned generic response for sentiment query, using fallback handler")
-                    return await _handle_chat_fallback(request.question, request.include_reasoning)
-            
-            return response
-        except Exception as e:
-            logger.warning(f"ADK agent call failed: {e}, falling back to direct tools")
-    
-    # Fallback: Use direct tool calls without ADK
+    # Use intelligent Gemini-powered chatbot
     try:
-        return await _handle_chat_fallback(request.question, request.include_reasoning)
+        return await _handle_intelligent_chat(request.question, request.include_reasoning)
     except Exception as e:
-        logger.error(f"Fallback chat handler failed: {e}")
+        logger.error(f"Intelligent chat failed: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return {
-            'answer': f"I encountered an error processing your question. Please try rephrasing it or ask about a specific ticker (e.g., 'What is the sentiment of MU?' or 'Does NVDA have good momentum?').",
+            'answer': f"I encountered an error processing your question. Please try rephrasing it or ask about a specific ticker (e.g., 'Should I buy MU?' or 'What is NVDA's momentum?').",
             'status': 'error',
             'error': str(e)
         }
