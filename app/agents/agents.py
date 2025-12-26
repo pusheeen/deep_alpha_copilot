@@ -47,7 +47,13 @@ except ImportError:
 # --- Setup ---
 if ADK_CORE_AVAILABLE:
     try:
-        llm = Gemini(model_name="gemini-2.0-flash-exp")
+        # Use Vertex AI for Gemini in Cloud Run
+        llm = Gemini(
+            model_name="gemini-2.0-flash-exp",
+            vertexai=True,
+            project=os.getenv("GCP_PROJECT_ID", "synthetic-time-469701-t7"),
+            location="us-central1"
+        )
     except Exception as e:
         print(f"Warning: Failed to initialize Gemini model: {e}")
         llm = None
