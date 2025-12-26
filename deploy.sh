@@ -110,9 +110,10 @@ echo
 
 # Test the deployment
 echo "Testing deployment..."
-curl -s $SERVICE_URL/ | python3 -m json.tool
+curl -fsS "$SERVICE_URL/" >/dev/null
+echo -e "${GREEN}✓ Homepage reachable${NC}"
 
-echo -e "${GREEN}✓ Health check passed${NC}"
+echo -e "${GREEN}✓ Basic check passed${NC}"
 echo
 
 # Setup Cloud Scheduler (optional)
