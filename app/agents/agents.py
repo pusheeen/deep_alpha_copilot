@@ -52,8 +52,8 @@ if ADK_CORE_AVAILABLE:
         # Use Google AI API with API key
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
-            llm = Gemini(model="gemini-1.5-flash", api_key=api_key)
-            print(f"✅ Gemini model initialized with API key (gemini-1.5-flash)")
+            llm = Gemini(model="models/gemini-1.5-flash-latest", api_key=api_key)
+            print(f"✅ Gemini model initialized with API key (models/gemini-1.5-flash-latest)")
         else:
             print("Warning: GEMINI_API_KEY not set")
             llm = None
