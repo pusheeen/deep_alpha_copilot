@@ -47,16 +47,16 @@ except ImportError:
     HttpError = Exception  # type: ignore[assignment]
 
 # --- Setup ---
-if ADK_CORE_AVAILABLE and vertexai:
+if ADK_CORE_AVAILABLE:
     try:
-        # Initialize Vertex AI
-        vertexai.init(
-            project=os.getenv("GCP_PROJECT_ID", "synthetic-time-469701-t7"),
-            location="us-central1"
-        )
-        # Create Gemini model
-        llm = Gemini(model="gemini-2.0-flash-exp")
-        print(f"✅ Gemini model initialized with Vertex AI")
+        # Use Google AI API with API key
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key:
+            llm = Gemini(model="gemini-2.0-flash-exp", api_key=api_key)
+            print(f"✅ Gemini model initialized with API key")
+        else:
+            print("Warning: GEMINI_API_KEY not set")
+            llm = None
     except Exception as e:
         print(f"Warning: Failed to initialize Gemini model: {e}")
         llm = None
