@@ -7,9 +7,11 @@ for graph querying, document retrieval, and stock price predictions.
 try:
     from google.adk.agents import Agent
     from google.adk.models import Gemini
+    import vertexai
     ADK_CORE_AVAILABLE = True
 except ImportError as e:
     ADK_CORE_AVAILABLE = False
+    vertexai = None  # type: ignore
     print(f"Warning: ADK import failed: {e}")
     # Mock classes to allow file to load
     class Agent:
@@ -45,15 +47,16 @@ except ImportError:
     HttpError = Exception  # type: ignore[assignment]
 
 # --- Setup ---
-if ADK_CORE_AVAILABLE:
+if ADK_CORE_AVAILABLE and vertexai:
     try:
-        # Use Vertex AI for Gemini in Cloud Run
-        llm = Gemini(
-            model_name="gemini-2.0-flash-exp",
-            vertexai=True,
+        # Initialize Vertex AI
+        vertexai.init(
             project=os.getenv("GCP_PROJECT_ID", "synthetic-time-469701-t7"),
             location="us-central1"
         )
+        # Create Gemini model
+        llm = Gemini(model="gemini-2.0-flash-exp")
+        print(f"✅ Gemini model initialized with Vertex AI")
     except Exception as e:
         print(f"Warning: Failed to initialize Gemini model: {e}")
         llm = None
