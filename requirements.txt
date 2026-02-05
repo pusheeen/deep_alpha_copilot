@@ -9,6 +9,7 @@ google-cloud-bigquery
 google-cloud-secret-manager
 google-api-python-client
 google-generativeai
+openai
 youtube-transcript-api
 markdown
 scipy

@@ -2238,6 +2238,225 @@ async def compare_stocks(request: ComparisonRequest):
         return {"status": "error", "message": str(e)}
 
 
+async def _extract_ticker_and_intent_with_openai(question: str) -> tuple[str | None, str]:
+    """
+    Fallback to OpenAI API when Gemini quota is exceeded.
+    Returns (ticker, intent) tuple.
+    """
+    try:
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            logger.debug("No OPENAI_API_KEY found for fallback")
+            return None, "general"
+        
+        import openai
+        client = openai.OpenAI(api_key=api_key)
+        
+        extraction_prompt = f"""Extract ticker and intent from this question. Return ONLY JSON:
+
+Question: "{question}"
+
+JSON format:
+{{
+    "ticker": "NVDA" or null,
+    "intent": "momentum" | "sentiment" | "news" | "financials" | "investment_recommendation" | "general"
+}}
+
+Only extract actual stock tickers (2-5 uppercase letters). Return null if none found."""
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: client.chat.completions.create(
+                model="gpt-4o-mini",  # Using mini for cost efficiency
+                messages=[{"role": "user", "content": extraction_prompt}],
+                temperature=0.3,
+                max_tokens=200
+            )
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        
+        # Extract JSON
+        if "```json" in response_text:
+            response_text = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            response_text = response_text.split("```")[1].split("```")[0].strip()
+        
+        import json
+        analysis = json.loads(response_text)
+        ticker = analysis.get("ticker")
+        intent = analysis.get("intent", "general")
+        
+    except ImportError:
+        logger.error("openai module not installed. Install with: pip install openai")
+        return None, "general"
+    except Exception as e:
+        logger.error(f"OpenAI fallback extraction failed: {e}")
+        return None, "general"
+
+    # Validate ticker is supported; if not, return an unsupported marker
+    if ticker:
+        supported_tickers = load_supported_tickers()
+        if ticker not in supported_tickers:
+            return f"UNSUPPORTED:{ticker}", intent
+        
+        logger.info(f"OpenAI fallback extracted ticker: {ticker}, intent: {intent}")
+        return ticker, intent
+
+
+async def _extract_ticker_and_intent_with_gemini(question: str, model_name: str) -> tuple[str | None, str]:
+    """
+    Helper function to extract ticker and intent using a specific Gemini model.
+    Returns (ticker, intent) tuple.
+    """
+    ticker = None
+    intent = "general"
+    
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None, "general"
+    
+    import google.generativeai as genai
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name)
+    
+    extraction_prompt = f"""Extract ticker and intent from this question. Return ONLY JSON:
+
+Question: "{question}"
+
+JSON format:
+{{
+    "ticker": "NVDA" or null,
+    "intent": "momentum" | "sentiment" | "news" | "financials" | "investment_recommendation" | "general"
+}}
+
+Only extract actual stock tickers (2-5 uppercase letters). Return null if none found."""
+    
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(None, model.generate_content, extraction_prompt)
+    response_text = response.text.strip()
+    
+    # Extract JSON
+    if "```json" in response_text:
+        response_text = response_text.split("```json")[1].split("```")[0].strip()
+    elif "```" in response_text:
+        response_text = response_text.split("```")[1].split("```")[0].strip()
+    
+    import json
+    analysis = json.loads(response_text)
+    ticker = analysis.get("ticker")
+    intent = analysis.get("intent", "general")
+    
+    # Validate ticker is supported; if not, return an unsupported marker
+    if ticker:
+        supported_tickers = load_supported_tickers()
+        if ticker not in supported_tickers:
+            return f"UNSUPPORTED:{ticker}", intent
+    
+    return ticker, intent
+
+
+async def _extract_ticker_and_intent_with_llm(question: str) -> tuple[str | None, str]:
+    """
+    Shared function to extract ticker and intent using Gemini LLM.
+    Uses tiered fallback: gemini-2.0-flash -> gemini-1.5-flash -> OpenAI
+    Returns (ticker, intent) tuple.
+    This avoids duplicate LLM calls when intelligent chat falls back to fallback handler.
+    """
+    # Tier 1: Try gemini-2.0-flash (primary model)
+    try:
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            logger.debug("No GEMINI_API_KEY found, trying OpenAI fallback")
+            return await _extract_ticker_and_intent_with_openai(question)
+        
+        import google.generativeai as genai
+        result = await _extract_ticker_and_intent_with_gemini(question, 'gemini-2.0-flash')
+        if result[0] is not None:  # Successfully extracted ticker
+            return result
+        
+    except ImportError:
+        logger.error("google.generativeai module not installed. Install with: pip install google-generativeai")
+        return await _extract_ticker_and_intent_with_openai(question)
+    except Exception as e:
+        # Check if it's a quota/rate limit error
+        error_str = str(e)
+        is_quota_error = "429" in error_str or "quota" in error_str.lower() or "rate limit" in error_str.lower()
+        
+        if is_quota_error:
+            logger.warning(f"Gemini 2.0-flash quota exceeded, trying gemini-1.5-flash (lower tier): {e}")
+            # Tier 2: Try gemini-1.5-flash (lower tier, potentially higher quota)
+            try:
+                result = await _extract_ticker_and_intent_with_gemini(question, 'gemini-1.5-flash')
+                if result[0] is not None:  # Successfully extracted ticker
+                    logger.info("Successfully used gemini-1.5-flash fallback")
+                    return result
+            except Exception as e2:
+                error_str2 = str(e2)
+                is_quota_error2 = "429" in error_str2 or "quota" in error_str2.lower() or "rate limit" in error_str2.lower()
+                if is_quota_error2:
+                    logger.warning(f"Gemini 1.5-flash also quota exceeded, trying OpenAI fallback: {e2}")
+                else:
+                    logger.error(f"Gemini 1.5-flash extraction failed: {e2}")
+            
+            # Tier 3: Fall back to OpenAI
+            return await _extract_ticker_and_intent_with_openai(question)
+        else:
+            logger.error(f"Gemini 2.0-flash LLM extraction failed: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
+            # Try OpenAI as fallback
+            return await _extract_ticker_and_intent_with_openai(question)
+    
+    # If we get here, gemini-2.0-flash didn't extract a ticker, try fallbacks
+    logger.warning("Gemini 2.0-flash didn't extract ticker, trying gemini-1.5-flash")
+    try:
+        result = await _extract_ticker_and_intent_with_gemini(question, 'gemini-1.5-flash')
+        if result[0] is not None:
+            return result
+    except Exception:
+        pass
+    
+    # Final fallback to OpenAI
+    try:
+        result = await _extract_ticker_and_intent_with_openai(question)
+        if result[0] is not None:
+            return result
+    except Exception as e:
+        logger.error(f"OpenAI extraction also failed: {e}")
+    
+    # Last resort: simple regex pattern matching for ticker extraction
+    import re
+    ticker_pattern = r'\b([A-Z]{2,5})\b'
+    potential_tickers = re.findall(ticker_pattern, question.upper())
+    supported_tickers = load_supported_tickers()
+    
+    for ticker in potential_tickers:
+        if ticker in supported_tickers:
+            # Try to infer intent from question
+            intent = "general"
+            question_lower = question.lower()
+            if any(word in question_lower for word in ['buy', 'sell', 'should', 'shall', 'recommend']):
+                intent = "investment_recommendation"
+            elif any(word in question_lower for word in ['momentum', 'trend', 'going up']):
+                intent = "momentum"
+            elif any(word in question_lower for word in ['sentiment', 'feeling']):
+                intent = "sentiment"
+            elif any(word in question_lower for word in ['news', 'latest']):
+                intent = "news"
+            
+            logger.info(f"Regex fallback extracted ticker: {ticker}, intent: {intent}")
+            return ticker, intent
+    
+    # If we saw any potential tickers but none supported, surface that
+    if potential_tickers:
+        return f"UNSUPPORTED:{potential_tickers[0]}", "general"
+    
+    # No ticker found
+    return None, "general"
+
+
 async def _handle_intelligent_chat(question: str, include_reasoning: bool = False) -> dict:
     """
     Intelligent chatbot using google.generativeai directly.
@@ -2255,35 +2474,19 @@ async def _handle_intelligent_chat(question: str, include_reasoning: bool = Fals
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
 
-        # Step 1: Use Gemini to understand the question and extract intent + ticker
-        analysis_prompt = f"""Analyze this stock market question and extract key information:
-
-Question: "{question}"
-
-Provide a JSON response with:
-{{
-    "intent": "investment_recommendation" | "momentum" | "sentiment" | "news" | "financials" | "general",
-    "ticker": "STOCK_SYMBOL or null",
-    "data_needed": ["company_data", "news", "reddit", "twitter"] (what data sources are needed)
-}}
-
-Only extract ticker symbols that are clearly mentioned (2-5 uppercase letters).
-"""
-
-        response = model.generate_content(analysis_prompt)
-        analysis_text = response.text.strip()
-
-        # Extract JSON from response (handle markdown code blocks)
-        if "```json" in analysis_text:
-            analysis_text = analysis_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in analysis_text:
-            analysis_text = analysis_text.split("```")[1].split("```")[0].strip()
-
-        import json
-        analysis = json.loads(analysis_text)
-
-        ticker = analysis.get("ticker")
-        intent = analysis.get("intent", "general")
+        # Step 1: Use shared LLM extraction function (avoid duplicate calls)
+        ticker, intent = await _extract_ticker_and_intent_with_llm(question)
+        
+        # Step 1b: Infer data_needed from intent (no need for additional LLM call)
+        data_needed = []
+        if intent == "momentum":
+            data_needed = ["company_data"]
+        elif intent == "sentiment":
+            data_needed = ["reddit", "news"]
+        elif intent == "news":
+            data_needed = ["news"]
+        elif intent in ["financials", "investment_recommendation"]:
+            data_needed = ["company_data", "news"]
 
         # Validate ticker is supported
         if ticker:
@@ -2291,38 +2494,44 @@ Only extract ticker symbols that are clearly mentioned (2-5 uppercase letters).
             if ticker not in supported_tickers:
                 ticker = None
 
-        # Step 2: Get data based on intent
+        # Step 2: Get data based on intent (use executors for blocking calls)
         tool_data = {}
 
         if ticker:
             # Get company data for most queries
             if intent in ["investment_recommendation", "financials", "general"]:
-                from app.agents.agents import query_company_data
-                tool_data["company_data"] = query_company_data(ticker, "all")
+                try:
+                    from app.agents.agents import query_company_data
+                    tool_data["company_data"] = await loop.run_in_executor(None, query_company_data, ticker, "all")
+                except Exception as e:
+                    logger.debug(f"Failed to get company data for {ticker}: {e}")
 
             # Get momentum data
             if intent == "momentum":
-                tool_data["momentum"] = compute_company_scores(ticker)
+                try:
+                    tool_data["momentum"] = await loop.run_in_executor(None, compute_company_scores, ticker)
+                except Exception as e:
+                    logger.debug(f"Failed to get momentum data for {ticker}: {e}")
 
             # Get news
-            if intent == "news" or "news" in analysis.get("data_needed", []):
+            if intent == "news" or "news" in data_needed:
                 try:
                     from app.agents.agents import search_latest_news
-                    tool_data["news"] = search_latest_news(ticker)
-                except:
-                    pass
+                    tool_data["news"] = await loop.run_in_executor(None, search_latest_news, ticker)
+                except Exception as e:
+                    logger.debug(f"Failed to get news for {ticker}: {e}")
 
             # Get sentiment
-            if intent == "sentiment" or "reddit" in analysis.get("data_needed", []):
+            if intent == "sentiment" or "reddit" in data_needed:
                 try:
                     from app.agents.agents import query_reddit_sentiment
-                    tool_data["reddit"] = query_reddit_sentiment(ticker, limit=10)
-                except:
-                    pass
+                    tool_data["reddit"] = await loop.run_in_executor(None, query_reddit_sentiment, ticker, 10)
+                except Exception as e:
+                    logger.debug(f"Failed to get sentiment for {ticker}: {e}")
 
         # Step 3: Use Gemini to format a natural response
         if not tool_data:
-            return await _handle_chat_fallback(question, include_reasoning)
+            return await _handle_chat_fallback(question, include_reasoning, ticker=ticker, intent=intent)
 
         format_prompt = f"""You are a financial analyst assistant. Based on the user's question and the data provided, give a helpful, natural answer.
 
@@ -2333,7 +2542,8 @@ Data Available:
 
 Provide a clear, concise answer focusing on what the user asked. If they asked for investment recommendations, provide a structured recommendation with rating, action, reasoning, and risks. Keep the response under 300 words."""
 
-        final_response = model.generate_content(format_prompt)
+        # Run Gemini API call in executor to avoid blocking
+        final_response = await loop.run_in_executor(None, model.generate_content, format_prompt)
         answer = final_response.text.strip()
 
         return {
@@ -2347,15 +2557,15 @@ Provide a clear, concise answer focusing on what the user asked. If they asked f
         logger.error(f"Intelligent chat failed: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        # Fall back to simple handler
+        # Fall back to simple handler (it will extract ticker/intent itself since we don't have them)
         return await _handle_chat_fallback(question, include_reasoning)
 
 
 @app.post("/chat")
 async def chat(request: QueryRequest, http_request: Request):
     """
-    Intelligent chatbot powered by Gemini.
-    Uses google.generativeai to understand questions and route to appropriate tools.
+    Intelligent chatbot powered by Financial_Root_Agent (ADK) or Gemini fallback.
+    Uses the ADK agent system when available, falls back to direct Gemini when not.
     """
     # Basic validation
     if not request.question or len(request.question.strip()) < 5:
@@ -2364,11 +2574,29 @@ async def chat(request: QueryRequest, http_request: Request):
             'status': 'validation_error'
         }
 
-    # Use intelligent Gemini-powered chatbot
+    # Try to use ADK root agent first (preferred architecture)
+    if hasattr(http_request.app.state, 'agent_caller') and http_request.app.state.agent_caller:
+        logger.info(f"Using root agent for query: {request.question[:50]}...")
+        try:
+            result = await http_request.app.state.agent_caller.call(
+                request.question, 
+                include_reasoning=request.include_reasoning
+            )
+            logger.info(f"Root agent returned status: {result.get('status')}")
+            return result
+        except Exception as e:
+            logger.error(f"Root agent chat failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # Fall through to fallback handler
+    else:
+        logger.warning("Root agent not available, using fallback handler")
+
+    # Fallback: Use direct Gemini chatbot (when ADK not available)
     try:
-        return await _handle_intelligent_chat(request.question, request.include_reasoning)
+        return await _handle_chat_fallback(request.question, request.include_reasoning)
     except Exception as e:
-        logger.error(f"Intelligent chat failed: {e}")
+        logger.error(f"Chat fallback failed: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return {
@@ -2378,46 +2606,93 @@ async def chat(request: QueryRequest, http_request: Request):
         }
 
 
-async def _handle_chat_fallback(question: str, include_reasoning: bool = False) -> dict:
+def _format_chat_response(
+    tldr: str,
+    key_points: list[str] | None = None,
+    details: list[str] | None = None,
+    followups: list[str] | None = None,
+) -> str:
+    """
+    Helper to keep answers concise and structured:
+    - TL;DR first
+    - Key points in bullets
+    - Optional details and quick follow-ups
+    """
+    key_points = key_points or []
+    details = details or []
+    followups = followups or []
+
+    parts: list[str] = [f"TL;DR: {tldr}"]
+
+    if key_points:
+        parts.append("\nKey points:")
+        parts.extend([f"- {p}" for p in key_points if p])
+
+    if details:
+        parts.append("\nDetails:")
+        parts.extend([f"- {d}" for d in details if d])
+
+    if followups:
+        parts.append("\nQuick follow-up (optional):")
+        parts.extend([f"- {f}" for f in followups if f])
+
+    return "\n".join(parts)
+
+
+async def _handle_chat_fallback(question: str, include_reasoning: bool = False, ticker: str | None = None, intent: str | None = None) -> dict:
     """
     Fallback chatbot that uses tools directly without ADK.
+    Uses LLM to extract ticker and intent if not already provided (to avoid duplicate calls).
     """
     question_lower = question.lower().strip()
     
-    # Extract ticker from question
-    import re
-    ticker_match = re.search(r'\b([A-Z]{2,5})\b', question.upper())
-    ticker = ticker_match.group(1) if ticker_match else None
+    # Only extract if not already provided (avoids duplicate LLM calls)
+    if ticker is None or intent is None:
+        logger.info(f"Extracting ticker and intent from: {question[:50]}...")
+        ticker, intent = await _extract_ticker_and_intent_with_llm(question)
+        logger.info(f"Extracted ticker: {ticker}, intent: {intent}")
+    if intent is None:
+        intent = "general"
+
+    # Handle unsupported tickers (marked as UNSUPPORTED:<TICKER>)
+    if ticker and isinstance(ticker, str) and ticker.startswith("UNSUPPORTED:"):
+        unsupported = ticker.split("UNSUPPORTED:", 1)[1]
+        supported = ", ".join(sorted(load_supported_tickers())[:20])
+        return {
+            'answer': f"Sorry, {unsupported} is outside our current coverage. Supported tickers include: {supported}. Please try one of those.",
+            'status': 'unsupported_ticker'
+        }
     
-    # Check if ticker is supported
-    if ticker:
-        supported_tickers = load_supported_tickers()
-        if ticker not in supported_tickers:
-            ticker = None
+    logger.info(f"Processing fallback chat - ticker: {ticker}, intent: {intent}")
     
     try:
-        # Handle momentum questions
-        if any(word in question_lower for word in ['momentum', 'going up', 'trend', 'direction', 'price movement']):
+        loop = asyncio.get_event_loop()
+        
+        # Handle momentum questions (using LLM-extracted intent or keyword fallback)
+        if intent == "momentum" or any(word in question_lower for word in ['momentum', 'going up', 'trend', 'direction', 'price movement']):
             if ticker:
                 try:
                     from app.scoring import compute_company_scores
-                    data = compute_company_scores(ticker)
+                    data = await loop.run_in_executor(None, compute_company_scores, ticker)
                     technical_score = data.get("scores", {}).get("technical", {}).get("score", 0)
                     recommendation = data.get("recommendation", {}).get("rating", "HOLD")
-                    
-                    if technical_score >= 7:
-                        answer = f"{ticker} shows strong positive momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Recent price trends and technical indicators suggest upward movement potential."
-                    elif technical_score >= 5:
-                        answer = f"{ticker} shows moderate momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Mixed signals suggest cautious optimism."
-                    else:
-                        answer = f"{ticker} shows weak momentum with a technical score of {technical_score:.1f}/10. The recommendation is {recommendation}. Technical indicators suggest limited upward movement."
-                    
+
+                    momentum_view = "strong positive" if technical_score >= 7 else "balanced/mixed" if technical_score >= 5 else "weak/negative"
+                    action_hint = "Consider adding or accumulating on dips" if technical_score >= 7 else "Monitor for a clearer setup" if technical_score >= 5 else "Caution; wait for trend to improve"
+                    tldr = f"{ticker} momentum is {momentum_view} (technical {technical_score:.1f}/10; rec: {recommendation})"
+                    key_points = [
+                        f"Trend read: {momentum_view} based on our technical composite",
+                        f"Recommendation: {recommendation}; action: {action_hint}",
+                        "Drivers: price trend, volume, and volatility signals in the technical pillar",
+                    ]
+                    followups = ["Time horizon and risk tolerance? (changes how aggressive to be)"]
+                    answer = _format_chat_response(tldr, key_points, followups=followups)
                     return {'answer': answer, 'status': 'success'}
                 except Exception as e:
                     logger.error(f"Error getting momentum for {ticker}: {e}")
         
-        # Handle sentiment questions
-        if any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception']):
+        # Handle sentiment questions (using LLM-extracted intent or keyword fallback)
+        if intent == "sentiment" or any(word in question_lower for word in ['sentiment', 'feeling', 'mood', 'outlook', 'perception']):
             if ticker:
                 try:
                     # Actually call Reddit and Twitter agents for sentiment
@@ -2428,40 +2703,35 @@ async def _handle_chat_fallback(question: str, include_reasoning: bool = False) 
                     
                     # Fetch Reddit sentiment
                     try:
-                        reddit_data = query_reddit_sentiment(ticker, limit=20)
+                        reddit_data = await loop.run_in_executor(None, query_reddit_sentiment, ticker, 20)
                     except Exception as e:
                         logger.debug(f"Reddit sentiment fetch failed for {ticker}: {e}")
                     
                     # Fetch Twitter sentiment
                     try:
-                        twitter_data = query_twitter_data(ticker)
+                        twitter_data = await loop.run_in_executor(None, query_twitter_data, ticker)
                     except Exception as e:
                         logger.debug(f"Twitter sentiment fetch failed for {ticker}: {e}")
                     
                     # Also get overall sentiment score
                     from app.scoring import compute_company_scores
-                    data = compute_company_scores(ticker)
+                    data = await loop.run_in_executor(None, compute_company_scores, ticker)
                     sentiment_score = data.get("scores", {}).get("sentiment", {}).get("score", 0)
                     overall_score = data.get("overall", {}).get("score", 0)
                     
-                    # Build comprehensive answer
-                    answer_parts = [f"Current sentiment for {ticker}:"]
-                    
-                    # Add Reddit sentiment if available
+                    reddit_line = None
                     if reddit_data and not reddit_data.get("error"):
                         reddit_sentiment = reddit_data.get("sentiment_summary", "")
-                        avg_sentiment = reddit_data.get("average_sentiment", 0)
                         post_count = reddit_data.get("total_posts", 0)
                         if post_count > 0:
-                            answer_parts.append(f"Reddit: {reddit_sentiment} ({post_count} posts analyzed)")
-                    
-                    # Add Twitter sentiment if available
+                            reddit_line = f"Reddit: {reddit_sentiment} ({post_count} posts)"
+
+                    twitter_line = None
                     if twitter_data and not twitter_data.get("error"):
                         twitter_sentiment = twitter_data.get("sentiment_summary", "")
                         if twitter_sentiment:
-                            answer_parts.append(f"Twitter/X: {twitter_sentiment}")
-                    
-                    # Add overall sentiment score
+                            twitter_line = f"Twitter/X: {twitter_sentiment}"
+
                     if sentiment_score >= 7:
                         sentiment_desc = "very positive"
                     elif sentiment_score >= 5:
@@ -2470,79 +2740,199 @@ async def _handle_chat_fallback(question: str, include_reasoning: bool = False) 
                         sentiment_desc = "neutral to slightly negative"
                     else:
                         sentiment_desc = "negative"
-                    
-                    answer_parts.append(f"Overall sentiment score: {sentiment_desc} ({sentiment_score:.1f}/10)")
-                    answer_parts.append(f"Deep Alpha overall score: {overall_score:.1f}/10")
-                    
-                    answer = " ".join(answer_parts)
+
+                    tldr = f"Sentiment for {ticker} is {sentiment_desc} ({sentiment_score:.1f}/10); overall score {overall_score:.1f}/10"
+                    key_points = [
+                        line for line in [reddit_line, twitter_line] if line
+                    ]
+                    key_points.append(f"Composite sentiment score: {sentiment_score:.1f}/10; Deep Alpha overall: {overall_score:.1f}/10")
+                    followups = ["Anything specific you want to probe (news, risks, or time horizon)?"]
+                    answer = _format_chat_response(tldr, key_points, followups=followups)
                     return {'answer': answer, 'status': 'success'}
                 except Exception as e:
                     logger.error(f"Error getting sentiment for {ticker}: {e}")
                     # Fallback to basic answer
                     try:
                         from app.scoring import compute_company_scores
-                        data = compute_company_scores(ticker)
+                        data = await loop.run_in_executor(None, compute_company_scores, ticker)
                         sentiment_score = data.get("scores", {}).get("sentiment", {}).get("score", 0)
-                        answer = f"The sentiment for {ticker} is {sentiment_score:.1f}/10 based on news and market data."
+                        tldr = f"Sentiment for {ticker}: {sentiment_score:.1f}/10 (composite from news/market signals)"
+                        key_points = ["Data-driven sentiment composite; ask if you want news drivers"]
+                        answer = _format_chat_response(tldr, key_points)
                         return {'answer': answer, 'status': 'success'}
                     except:
                         pass
+        
+        # Handle investment recommendation questions (buy/sell/hold)
+        if intent == "investment_recommendation" or any(word in question_lower for word in ['buy', 'sell', 'should i', 'shall i', 'recommend', 'investment']):
+            if ticker:
+                try:
+                    from app.scoring import compute_company_scores
+                    data = await loop.run_in_executor(None, compute_company_scores, ticker)
+                    
+                    overall_score = data.get("overall", {}).get("score", 0)
+                    rec_data = data.get("recommendation", {})
+                    recommendation = rec_data.get("rating", "HOLD")
+                    confidence = rec_data.get("confidence", "Medium")
+                    action = rec_data.get("action", "Monitor")
+                    timing = rec_data.get("timing", "Monitor for developments")
+                    
+                    scores_data = data.get("scores", {})
+                    business_score = scores_data.get("business", {}).get("score", 0)
+                    financial_score = scores_data.get("financial", {}).get("score", 0)
+                    sentiment_score = scores_data.get("sentiment", {}).get("score", 0)
+                    technical_score = scores_data.get("technical", {}).get("score", 0)
+                    leadership_score = scores_data.get("leadership", {}).get("score", 0)
+                    
+                    company_name = data.get("quick_facts", {}).get("name", ticker)
+                    info = data.get("company", {}).get("info", {})
+                    forward_pe = info.get("forwardPE") or info.get("trailingPE") or 0
+                    
+                    strengths = rec_data.get("strengths", [])
+                    weaknesses = rec_data.get("weaknesses", [])
+                    risks = rec_data.get("risks", [])
+                    
+                    pillar_summaries = [
+                        f"Business {business_score:.1f}/10: {scores_data.get('business', {}).get('summary', 'Business fundamentals assessment')}",
+                        f"Financial {financial_score:.1f}/10: {scores_data.get('financial', {}).get('summary', 'Financial health assessment')}",
+                        f"Sentiment {sentiment_score:.1f}/10: {scores_data.get('sentiment', {}).get('summary', 'Market sentiment assessment')}",
+                        f"Technical {technical_score:.1f}/10: {scores_data.get('technical', {}).get('summary', 'Technical momentum assessment')}",
+                        f"Leadership {leadership_score:.1f}/10: {scores_data.get('leadership', {}).get('summary', 'Leadership assessment')}",
+                    ]
+                    if forward_pe > 0:
+                        pillar_summaries.append(f"Valuation: P/E ~{forward_pe:.1f}")
+                    
+                    # Bull case (based on strengths and positive factors)
+                    bull_likelihood = min(90, max(30, (overall_score / 10) * 70 + 20))  # Convert score to likelihood
+                    bull_assumptions = []
+                    if business_score >= 7:
+                        bull_assumptions.append("Strong business fundamentals continue")
+                    if financial_score >= 7:
+                        bull_assumptions.append("Financial health remains robust")
+                    if technical_score >= 7:
+                        bull_assumptions.append("Positive momentum persists")
+                    if sentiment_score >= 7:
+                        bull_assumptions.append("Market sentiment remains favorable")
+                    if not bull_assumptions:
+                        bull_assumptions = ["Current positive trends continue"]
+                    
+                    answer_parts.append(f"\n**Bull Case (Likelihood: {bull_likelihood:.0f}%)**\n")
+                    if strengths:
+                        answer_parts.append(f"- {', '.join(strengths[:3])}\n")
+                    answer_parts.append(f"- Assumptions: {', '.join(bull_assumptions[:3])}\n")
+                    answer_parts.append(f"- Likelihood: {bull_likelihood:.0f}% probability\n")
+                    answer_parts.append(f"- Catalysts: Positive developments in business fundamentals, market sentiment, or technical momentum\n")
+                    
+                    # Bear case (based on risks and weaknesses)
+                    bear_likelihood = min(70, max(20, (10 - overall_score) / 10 * 50 + 10))
+                    bear_assumptions = []
+                    if business_score <= 4:
+                        bear_assumptions.append("Business fundamentals deteriorate")
+                    if financial_score <= 4:
+                        bear_assumptions.append("Financial stress increases")
+                    if technical_score <= 4:
+                        bear_assumptions.append("Negative momentum continues")
+                    if sentiment_score <= 4:
+                        bear_assumptions.append("Market sentiment turns negative")
+                    if not bear_assumptions:
+                        bear_assumptions = ["Negative factors materialize"]
+
+                    tldr = f"{company_name} ({ticker}): {recommendation} (overall {overall_score:.1f}/10, confidence {confidence})"
+                    key_points = pillar_summaries
+                    details = [
+                        f"Bull case ({bull_likelihood:.0f}%): {', '.join(strengths[:3]) or 'Upside if strengths persist'}; assumptions: {', '.join(bull_assumptions[:3])}",
+                        f"Bear case ({bear_likelihood:.0f}%): {', '.join(risks[:3]) or 'Macro/competitive risks'}; assumptions: {', '.join(bear_assumptions[:3])}",
+                        f"Action: {action}; Timing: {timing}",
+                    ]
+                    followups = ["What's your time horizon and risk tolerance?", "Any constraints (tax, concentration, liquidity)?"]
+                    answer = _format_chat_response(tldr, key_points, details, followups)
+                    return {'answer': answer, 'status': 'success'}
+                except Exception as e:
+                    logger.error(f"Error getting investment recommendation for {ticker}: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
         
         # Handle general company questions
         if ticker:
             try:
                 from app.scoring import compute_company_scores
-                data = compute_company_scores(ticker)
+                data = await loop.run_in_executor(None, compute_company_scores, ticker)
                 overall_score = data.get("overall", {}).get("score", 0)
                 recommendation = data.get("recommendation", {}).get("rating", "HOLD")
                 company_name = data.get("quick_facts", {}).get("name", ticker)
-                
-                answer = f"{company_name} ({ticker}) has a Deep Alpha score of {overall_score:.1f}/10 with a {recommendation} recommendation. "
-                
-                # Add relevant details based on question
-                if 'risk' in question_lower or 'concern' in question_lower:
-                    risks = data.get("recommendation", {}).get("risks", [])
-                    if risks:
-                        answer += f"Key risks include: {', '.join(risks[:3])}."
-                
+
+                tldr = f"{company_name} ({ticker}) score: {overall_score:.1f}/10; recommendation: {recommendation}"
+                key_points = []
                 if 'financial' in question_lower or 'health' in question_lower:
                     financial_score = data.get("scores", {}).get("financial", {}).get("score", 0)
-                    answer += f" Financial health score: {financial_score:.1f}/10."
-                
+                    key_points.append(f"Financial health: {financial_score:.1f}/10")
+                risks = data.get("recommendation", {}).get("risks", [])
+                if 'risk' in question_lower or 'concern' in question_lower:
+                    if risks:
+                        key_points.append(f"Key risks: {', '.join(risks[:3])}")
+                followups = ["Want momentum, sentiment, or news next?", "Any portfolio constraints or time horizon?"]
+                answer = _format_chat_response(tldr, key_points, followups=followups)
                 return {'answer': answer, 'status': 'success'}
             except Exception as e:
                 logger.error(f"Error getting company data for {ticker}: {e}")
         
-        # Handle news questions
-        if any(word in question_lower for word in ['news', 'latest', 'recent', 'happening']):
+        # Handle news questions (using LLM-extracted intent or keyword fallback)
+        if intent == "news" or any(word in question_lower for word in ['news', 'latest', 'recent', 'happening']):
             if ticker:
                 try:
                     payload = _load_cached_news(ticker)
                     if not payload:
-                        payload = fetch_realtime_news(ticker)
+                        payload = await loop.run_in_executor(None, fetch_realtime_news, ticker)
                     
                     articles = payload.get("articles", [])
                     if articles:
                         summary = payload.get("summary", {})
                         headline = summary.get("headline", "Latest news available")
-                        answer = f"Latest news for {ticker}: {headline}. Found {len(articles)} recent articles. "
-                        if articles:
-                            answer += f"Top headline: {articles[0].get('title', 'N/A')}"
+                        tldr = f"Latest news for {ticker}: {headline}"
+                        key_points = [
+                            f"{len(articles)} recent articles reviewed",
+                            f"Top headline: {articles[0].get('title', 'N/A')}" if articles else None,
+                        ]
+                        followups = ["Want a quick summary of the top 3 articles or sentiment impact?"]
+                        answer = _format_chat_response(tldr, key_points, followups=followups)
                         return {'answer': answer, 'status': 'success'}
                     else:
-                        return {'answer': f"No recent news found for {ticker}.", 'status': 'success'}
+                        tldr = f"No recent news found for {ticker}"
+                        followups = ["Should I watch for updates and notify on notable moves?"]
+                        answer = _format_chat_response(tldr, [], followups=followups)
+                        return {'answer': answer, 'status': 'success'}
                 except Exception as e:
                     logger.error(f"Error getting news for {ticker}: {e}")
         
         # Default response
         if ticker:
             return {
-                'answer': f"I can help with questions about {ticker}. Try asking about momentum, sentiment, risks, financials, or latest news. For example: 'What is the sentiment of {ticker}?' or 'Does {ticker} have good momentum?'",
+                'answer': _format_chat_response(
+                    f"I can help with {ticker}.",
+                    key_points=[
+                        "Ask about momentum, sentiment, financials, risks, or news",
+                        "I can summarize bull/bear cases and actions"
+                    ],
+                    followups=[
+                        "Which angle matters most to you (momentum, fundamentals, or news)?",
+                        "Any time horizon or risk tolerance to tailor the answer?"
+                    ]
+                ),
                 'status': 'success'
             }
         else:
             return {
-                'answer': "I can help answer questions about stocks. Please include a ticker symbol (e.g., NVDA, MU, AAPL) in your question. I can help with momentum, sentiment, risks, financials, and latest news.",
+                'answer': _format_chat_response(
+                    "I can help with stock questions once you share a ticker.",
+                    key_points=[
+                        "Coverage includes momentum, sentiment, financials, risks, and news",
+                        "I can frame bull/bear cases and suggested actions"
+                    ],
+                    followups=[
+                        "Which ticker and time horizon?",
+                        "Any risk tolerance or portfolio constraint I should factor in?"
+                    ]
+                ),
                 'status': 'success'
             }
     
