@@ -17,11 +17,11 @@
     <div id="flowDataHelpModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeFlowDataHelp(event)">
         <div class="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
             <!-- Modal Header -->
-            <div class="bg-blue-600 text-white rounded-t-xl p-4 flex items-center justify-between sticky top-0">
+            <div class="bg-slate-900 text-white rounded-t-xl p-4 flex items-center justify-between sticky top-0">
                 <h3 class="text-lg font-bold flex items-center">
                     <span class="mr-2">ℹ️</span> How to Read Flow Data
                 </h3>
-                <button onclick="closeFlowDataHelp()" class="text-white hover:text-blue-200 transition-colors">
+                <button onclick="closeFlowDataHelp()" class="text-white hover:text-slate-300 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -32,8 +32,8 @@
             <div class="p-4">
                 <div class="space-y-3">
                     <!-- Institutional Data Section -->
-                    <div class="bg-green-50 rounded-lg p-3 border border-green-200">
-                        <h4 class="text-sm font-bold text-green-800 mb-2 flex items-center">
+                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-green-600">
+                        <h4 class="text-sm font-bold text-green-700 mb-2 flex items-center">
                             ✅ Institutional Data (Factual)
                         </h4>
                         <ul class="space-y-1 text-xs text-slate-700">
@@ -44,8 +44,8 @@
                     </div>
 
                     <!-- Retail Data Section -->
-                    <div class="bg-orange-50 rounded-lg p-3 border border-orange-200">
-                        <h4 class="text-sm font-bold text-orange-800 mb-2 flex items-center">
+                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-amber-500">
+                        <h4 class="text-sm font-bold text-amber-700 mb-2 flex items-center">
                             ⚠️ Daily Flow Split (Estimated)
                         </h4>
                         <ul class="space-y-1 text-xs text-slate-700">
@@ -56,8 +56,8 @@
                     </div>
 
                     <!-- Chart Guide Section -->
-                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                        <h4 class="text-sm font-bold text-blue-800 mb-2">📊 Chart Guide</h4>
+                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-indigo-600">
+                        <h4 class="text-sm font-bold text-indigo-700 mb-2">📊 Chart Guide</h4>
                         <ul class="space-y-1.5 text-xs text-slate-700">
                             <li><strong>Blue Line:</strong> Retail volume (estimated daily)</li>
                             <li><strong>Purple Line:</strong> Institutional volume (estimated daily)</li>
@@ -76,7 +76,7 @@
 
             <!-- Modal Footer -->
             <div class="bg-slate-50 rounded-b-xl p-3 flex justify-end">
-                <button onclick="closeFlowDataHelp()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
+                <button onclick="closeFlowDataHelp()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
                     Got it!
                 </button>
             </div>
@@ -93,7 +93,7 @@
                     </div>
                 </div>
                 <nav class="flex flex-wrap gap-2 text-sm">
-                    <a href="/" class="px-3 py-2 rounded-lg bg-cyan-500 text-slate-900 font-semibold">Product</a>
+                    <a href="/" class="px-3 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Product</a>
                     <a href="/about" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">About</a>
                     <a href="/research" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Research</a>
                     <a href="/team" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Team</a>
@@ -120,7 +120,7 @@
                 </div>
                 <div class="ml-auto text-slate-400 text-xs flex items-center gap-2">
                     <span>Data as of:</span>
-                    <span id="market-update-time" class="font-mono text-blue-300">Loading...</span>
+                    <span id="market-update-time" class="font-mono text-slate-300">Loading...</span>
                 </div>
             </div>
             
@@ -137,9 +137,9 @@
                     <form id="score-form" class="bg-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 flex-1 md:w-96">
                         <div class="flex-1">
                             <label for="score-ticker" class="text-xs uppercase tracking-wide text-slate-400">Ticker symbol</label>
-                            <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 uppercase" placeholder="NVDA" />
+                            <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase" placeholder="NVDA" />
                         </div>
-                        <button type="submit" class="inline-flex items-center justify-center bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold px-4 py-2 rounded-lg transition">Generate</button>
+                        <button type="submit" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition">Generate</button>
                     </form>
                     <a href="/comparison" id="open-comparison" class="inline-flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold px-4 py-2 rounded-lg transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -209,7 +209,7 @@
                     <span class="text-sm font-medium text-slate-700">Compare:</span>
                     <div class="flex flex-wrap gap-2">
                         <div class="relative">
-                            <input type="text" id="compare-ticker-1" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="NVDA" />
+                            <input type="text" id="compare-ticker-1" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="NVDA" />
                             <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -217,7 +217,7 @@
                             </button>
                         </div>
                         <div class="relative">
-                            <input type="text" id="compare-ticker-2" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="TSLA" />
+                            <input type="text" id="compare-ticker-2" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="TSLA" />
                             <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -225,7 +225,7 @@
                             </button>
                         </div>
                         <div class="relative">
-                            <input type="text" id="compare-ticker-3" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="AAPL" />
+                            <input type="text" id="compare-ticker-3" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="AAPL" />
                             <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="3">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -233,7 +233,7 @@
                             </button>
                         </div>
                         <div class="relative">
-                            <input type="text" id="compare-ticker-4" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="MSFT" />
+                            <input type="text" id="compare-ticker-4" class="w-20 px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="MSFT" />
                             <button class="absolute right-1 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 remove-ticker" data-index="4">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -241,7 +241,7 @@
                             </button>
                         </div>
                     </div>
-                    <button id="compare-btn" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
+                    <button id="compare-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                         Compare Stocks
                     </button>
                 </div>
@@ -251,7 +251,7 @@
             <div id="comparison-results" class="hidden">
                 <div id="comparison-loading" class="hidden text-center py-10">
                     <div class="flex flex-col items-center space-y-3">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                         <p class="text-slate-600">Loading comparison data...</p>
                     </div>
                 </div>
@@ -277,7 +277,7 @@
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-slate-800 mb-4">Price Performance Comparison</h3>
                         <div class="flex items-center gap-4 mb-4">
-                            <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <select id="price-period" class="px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="1d">1 Day</option>
                                 <option value="5d">5 Days</option>
                                 <option value="1w">1 Week</option>
@@ -289,7 +289,7 @@
                                 <option value="5y">5 Years</option>
                                 <option value="max" selected>Max</option>
                             </select>
-                            <button id="refresh-price-comparison" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                            <button id="refresh-price-comparison" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                 Refresh
                             </button>
                         </div>
@@ -329,11 +329,11 @@
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                     <span class="mr-2">💹</span> Institutional & Retail Flow Data <span class="text-xs text-slate-400 ml-2 font-normal">(Quarterly institutional, 3mo retail estimates)</span>
-                    <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-blue-600 hover:bg-blue-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
+                    <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-indigo-600 hover:bg-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
                         ?
                     </button>
                 </div>
-                <button id="flow-details-toggle" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                <button id="flow-details-toggle" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
                     Expand full flow view
                 </button>
             </div>
@@ -374,7 +374,7 @@
                     <h2 class="text-xl font-semibold text-slate-800">Coverage Universe</h2>
                     <p class="text-sm text-slate-600 mt-1">Browse all companies we track. Scores load automatically in the background.</p>
             </div>
-                <button id="load-all-btn" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-all shadow-sm hover:shadow-md">
+                <button id="load-all-btn" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -386,13 +386,13 @@
             <div id="background-loading-container" class="mb-6 hidden">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-slate-700">Loading tickers in background...</span>
-                    <span id="loading-progress-text" class="text-sm font-semibold text-blue-600">0%</span>
+                    <span id="loading-progress-text" class="text-sm font-semibold text-indigo-600">0%</span>
                 </div>
                 <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                    <div id="loading-progress-bar" class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
+                    <div id="loading-progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
                 </div>
                 <p class="text-xs text-slate-500 mt-2 flex items-center">
-                    <svg class="animate-spin h-3 w-3 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-3 w-3 mr-1 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -405,7 +405,7 @@
                 ${supportedTickers.map(ticker => {
                     const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
                     return `
-                        <div class="ticker-card bg-slate-50 hover:bg-slate-100 rounded-lg p-3 text-center transition-colors cursor-pointer border border-slate-200 hover:border-blue-300" data-ticker="${ticker}">
+                        <div class="ticker-card bg-slate-50 hover:bg-slate-100 rounded-lg p-3 text-center transition-colors cursor-pointer border border-slate-200 hover:border-indigo-400" data-ticker="${ticker}">
                             <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
                             <div class="text-xs text-slate-500 mt-1 truncate" title="${metadata.name}">${metadata.name}</div>
                         </div>
@@ -438,7 +438,7 @@
         <!-- Floating Chat Assistant -->
         <div id="chat-assistant" class="fixed bottom-6 right-6 z-50">
             <!-- Chat Toggle Button -->
-            <button id="chat-toggle" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <button id="chat-toggle" class="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -447,7 +447,7 @@
             <!-- Chat Window -->
             <div id="chat-window" class="hidden absolute bottom-16 right-0 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
                 <!-- Chat Header -->
-                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+                <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
                     <div class="flex items-center space-x-2">
                         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -456,7 +456,7 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-sm">Deep Alpha Copilot</h3>
-                            <p class="text-xs text-blue-100">AI Financial Analyst</p>
+                            <p class="text-xs text-slate-400">AI Financial Analyst</p>
                         </div>
                     </div>
                     <button id="chat-close" class="text-white/80 hover:text-white transition-colors">
@@ -480,8 +480,8 @@
                 <!-- Chat Input -->
                 <div class="border-t border-slate-200 p-4">
                     <form id="chat-form" class="flex items-center gap-2">
-                        <input type="text" id="user-input" placeholder="Ask me anything..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                        <button type="submit" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
+                        <input type="text" id="user-input" placeholder="Ask me anything..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <button type="submit" class="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
@@ -738,7 +738,7 @@
         function scoreColor(score) {
             if (score === null || score === undefined) return 'bg-slate-200 text-slate-700';
             if (score >= 7.5) return 'bg-green-100 text-green-800';
-            if (score >= 5.0) return 'bg-yellow-100 text-yellow-800';
+            if (score >= 5.0) return 'bg-slate-100 text-slate-600';
             return 'bg-red-100 text-red-800';
         }
 
@@ -892,18 +892,18 @@
                     sentimentBg = 'bg-red-50 border-red-200';
                 } else {
                     sentimentLabel = 'Neutral';
-                    sentimentColor = 'text-yellow-700';
-                    sentimentBg = 'bg-yellow-50 border-yellow-200';
+                    sentimentColor = 'text-slate-600';
+                    sentimentBg = 'bg-slate-50 border-slate-200';
                 }
                 
                 const sources = [...new Set(events.map(e => e.source).filter(Boolean))];
                 const keyEvents = events.slice(0, 2).map(event => `
                     <li class="flex items-start space-x-2 text-xs">
-                        <span class="mt-1 inline-block h-1 w-1 rounded-full ${event.sentiment >= 0.2 ? 'bg-green-500' : event.sentiment <= -0.2 ? 'bg-red-500' : 'bg-yellow-500'}"></span>
+                        <span class="mt-1 inline-block h-1 w-1 rounded-full ${event.sentiment >= 0.2 ? 'bg-green-500' : event.sentiment <= -0.2 ? 'bg-red-500' : 'bg-slate-400'}"></span>
                         <div class="flex-1">
                             <div class="flex items-start justify-between">
                                 <span class="text-slate-600 flex-1">${event.title.length > 50 ? event.title.substring(0, 50) + '...' : event.title}</span>
-                                ${event.link ? `<a href="${event.link}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-700" title="Read full article">
+                                ${event.link ? `<a href="${event.link}" target="_blank" class="ml-2 text-indigo-500 hover:text-indigo-700" title="Read full article">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                     </svg>
@@ -912,11 +912,11 @@
                             <div class="flex items-center justify-between mt-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-slate-400 text-xs">${new Date(event.published_at).toLocaleDateString()}</span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
                                         ${event.source || 'Unknown'}
                             </span>
                         </div>
-                                <span class="text-xs ${event.sentiment > 0.1 ? 'text-green-600' : event.sentiment < -0.1 ? 'text-red-600' : 'text-yellow-600'}">
+                                <span class="text-xs ${event.sentiment > 0.1 ? 'text-green-600' : event.sentiment < -0.1 ? 'text-red-600' : 'text-slate-500'}">
                                     ${event.sentiment > 0.1 ? '↗' : event.sentiment < -0.1 ? '↘' : '→'}
                                 </span>
                     </div>
@@ -1008,9 +1008,9 @@
             switch(recommendation) {
                 case 'Strong Buy': return 'bg-green-600 text-white';
                 case 'Buy': return 'bg-green-500 text-white';
-                case 'Hold': return 'bg-yellow-500 text-white';
+                case 'Hold': return 'bg-slate-500 text-white';
                 case 'Sell': return 'bg-red-500 text-white';
-                default: return 'bg-gray-500 text-white';
+                default: return 'bg-slate-500 text-white';
             }
         }
 
@@ -1025,8 +1025,8 @@
             const colorMap = {
                 green: 'bg-green-100 text-green-700 border-green-300',
                 lightgreen: 'bg-green-50 text-green-600 border-green-200',
-                yellow: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-                orange: 'bg-orange-100 text-orange-700 border-orange-300',
+                yellow: 'bg-slate-100 text-slate-600 border-slate-300',
+                orange: 'bg-amber-100 text-amber-700 border-amber-300',
                 red: 'bg-red-100 text-red-700 border-red-300'
             };
             return colorMap[color] || 'bg-slate-100 text-slate-700 border-slate-300';
@@ -1142,7 +1142,7 @@
             const getAssessmentClass = (assessment) => {
                 if (assessment === 'Undervalued') return 'bg-green-100 text-green-800';
                 if (assessment === 'Overvalued') return 'bg-red-100 text-red-800';
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-slate-100 text-slate-600';
             };
 
             peEl.className = `px-2 py-0.5 rounded text-xs ${getAssessmentClass(peAssessment)}`;
@@ -1165,8 +1165,8 @@
                     datasets: [{
                         label: `${data.ticker} P/E`,
                         data: peData.map(d => d.pe_ratio),
-                        borderColor: '#3B82F6',
-                        backgroundColor: '#3B82F620',
+                        borderColor: '#4f46e5',
+                        backgroundColor: '#4f46e520',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.1
@@ -1305,7 +1305,7 @@
                     
                     <div class="text-xs text-gray-400">
                         <strong>Source:</strong> 
-                        <a href="${chartEvent.link}" target="_blank" class="text-blue-400 hover:text-blue-300 underline">
+                        <a href="${chartEvent.link}" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline">
                             ${chartEvent.source || 'Market Data'}
                         </a>
                     </div>
@@ -1840,12 +1840,12 @@
             scoreboard.innerHTML = `
                 <div class="space-y-8">
                     <!-- Hero Section: Quick Facts & Recommendation -->
-                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl">
+                    <div class="bg-slate-900 rounded-2xl p-8 text-white shadow-xl">
                         <div class="grid lg:grid-cols-3 gap-8">
                             <!-- Quick Facts -->
                             <div class="lg:col-span-1">
                                 <h1 class="text-2xl font-bold mb-4">${company.name}</h1>
-                                <div class="space-y-3 text-blue-100">
+                                <div class="space-y-3 text-slate-300">
                                     <div class="flex justify-between">
                                         <span class="text-sm">Ticker:</span>
                                         <span class="font-mono font-semibold">${company.ticker}</span>
@@ -1873,7 +1873,7 @@
                                         </div>
                                     ` : ''}
                                     <div class="pt-2">
-                                        <a href="https://finance.yahoo.com/quote/${company.ticker}" target="_blank" class="inline-flex items-center text-blue-200 hover:text-white text-sm">
+                                        <a href="https://finance.yahoo.com/quote/${company.ticker}" target="_blank" class="inline-flex items-center text-slate-400 hover:text-white text-sm">
                                             View on Yahoo Finance
                                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -1887,7 +1887,7 @@
                             <div class="lg:col-span-1">
                                 <h3 class="text-lg font-semibold mb-4">Business Model</h3>
                                 <div class="bg-white/10 rounded-lg p-4">
-                                    <p class="text-sm text-blue-100 leading-relaxed">
+                                    <p class="text-sm text-slate-300 leading-relaxed">
                                         ${quickFacts.business_model || 'Technology company providing products and services to various markets.'}
                                     </p>
                                 </div>
@@ -1895,23 +1895,23 @@
                                 <!-- Key Metrics Summary -->
                                 <div class="mt-4 space-y-2 text-sm">
                                     <div class="flex justify-between">
-                                        <span class="text-blue-200">Market Cap:</span>
+                                        <span class="text-slate-400">Market Cap:</span>
                                         <span class="font-semibold">${formatCurrency(quickFacts.market_cap)}</span>
                                     </div>
                                     ${quickFacts.employees ? `
                                         <div class="flex justify-between">
-                                            <span class="text-blue-200">Employees:</span>
+                                            <span class="text-slate-400">Employees:</span>
                                             <span class="font-semibold">${quickFacts.employees.toLocaleString()}</span>
                                         </div>
                                     ` : ''}
                                     ${quickFacts.founded ? `
                                         <div class="flex justify-between">
-                                            <span class="text-blue-200">Founded:</span>
+                                            <span class="text-slate-400">Founded:</span>
                                             <span class="font-semibold">${quickFacts.founded}</span>
                                         </div>
                                     ` : ''}
                                     <div class="flex justify-between">
-                                        <span class="text-blue-200">HQ:</span>
+                                        <span class="text-slate-400">HQ:</span>
                                         <span class="font-semibold">${quickFacts.hq_location || 'N/A'}</span>
                                     </div>
                                 </div>
@@ -1922,7 +1922,7 @@
                                 <div class="text-center">
                                     <div class="mb-4">
                                         <div class="text-4xl font-bold mb-2">${overall.score.toFixed(1)}</div>
-                                        <div class="text-sm text-blue-100 uppercase tracking-wide">Overall Score</div>
+                                        <div class="text-sm text-slate-300 uppercase tracking-wide">Overall Score</div>
                                     </div>
                                     <div class="mb-4">
                                         <div class="px-6 py-3 ${getRecommendationColor(recommendation.recommendation || overall.recommendation)} rounded-lg font-bold text-lg">
@@ -1931,11 +1931,11 @@
                                     </div>
                                     <div class="text-left text-sm space-y-2">
                                         <div class="font-medium">Investment Thesis:</div>
-                                        <p class="text-blue-100 leading-relaxed">
+                                        <p class="text-slate-300 leading-relaxed">
                                             ${recommendation.action || 'Strong fundamentals with positive momentum. Good risk/reward ratio.'}
                                         </p>
                                         <div class="font-medium">Timing:</div>
-                                        <p class="text-blue-100">
+                                        <p class="text-slate-300">
                                             ${recommendation.timing || 'Consider buying now - reasonable valuation with positive technicals.'}
                                         </p>
                                     </div>
@@ -1991,7 +1991,7 @@
                                 <span class="text-slate-600">Positive Event</span>
                             </div>
                             <div class="flex items-center">
-                                <span class="w-3 h-3 rounded-full bg-yellow-500 mr-1"></span>
+                                <span class="w-3 h-3 rounded-full bg-slate-400 mr-1"></span>
                                 <span class="text-slate-600">Neutral Event</span>
                             </div>
                             <div class="flex items-center">
@@ -1999,7 +1999,7 @@
                                 <span class="text-slate-600">Negative Event</span>
                             </div>
                         </div>
-                        <button id="refreshPriceChart" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <button id="refreshPriceChart" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
                             Refresh Data
                         </button>
                     </div>
@@ -2189,14 +2189,14 @@
                                 <h4 class="text-lg font-semibold text-slate-800">${label}</h4>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${comp.company_score.toFixed(1)}/10</span>
                                 <div class="group relative">
-                                    <svg class="w-4 h-4 text-slate-400 hover:text-blue-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-slate-400 hover:text-indigo-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                     </svg>
                                     <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-slate-900 text-white text-xs rounded-lg p-3 w-80 z-20 shadow-xl">
                                         <div class="space-y-2">${methodology}</div>
                                         ${key === 'sentiment' ? `
                                             <div class="mt-3 pt-3 border-t border-slate-700">
-                                                <div class="font-semibold text-blue-300 mb-2">📰 Recent Sources:</div>
+                                                <div class="font-semibold text-indigo-300 mb-2">📰 Recent Sources:</div>
                                                 <div id="sentiment-links-${company.ticker}" class="space-y-1">
                                                     <div class="animate-pulse bg-slate-700 rounded h-3 w-full"></div>
                                                     <div class="animate-pulse bg-slate-700 rounded h-3 w-3/4"></div>
@@ -2212,22 +2212,22 @@
                     </div>
                         
                         <!-- Key Takeaway -->
-                        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p class="text-sm font-medium text-blue-800">💡 Key Takeaway:</p>
-                            <p class="text-sm text-blue-700 mt-1">${keyTakeaway}</p>
+                        <div class="mb-4 p-3 bg-white border border-slate-200 border-l-4 border-l-indigo-600 rounded-lg">
+                            <p class="text-sm font-medium text-indigo-700">💡 Key Takeaway:</p>
+                            <p class="text-sm text-slate-600 mt-1">${keyTakeaway}</p>
                         </div>
                         
                         <!-- Visual Comparison with consistent height -->
                         <div class="relative h-6 mb-4">
                             <div class="absolute w-full h-4 bg-slate-100 rounded-full"></div>
-                            <div class="absolute h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all shadow-sm" style="width: ${companyPercent}%"></div>
+                            <div class="absolute h-4 bg-indigo-600 rounded-full transition-all" style="width: ${companyPercent}%"></div>
                             <div class="absolute h-3 bg-gradient-to-r from-slate-300 to-slate-400 rounded-full transition-all opacity-80 border border-slate-200" style="width: 8px; left: ${industryPercent}%; top: 0.5px"></div>
                         </div>
                         
                         <!-- Metrics with consistent alignment -->
                         <div class="flex items-center justify-between text-sm mb-4">
                             <div class="flex items-center space-x-3">
-                                <span class="text-blue-600 font-semibold">${company.ticker}: ${comp.company_score ? comp.company_score.toFixed(1) : 'N/A'}</span>
+                                <span class="text-indigo-600 font-semibold">${company.ticker}: ${comp.company_score ? comp.company_score.toFixed(1) : 'N/A'}</span>
                                 <span class="text-slate-400">•</span>
                                 <span class="text-slate-600">Industry: ${comp.industry_avg ? comp.industry_avg.toFixed(1) : 'N/A'}</span>
                             </div>
@@ -2277,9 +2277,9 @@
                         
                         return `
                             <div class="flex items-start space-x-2">
-                                <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                <div class="w-2 h-2 bg-indigo-400 rounded-full mt-2 flex-shrink-0"></div>
                                 <div class="flex-1 min-w-0">
-                                    <a href="${url}" target="_blank" class="text-blue-300 hover:text-blue-200 underline truncate block" title="${title}">
+                                    <a href="${url}" target="_blank" class="text-indigo-300 hover:text-indigo-200 underline truncate block" title="${title}">
                                         ${title.length > 60 ? title.substring(0, 60) + '...' : title}
                                     </a>
                                     <div class="text-slate-400 text-xs mt-1">${source}</div>
@@ -2304,9 +2304,9 @@
                                 
                                 return `
                                     <div class="flex items-start space-x-2">
-                                        <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                        <div class="w-2 h-2 bg-indigo-400 rounded-full mt-2 flex-shrink-0"></div>
                                         <div class="flex-1 min-w-0">
-                                            <a href="${url}" target="_blank" class="text-blue-300 hover:text-blue-200 underline truncate block" title="${title}">
+                                            <a href="${url}" target="_blank" class="text-indigo-300 hover:text-indigo-200 underline truncate block" title="${title}">
                                                 ${title.length > 60 ? title.substring(0, 60) + '...' : title}
                                             </a>
                                             <div class="text-slate-400 text-xs mt-1">${source}</div>
@@ -2593,7 +2593,7 @@
                                 <div class="text-xs text-slate-600">${overall.recommendation || 'Updating'}</div>
                             `;
                             tickerCard.classList.remove('opacity-50');
-                            tickerCard.classList.add('hover:bg-slate-100', 'cursor-pointer', 'transition-colors', 'hover:border-blue-300');
+                            tickerCard.classList.add('hover:bg-slate-100', 'cursor-pointer', 'transition-colors', 'hover:border-indigo-400');
                         }
 
                         loadedTickers.add(ticker);
@@ -2673,7 +2673,7 @@
                     return `
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-2 text-sm font-medium text-slate-800">
-                                <a href="https://finance.yahoo.com/quote/${row.ticker}" target="_blank" class="text-cyan-600 hover:text-cyan-800 hover:underline">${row.ticker}</a>
+                                <a href="https://finance.yahoo.com/quote/${row.ticker}" target="_blank" class="text-indigo-600 hover:text-indigo-700 hover:underline">${row.ticker}</a>
                             </td>
                             <td class="px-4 py-2 text-sm text-slate-700">${metadata.name}</td>
                             <td class="px-4 py-2 text-sm text-slate-600">${metadata.industry}</td>
@@ -3203,7 +3203,7 @@
                 // Quality tier badges
                 const qualityBadges = {
                     'premium': { text: 'Premium Analysis', class: 'bg-purple-100 text-purple-700 border-purple-300' },
-                    'high': { text: 'High Quality Analysis', class: 'bg-blue-100 text-blue-700 border-blue-300' },
+                    'high': { text: 'High Quality Analysis', class: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
                     'good': { text: 'Standard Analysis', class: 'bg-amber-100 text-amber-700 border-amber-300' },
                     'basic': { text: 'Basic Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' },
                     'standard': { text: 'Standard Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' }
@@ -3326,8 +3326,14 @@
                 `;
             }
 
-            // Render articles if available
-            const articlesHtml = articles.length > 0 ? articles.slice(0, 10).map(article => {
+            // Render articles if available (sorted by most recent first)
+            const articlesHtml = articles.length > 0 ? articles
+                .sort((a, b) => {
+                    const dateA = a.published ? new Date(a.published) : new Date(0);
+                    const dateB = b.published ? new Date(b.published) : new Date(0);
+                    return dateB - dateA; // Most recent first
+                })
+                .slice(0, 10).map(article => {
                 const publishedDate = article.published ? new Date(article.published) : null;
                 const link = article.link ? escapeHtml(article.link) : '#';
                 const sourceLine = [
@@ -3338,7 +3344,7 @@
                 return `
                     <article class="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm hover:shadow-md transition">
                         <a href="${link}" target="_blank" rel="noopener"
-                           class="text-sm md:text-base font-semibold text-slate-800 hover:text-blue-600">
+                           class="text-sm md:text-base font-semibold text-slate-800 hover:text-indigo-600">
                             ${escapeHtml(article.title || 'Untitled article')}
                         </a>
                         <div class="mt-2 text-xs text-slate-500">${escapeHtml(sourceLine)}</div>
@@ -3359,7 +3365,7 @@
                     <section class="space-y-4">
                         <div class="flex items-center justify-between">
                             <h4 class="text-sm font-semibold text-slate-700 uppercase tracking-wide">Latest News Coverage (Last 72 Hours)</h4>
-                            <button onclick="toggleNewsCoverage()" class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1">
+                            <button onclick="toggleNewsCoverage()" class="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1">
                                 <span id="news-toggle-text">Show</span>
                                 <svg id="news-toggle-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -3494,9 +3500,9 @@
                             <div class="mb-6">
                                 <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Ownership Summary</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                        <div class="text-xs text-blue-700 mb-1">Total Institutions</div>
-                                        <div class="text-2xl font-bold text-blue-600">${inst.number_of_institutions || 'N/A'}</div>
+                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                                        <div class="text-xs text-indigo-700 mb-1">Total Institutions</div>
+                                        <div class="text-2xl font-bold text-indigo-600">${inst.number_of_institutions || 'N/A'}</div>
                                         <div class="text-xs text-slate-600 mt-1">Holding shares</div>
                                     </div>
                                     <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
@@ -3622,9 +3628,9 @@
                                     <strong>⚠️ Estimated Data:</strong> Daily retail/institutional split is estimated using volume pattern heuristics. Yahoo Finance only provides factual quarterly institutional ownership (see above). For real-time order flow data, professional terminals like Bloomberg or Refinitiv are required.
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div class="bg-cyan-50 rounded-lg p-4 border border-cyan-200">
-                                        <div class="text-xs text-cyan-700 mb-1">Avg Daily Volume ✅</div>
-                                        <div class="text-xl font-bold text-cyan-600">${(metrics.average_daily_volume / 1e6).toFixed(1)}M</div>
+                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                                        <div class="text-xs text-indigo-700 mb-1">Avg Daily Volume ✅</div>
+                                        <div class="text-xl font-bold text-indigo-600">${(metrics.average_daily_volume / 1e6).toFixed(1)}M</div>
                                         <div class="text-xs text-slate-600 mt-1">Shares per day (factual)</div>
                                     </div>
                                     <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
@@ -3640,7 +3646,7 @@
                                         <div class="text-xl font-bold ${
                                             metrics.net_flow_indicator_pct > 5 ? 'text-green-600' :
                                             metrics.net_flow_indicator_pct < -5 ? 'text-red-600' :
-                                            'text-blue-600'
+                                            'text-indigo-600'
                                         }">
                                             ${metrics.net_flow_indicator_pct?.toFixed(1) || 'N/A'}%
                                         </div>
@@ -3830,9 +3836,9 @@
                                     <div class="text-2xl font-bold text-purple-600">${dailyUsage}</div>
                                     <div class="text-xs text-slate-600 mt-1">Tokens per day</div>
                                 </div>
-                                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                    <div class="text-xs text-blue-700 mb-1">Weekly Usage</div>
-                                    <div class="text-2xl font-bold text-blue-600">${weeklyUsage}</div>
+                                <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                                    <div class="text-xs text-indigo-700 mb-1">Weekly Usage</div>
+                                    <div class="text-2xl font-bold text-indigo-600">${weeklyUsage}</div>
                                     <div class="text-xs text-slate-600 mt-1">Tokens per week</div>
                                 </div>
                                 <div class="bg-green-50 rounded-lg p-4 border border-green-200">
@@ -3855,7 +3861,7 @@
                                         <img src="/api/token-usage-plot" alt="Token Usage Time Series" class="w-full h-auto rounded-lg" />
                                     </div>
                                     <div class="mt-3 text-xs text-slate-500 italic">
-                                        Source: <a href="https://openrouter.ai/rankings" target="_blank" class="text-blue-600 hover:underline">OpenRouter Rankings</a> - TOP 3 models per data point
+                                        Source: <a href="https://openrouter.ai/rankings" target="_blank" class="text-indigo-600 hover:underline">OpenRouter Rankings</a> - TOP 3 models per data point
                                     </div>
                                 </div>
                             `;
@@ -3880,9 +3886,9 @@
                                     <div class="text-xs text-slate-600 mt-1">Last ${data.days || 365} days</div>
                                 </div>
                                 ${data.total_requests ? `
-                                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                        <div class="text-xs text-blue-700 mb-1">Total Requests</div>
-                                        <div class="text-2xl font-bold text-blue-600">${typeof data.total_requests === 'number' ? (data.total_requests / 1e6).toFixed(1) + 'M' : 'N/A'}</div>
+                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                                        <div class="text-xs text-indigo-700 mb-1">Total Requests</div>
+                                        <div class="text-2xl font-bold text-indigo-600">${typeof data.total_requests === 'number' ? (data.total_requests / 1e6).toFixed(1) + 'M' : 'N/A'}</div>
                                         <div class="text-xs text-slate-600 mt-1">API calls made</div>
                                     </div>
                                 ` : ''}
