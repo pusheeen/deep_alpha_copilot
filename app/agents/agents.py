@@ -3622,12 +3622,70 @@ if llm and ADK_CORE_AVAILABLE:
         """
     )
 
+    # --- Investor Persona Tool & Sub-Agent ---
+    def query_investor_personas(ticker: str, personas: str = "all") -> dict:
+        """
+        Analyze a stock from 12 legendary investor perspectives (e.g., Buffett, Burry, Lynch).
+
+        Args:
+            ticker: Stock ticker symbol (e.g., 'NVDA', 'AVGO')
+            personas: Comma-separated persona IDs or 'all'. Available IDs:
+                buffett, munger, burry, pabrai, lynch, druckenmiller,
+                graham, damodaran, wood, jhunjhunwala, ackman, fisher
+
+        Returns:
+            dict: Persona verdicts with consensus summary and committee reconciliation.
+        """
+        from app.scoring import compute_company_scores, analyze_all_personas, run_reconciliation
+
+        try:
+            ticker = ticker.upper().strip()
+            scores_data = compute_company_scores(ticker)
+            persona_ids = None
+            if personas and personas.lower() != "all":
+                persona_ids = [p.strip() for p in personas.split(",") if p.strip()]
+            persona_results = analyze_all_personas(scores_data, persona_ids=persona_ids)
+            reconciliation = run_reconciliation(persona_results, scores_data)
+            return {
+                "status": "success",
+                "ticker": ticker,
+                "personas": persona_results,
+                "reconciliation": reconciliation,
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Investor persona analysis failed for {ticker}: {str(e)}"
+            }
+
+    investor_persona_subagent = Agent(
+        name="InvestorPersona_Agent",
+        model=llm,
+        tools=[query_investor_personas],
+        description="Use to analyze stocks from 12 legendary investor perspectives (Buffett, Munger, Burry, Lynch, Graham, etc.). "
+                    "Provides individual verdicts and a reconciled committee recommendation.",
+        instruction="""You are the Investor Persona Analysis agent. You help users understand
+        how legendary investors would view a particular stock.
+
+        When asked about investor perspectives or "what would Buffett think":
+        1. Call query_investor_personas() with the ticker
+        2. Present the consensus summary first (buy/hold/sell counts, average conviction)
+        3. Highlight the most interesting agreements and disagreements
+        4. Present the committee reconciliation verdict
+        5. List each persona's individual verdict with their reasoning
+
+        You can analyze specific personas by passing a comma-separated list of IDs.
+        Available persona IDs: buffett, munger, burry, pabrai, lynch, druckenmiller,
+        graham, damodaran, wood, jhunjhunwala, ackman, fisher
+        """
+    )
+
     # --- Root Agent Definition ---
     root_agent = Agent(
         name="Financial_Root_Agent",
         model=llm,
         tools=[validate_data_exists, log_blocking_issue, detect_fabricated_data],
-        sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, sector_news_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent, market_indices_subagent, twitter_subagent, sector_metrics_subagent, token_usage_subagent, flow_data_subagent, agent_evaluator_subagent],
+        sub_agents=[graph_qa_subagent, document_rag_subagent, news_search_subagent, sector_news_subagent, market_data_subagent, prediction_subagent, reddit_sentiment_subagent, ceo_lookup_subagent, market_indices_subagent, twitter_subagent, sector_metrics_subagent, token_usage_subagent, flow_data_subagent, agent_evaluator_subagent, investor_persona_subagent],
         description="The main financial assistant with built-in supervision capabilities. Validates data availability before delegating and ensures agents never get blocked or use fabricated data.",
         instruction=f"""
         You are a knowledgeable financial data assistant with access to data for {len(TARGET_TICKERS)} companies including: {', '.join(TARGET_TICKERS)}.
@@ -3698,6 +3756,12 @@ if llm and ADK_CORE_AVAILABLE:
       * Inflow/outflow indicators and investor behavior patterns
       * Questions about who owns a stock or how ownership is changing
       * Questions about institutional buying or selling activity
+
+    - Use 'InvestorPersona_Agent' for:
+      * "What would Buffett/Burry/Lynch think of this stock?"
+      * Investor perspective analysis from legendary investors
+      * Multi-perspective investment committee analysis
+      * Comparing how different investment philosophies view a stock
 
     - Use 'AgentEvaluator' AFTER other agents complete to:
       * Verify data freshness meets architecture guidelines
@@ -3776,5 +3840,6 @@ else:
     token_usage_subagent = None
     flow_data_subagent = None
     agent_evaluator_subagent = None
+    investor_persona_subagent = None
     root_agent = None
     print("ℹ️ All ADK agents disabled (llm=None). Using direct Gemini chatbot instead.")

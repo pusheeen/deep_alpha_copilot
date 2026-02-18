@@ -10,6 +10,7 @@ google-cloud-secret-manager
 google-api-python-client
 google-generativeai
 openai
+anthropic
 youtube-transcript-api
 markdown
 scipy

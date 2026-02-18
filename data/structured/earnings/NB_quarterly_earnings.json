@@ -1,6 +1,22 @@
 [
   {
     "ticker": "NB",
+    "period": "2025-12-31 00:00:00",
+    "revenue": 0.0,
+    "earnings": -9502000.0,
+    "net_income": -623000.0,
+    "eps": 0.0
+  },
+  {
+    "ticker": "NB",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": -12018000.0,
+    "net_income": -42659000.0,
+    "eps": -0.53
+  },
+  {
+    "ticker": "NB",
     "period": "2025-06-30 00:00:00",
     "revenue": 0.0,
     "earnings": -5063000.0,
@@ -14,21 +30,5 @@
     "earnings": -2599000.0,
     "net_income": -5297000.0,
     "eps": -0.11
-  },
-  {
-    "ticker": "NB",
-    "period": "2024-12-31 00:00:00",
-    "revenue": 0.0,
-    "earnings": -2901000.0,
-    "net_income": -450000.0,
-    "eps": -0.01
-  },
-  {
-    "ticker": "NB",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 0.0,
-    "earnings": -1395000.0,
-    "net_income": -2071000.0,
-    "eps": -0.05
   }
 ]

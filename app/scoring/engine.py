@@ -926,6 +926,24 @@ def compute_financial_score(fin_df: pd.DataFrame, info: dict) -> ComponentScore:
             )
         )
 
+    # Forward P/E compression signal
+    trailing_pe_raw = info.get("trailingPE")
+    forward_pe_raw = info.get("forwardPE")
+    if (
+        trailing_pe_raw is not None and forward_pe_raw is not None
+        and trailing_pe_raw > 0 and forward_pe_raw > 0
+    ):
+        pe_compression = (trailing_pe_raw - forward_pe_raw) / trailing_pe_raw
+        if pe_compression > 0.3:
+            component_scores.append(8.5)
+            notes.append("Strong forward P/E compression — expected earnings growth.")
+        elif pe_compression > 0.1:
+            component_scores.append(7.0)
+            notes.append("Moderate forward P/E compression — moderate expected growth.")
+        elif pe_compression < -0.2:
+            component_scores.append(4.0)
+            notes.append("Negative forward P/E compression — expected earnings decline.")
+
     score = clamp(mean(component_scores)) if component_scores else None
 
     summary = (
@@ -1535,7 +1553,12 @@ def get_quick_facts(ticker: str, info: dict, fin_df: pd.DataFrame) -> dict:
             "pe_ratio": pe_ratio,
             "ps_ratio": ps_ratio,
             "employees": info.get("fullTimeEmployees"),
-            "founded": info.get("foundedYear")
+            "founded": info.get("foundedYear"),
+            "forward_pe": info.get("forwardPE"),
+            "peg_ratio": info.get("pegRatio"),
+            "beta": info.get("beta"),
+            "price_to_book": info.get("priceToBook"),
+            "dividend_yield": info.get("dividendYield"),
         }
     except Exception:
         return {}

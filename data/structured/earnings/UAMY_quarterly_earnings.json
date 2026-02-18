@@ -1,6 +1,14 @@
 [
   {
     "ticker": "UAMY",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 8701951.0,
+    "earnings": 2013442.0,
+    "net_income": -4780700.0,
+    "eps": -0.04
+  },
+  {
+    "ticker": "UAMY",
     "period": "2025-06-30 00:00:00",
     "revenue": 10525123.0,
     "earnings": 2837545.0,
@@ -22,13 +30,5 @@
     "earnings": 1309605.0,
     "net_income": -882919.0,
     "eps": null
-  },
-  {
-    "ticker": "UAMY",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 2421020.0,
-    "earnings": 425768.0,
-    "net_income": -727509.0,
-    "eps": -0.01
   }
 ]

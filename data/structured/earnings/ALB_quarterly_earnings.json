@@ -1,6 +1,22 @@
 [
   {
     "ticker": "ALB",
+    "period": "2025-12-31 00:00:00",
+    "revenue": 1428031000.0,
+    "earnings": 197934000.0,
+    "net_income": -414179000.0,
+    "eps": null
+  },
+  {
+    "ticker": "ALB",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 1307829000.0,
+    "earnings": 117610000.0,
+    "net_income": -160694000.0,
+    "eps": -1.72
+  },
+  {
+    "ticker": "ALB",
     "period": "2025-06-30 00:00:00",
     "revenue": 1329992000.0,
     "earnings": 196876000.0,
@@ -14,21 +30,5 @@
     "earnings": 156299000.0,
     "net_income": 41348000.0,
     "eps": 0.0
-  },
-  {
-    "ticker": "ALB",
-    "period": "2024-12-31 00:00:00",
-    "revenue": 1231713000.0,
-    "earnings": 138213000.0,
-    "net_income": 75293000.0,
-    "eps": 0.29
-  },
-  {
-    "ticker": "ALB",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 1354692000.0,
-    "earnings": -104034000.0,
-    "net_income": -1068992000.0,
-    "eps": -9.45
   }
 ]

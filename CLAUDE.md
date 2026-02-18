@@ -1,5 +1,14 @@
 # Instructions for Claude
 
+## Tool Permissions
+- **Allowed**: Run any Bash commands for building, testing, fetching data, git operations, installing dependencies, running scripts, etc.
+- **Not allowed without explicit user permission**: Destructive commands that could cause irreversible damage, such as:
+  - `rm -rf /` or mass file deletion
+  - `git push --force` to main/master
+  - `git reset --hard` (discarding uncommitted work)
+  - `DROP DATABASE` or similar destructive database operations
+  - Any command that could delete large amounts of files or data
+
 ## Code Safety
 1. **Never delete all code without explicit permission** - Always preserve existing functionality unless explicitly instructed to remove it. If major deletions are needed, ask for confirmation first.
 

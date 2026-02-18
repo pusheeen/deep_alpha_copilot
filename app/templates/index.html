@@ -4,12 +4,41 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>deepAlpha Copilot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         #chat-container::-webkit-scrollbar { width: 4px; }
         #chat-container::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 20px; }
+        /* Universe table sort headers */
+        .sort-header { cursor: pointer; user-select: none; }
+        .sort-header:hover { color: #6366f1; }
+        .sort-header .sort-icon { opacity: 0.3; transition: opacity 0.15s; }
+        .sort-header:hover .sort-icon, .sort-header.active .sort-icon { opacity: 1; }
+        /* Smooth transitions for deep-dive panel */
+        #deep-dive-panel { transition: all 0.3s ease; }
+        /* Table row hover */
+        #universe-tbody tr { transition: background-color 0.15s; }
+        /* Sticky header for universe table */
+        #universe-table thead th { position: sticky; top: 0; z-index: 10; }
+        /* Signal dot pulse */
+        @keyframes signal-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .signal-pulse { animation: signal-pulse 2s ease-in-out infinite; }
+        /* Scrollbar for universe table */
+        .universe-scroll::-webkit-scrollbar { height: 6px; }
+        .universe-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-900">
@@ -32,9 +61,9 @@
             <div class="p-4">
                 <div class="space-y-3">
                     <!-- Institutional Data Section -->
-                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-green-600">
-                        <h4 class="text-sm font-bold text-green-700 mb-2 flex items-center">
-                            ✅ Institutional Data (Factual)
+                    <div class="bg-white rounded-lg p-3 border border-slate-200">
+                        <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center">
+                            Institutional Data (Factual)
                         </h4>
                         <ul class="space-y-1 text-xs text-slate-700">
                             <li><strong>Source:</strong> SEC 13F filings via Yahoo Finance</li>
@@ -44,20 +73,20 @@
                     </div>
 
                     <!-- Retail Data Section -->
-                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-amber-500">
-                        <h4 class="text-sm font-bold text-amber-700 mb-2 flex items-center">
-                            ⚠️ Daily Flow Split (Estimated)
+                    <div class="bg-white rounded-lg p-3 border border-slate-200">
+                        <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center">
+                            Daily Flow Split (Estimated)
                         </h4>
                         <ul class="space-y-1 text-xs text-slate-700">
                             <li><strong>Source:</strong> Estimated using volume patterns</li>
                             <li><strong>Method:</strong> Volume spikes, price moves, volatility</li>
-                            <li><strong>Accuracy:</strong> ⚠️ Estimated only</li>
+                            <li><strong>Accuracy:</strong> Estimated only</li>
                         </ul>
                     </div>
 
                     <!-- Chart Guide Section -->
-                    <div class="bg-white rounded-lg p-3 border border-slate-200 border-l-4 border-l-indigo-600">
-                        <h4 class="text-sm font-bold text-indigo-700 mb-2">📊 Chart Guide</h4>
+                    <div class="bg-white rounded-lg p-3 border border-slate-200">
+                        <h4 class="text-sm font-bold text-slate-700 mb-2">Chart Guide</h4>
                         <ul class="space-y-1.5 text-xs text-slate-700">
                             <li><strong>Blue Line:</strong> Retail volume (estimated daily)</li>
                             <li><strong>Purple Line:</strong> Institutional volume (estimated daily)</li>
@@ -66,9 +95,9 @@
 
                     <!-- Key Takeaway -->
                     <div class="bg-slate-100 rounded-lg p-3 border border-slate-300">
-                        <h4 class="text-xs font-bold text-slate-800 mb-1">💡 Key Takeaway</h4>
+                        <h4 class="text-xs font-bold text-slate-800 mb-1">Key Takeaway</h4>
                         <p class="text-xs text-slate-700">
-                            Use ✅ institutional data for fundamentals. Use ⚠️ daily estimates as indicators only.
+                            Use institutional data for fundamentals. Use daily estimates as indicators only.
                         </p>
                     </div>
                 </div>
@@ -83,109 +112,148 @@
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto py-6 px-4 space-y-6">
-        <header class="bg-slate-900 text-slate-100 rounded-2xl p-6 shadow-lg">
-            <!-- Top Navigation -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div class="flex items-center gap-3">
+    <div class="max-w-7xl mx-auto py-4 px-4 space-y-4">
+        <!-- Compact Header -->
+        <header class="bg-slate-900 text-slate-100 rounded-2xl px-6 py-4 shadow-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-6">
                     <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-slate-400">DeepAlpha Copilot</p>
+                        <h1 class="text-lg font-bold tracking-tight">Deep Alpha <span class="text-indigo-400 font-light">Copilot</span></h1>
                     </div>
+                    <nav class="hidden md:flex gap-1 text-xs">
+                        <a href="/" class="px-3 py-1.5 rounded-md bg-indigo-600 text-white font-semibold">Dashboard</a>
+                        <a href="/about" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition text-slate-400 hover:text-white">About</a>
+                        <a href="/research" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition text-slate-400 hover:text-white">Research</a>
+                        <a href="/team" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition text-slate-400 hover:text-white">Team</a>
+                    </nav>
                 </div>
-                <nav class="flex flex-wrap gap-2 text-sm">
-                    <a href="/" class="px-3 py-2 rounded-lg bg-indigo-600 text-white font-semibold">Product</a>
-                    <a href="/about" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">About</a>
-                    <a href="/research" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Research</a>
-                    <a href="/team" class="px-3 py-2 rounded-lg bg-slate-800/60 hover:bg-slate-800 transition">Team</a>
-                </nav>
-            </div>
-            <!-- Market Conditions Bar -->
-            <div id="market-conditions" class="bg-slate-800/50 rounded-lg p-3 mb-4 flex flex-wrap items-center gap-4 text-xs">
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400">Market:</span>
-                    <span id="market-phase" class="font-semibold">Loading...</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400">Fear & Greed:</span>
-                    <span id="fear-greed-score" class="font-semibold">--</span>
-                    <span id="fear-greed-level" class="px-2 py-0.5 rounded text-xs"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400">VIX:</span>
-                    <span id="vix-current" class="font-semibold">--</span>
-                </div>
-                <div class="flex items-center gap-2" title="Estimated based on VIX levels">
-                    <span class="text-slate-400">Put/Call:</span>
-                    <span id="put-call-ratio" class="font-semibold">--</span>
-                </div>
-                <div class="ml-auto text-slate-400 text-xs flex items-center gap-2">
-                    <span>Data as of:</span>
-                    <span id="market-update-time" class="font-mono text-slate-300">Loading...</span>
-                </div>
-            </div>
-            
-            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400 mb-2">AI financial analyst</p>
-                    <h1 class="text-3xl md:text-4xl font-semibold">Deep Alpha</h1>
-                    <p class="mt-3 text-sm text-slate-300">
-                        We translate fundamentals, financials, sentiment, leadership, events, and technical signals into a concise outlook so you can act with conviction.
-                    </p>
-                </div>
-                <!-- Login/Signup functionality removed -->
-                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                    <form id="score-form" class="bg-slate-800/60 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-3 flex-1 md:w-96">
-                        <div class="flex-1">
-                            <label for="score-ticker" class="text-xs uppercase tracking-wide text-slate-400">Ticker symbol</label>
-                            <input type="text" id="score-ticker" value="NVDA" class="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase" placeholder="NVDA" />
+                <div class="flex items-center gap-3">
+                    <!-- Compact search -->
+                    <form id="score-form" class="flex items-center gap-2">
+                        <div class="relative">
+                            <input type="text" id="score-ticker" value="NVDA" class="w-24 rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase font-mono" placeholder="NVDA" />
                         </div>
-                        <button type="submit" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition">Generate</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition">Analyze</button>
                     </form>
-                    <a href="/comparison" id="open-comparison" class="inline-flex items-center justify-center bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold px-4 py-2 rounded-lg transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
+                    <a href="/comparison" id="open-comparison" class="hidden md:inline-flex items-center bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-3 py-1.5 rounded-lg transition border border-slate-700">
                         Compare
                     </a>
                 </div>
             </div>
+            <!-- Market Conditions Strip -->
+            <div id="market-conditions" class="mt-3 flex flex-wrap items-center gap-4 text-[11px] border-t border-slate-800 pt-3">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 signal-pulse"></span>
+                    <span class="text-slate-500">Market:</span>
+                    <span id="market-phase" class="font-medium text-slate-300">Loading...</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-slate-500">F&G:</span>
+                    <span id="fear-greed-score" class="font-semibold text-slate-200">--</span>
+                    <span id="fear-greed-level" class="px-1.5 py-0.5 rounded text-[10px]"></span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-slate-500">VIX:</span>
+                    <span id="vix-current" class="font-semibold text-slate-200">--</span>
+                </div>
+                <div class="flex items-center gap-1.5" title="Estimated based on VIX levels">
+                    <span class="text-slate-500">P/C:</span>
+                    <span id="put-call-ratio" class="font-semibold text-slate-200">--</span>
+                </div>
+                <div class="ml-auto text-slate-500 flex items-center gap-1.5">
+                    <span id="market-update-time" class="font-mono text-slate-400">Loading...</span>
+                </div>
+            </div>
         </header>
 
-        <!-- Product Overview (Landing Content) -->
-        <section class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <div class="grid lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1">
-                    <h2 class="text-xl font-semibold text-slate-900">Decision-ready equity research—on demand.</h2>
-                    <p class="mt-3 text-sm text-slate-600 leading-relaxed">
-                        DeepAlpha Copilot turns fragmented market information into a clear outlook by combining structured fundamentals with narrative signals like news, filings, and sentiment.
-                    </p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <a href="/research" class="inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg transition">
-                            Read the research
-                        </a>
-                        <a href="/team" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold px-4 py-2 rounded-lg transition border border-slate-200">
-                            Meet the team
-                        </a>
+        <!-- Landing Hero (first visit) -->
+        <section id="landing-hero" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-8 py-12 md:py-16 max-w-3xl mx-auto text-center">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                    AI-powered investment research
+                </h2>
+                <p class="mt-3 text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+                    Deep Alpha Copilot scores every stock across 7 dimensions — business, financials, earnings, sentiment, leadership, technical, and strategic importance — then synthesizes 12 legendary investor perspectives.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button id="hero-demo-btn" onclick="startDemo()" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        Try a live analysis
+                    </button>
+                    <button onclick="dismissHero()" class="px-6 py-2.5 bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium rounded-lg transition-colors border border-slate-200">
+                        Go to dashboard
+                    </button>
+                </div>
+                <div class="mt-10 grid grid-cols-3 gap-6 text-left max-w-lg mx-auto">
+                    <div>
+                        <div class="text-2xl font-bold text-slate-800">21</div>
+                        <div class="text-xs text-slate-400 mt-0.5">Stocks covered</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-slate-800">7</div>
+                        <div class="text-xs text-slate-400 mt-0.5">Score dimensions</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-slate-800">12</div>
+                        <div class="text-xs text-slate-400 mt-0.5">Investor personas</div>
                     </div>
                 </div>
-                <div class="lg:col-span-2 grid md:grid-cols-2 gap-4">
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-slate-900">Standardized scoring</h3>
-                        <p class="mt-2 text-sm text-slate-600">Comparable factor scores and recommendation bands across tickers.</p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-slate-900">Thesis + risk map</h3>
-                        <p class="mt-2 text-sm text-slate-600">A crisp thesis, key risks, and what to monitor next.</p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-slate-900">News interpreter</h3>
-                        <p class="mt-2 text-sm text-slate-600">Recent events summarized with materiality and expected impact.</p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-slate-900">Agent-based reasoning</h3>
-                        <p class="mt-2 text-sm text-slate-600">Specialist tools + synthesis to answer complex questions in one flow.</p>
-                    </div>
+            </div>
+        </section>
+
+        <!-- Universe Overview -->
+        <section id="universe-section" class="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
+            <div class="px-6 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-800">Coverage Universe</h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Click any ticker to deep-dive</p>
                 </div>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer select-none">
+                        <input type="checkbox" id="show-detail-cols" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5" />
+                        Show details
+                    </label>
+                    <button id="load-universe-btn" class="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition px-2.5 py-1 rounded border border-slate-200 hover:border-indigo-300">
+                        Load Prices
+                    </button>
+                    <button id="load-all-btn" class="hidden"></button>
+                </div>
+            </div>
+            <!-- Universe loading indicator -->
+            <div id="universe-loading" class="hidden px-6 py-1.5 bg-slate-50 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 border-2 border-slate-300 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <span class="text-[11px] text-slate-500">Fetching live data...</span>
+                    <span id="universe-progress" class="text-[11px] text-slate-400 ml-auto"></span>
+                </div>
+            </div>
+
+            <!-- Compact card grid (shown before prices load) -->
+            <div id="universe-cards" class="p-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Full table (hidden until prices load) -->
+            <div id="universe-table-wrap" class="universe-scroll overflow-x-auto hidden">
+                <table id="universe-table" class="w-full text-sm" style="table-layout: fixed;">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200">
+                            <th class="sort-header px-3 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[60px]" data-sort="ticker">Ticker</th>
+                            <th class="px-3 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase tracking-wider" style="width:22%">Company</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[70px]" data-sort="price">Price</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[70px]" data-sort="day_change_pct">Change</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[80px]" data-sort="market_cap">Mkt Cap</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[55px]" data-sort="pe_ratio">P/E</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[60px]" data-sort="forward_pe">Fwd P/E</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[50px]" data-sort="beta">Beta</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[60px]" data-sort="profit_margin">Margin</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider detail-col hidden w-[55px]" data-sort="revenue_growth">Rev Gr</th>
+                            <th class="sort-header px-3 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[50px]" data-sort="score">Score</th>
+                            <th class="px-3 py-2 text-center text-[10px] font-semibold text-slate-400 uppercase tracking-wider w-[70px]">Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="universe-tbody" class="divide-y divide-slate-50">
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -255,7 +323,7 @@
                         <p class="text-slate-600">Loading comparison data...</p>
                     </div>
                 </div>
-                <div id="comparison-note" class="hidden mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm"></div>
+                <div id="comparison-note" class="hidden mb-4 bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 rounded-xl text-sm"></div>
                 <div id="comparison-content">
                     <!-- Overall Scores Comparison -->
                     <div class="mb-8">
@@ -301,34 +369,31 @@
             </div>
         </section>
 
-        <div id="coming-soon-banner" class="hidden bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-2xl mb-4">
+        <div id="coming-soon-banner" class="hidden bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 rounded-2xl mb-4">
             <strong class="font-semibold">Preview notice:</strong>
             Analysis for <span id="coming-soon-ticker" class="font-mono font-semibold"></span> is coming soon. Data will continue to fill in as we finalize coverage.
         </div>
 
-        <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <p class="text-sm text-slate-500">Loading scorecard...</p>
+        <section id="scoreboard" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hidden">
+            <p class="text-sm text-slate-500">Select a ticker above to see its analysis.</p>
         </section>
 
         <!-- Latest News & AI Analysis Section (Standalone) -->
-        <section id="standalone-news-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <section id="standalone-news-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hidden">
             <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <span class="mr-2">📰</span> Latest News & AI Investment Analysis <span class="text-xs text-slate-400 ml-2 font-normal">(Refreshes every 12 hours)</span>
+                Latest News & AI Investment Analysis <span class="text-xs text-slate-400 ml-2 font-normal">(Refreshes every 12 hours)</span>
             </h3>
             <div id="news-last-updated" class="text-xs text-slate-500 mb-2"></div>
             <div id="standalone-news-content" class="text-slate-600 text-sm">
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-                    <span class="ml-3 text-slate-500">Loading latest news...</span>
-                </div>
+                <p class="text-sm text-slate-400 py-4">Select a ticker to load news.</p>
             </div>
         </section>
 
         <!-- Flow Data Section (Standalone) -->
-        <section id="standalone-flow-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+        <section id="standalone-flow-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hidden">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                    <span class="mr-2">💹</span> Institutional & Retail Flow Data <span class="text-xs text-slate-400 ml-2 font-normal">(Quarterly institutional, 3mo retail estimates)</span>
+                    Institutional & Retail Flow Data <span class="text-xs text-slate-400 ml-2 font-normal">(Quarterly institutional, 3mo retail estimates)</span>
                     <button onclick="toggleFlowDataHelp()" class="ml-3 text-white bg-indigo-600 hover:bg-indigo-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors shadow-md">
                         ?
                     </button>
@@ -355,83 +420,20 @@
             </div>
         </section>
 
-        <!-- Token Usage Section (Standalone) -->
-        <section id="standalone-token-section" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <span class="mr-2">📊</span> AI Token Usage (Since Last Year)
-            </h3>
-            <div id="standalone-token-content" class="text-slate-600 text-sm">
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-800"></div>
-                    <span class="ml-3 text-slate-500">Loading token usage...</span>
-                </div>
-            </div>
+        <!-- Token Usage Section (Hidden - operational detail) -->
+        <section id="standalone-token-section" class="hidden">
+            <div id="standalone-token-content"></div>
         </section>
 
-        <section id="score-table" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-xl font-semibold text-slate-800">Coverage Universe</h2>
-                    <p class="text-sm text-slate-600 mt-1">Browse all companies we track. Scores load automatically in the background.</p>
-            </div>
-                <button id="load-all-btn" class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh All
-                </button>
-            </div>
-            
-            <!-- Background Loading Progress Bar -->
-            <div id="background-loading-container" class="mb-6 hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-slate-700">Loading tickers in background...</span>
-                    <span id="loading-progress-text" class="text-sm font-semibold text-indigo-600">0%</span>
-                </div>
-                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                    <div id="loading-progress-bar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
-                </div>
-                <p class="text-xs text-slate-500 mt-2 flex items-center">
-                    <svg class="animate-spin h-3 w-3 mr-1 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    You can continue browsing while we load the rest
-                </p>
-            </div>
-            
-            <!-- Ticker Grid -->
-            <div id="ticker-grid" class="grid grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-3 mb-6">
-                ${supportedTickers.map(ticker => {
-                    const metadata = companyMetadata[ticker] || { name: ticker, industry: 'Unknown' };
-                    return `
-                        <div class="ticker-card bg-slate-50 hover:bg-slate-100 rounded-lg p-3 text-center transition-colors cursor-pointer border border-slate-200 hover:border-indigo-400" data-ticker="${ticker}">
-                            <div class="font-mono text-sm font-semibold text-slate-800">${ticker}</div>
-                            <div class="text-xs text-slate-500 mt-1 truncate" title="${metadata.name}">${metadata.name}</div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-            
-            <!-- Full Table (Hidden by default) -->
+        <!-- Legacy score table (hidden, kept for JS compatibility) -->
+        <section id="score-table" class="hidden">
+            <div id="background-loading-container" class="hidden"></div>
+            <div id="ticker-grid" class="hidden"></div>
             <div id="full-table" class="hidden">
-                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Ticker</th>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Company</th>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Industry</th>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Score</th>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Recommendation</th>
-                                <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Confidence</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="divide-y divide-slate-100">
-                        </tbody>
-                    </table>
-                </div>
+                <table class="hidden"><tbody id="table-body"></tbody></table>
             </div>
+            <div id="loading-progress-bar" class="hidden"></div>
+            <div id="loading-progress-text" class="hidden"></div>
         </section>
 
 
@@ -492,15 +494,10 @@
                 </div>
     </div>
 
-    <footer class="max-w-6xl mx-auto px-4 pb-10">
-        <div class="mt-8 text-xs text-slate-500 flex flex-wrap gap-3 items-center justify-between">
-            <span>© DeepAlpha Copilot</span>
-            <div class="flex flex-wrap gap-3">
-                <a class="hover:text-slate-700" href="/about">About</a>
-                <a class="hover:text-slate-700" href="/research">Research</a>
-                <a class="hover:text-slate-700" href="/team">Team</a>
-            </div>
-            <span><strong>Disclaimer:</strong> Informational analysis only — not investment advice.</span>
+    <footer class="max-w-7xl mx-auto px-4 pb-6">
+        <div class="mt-4 pt-4 border-t border-slate-200 text-[11px] text-slate-400 flex flex-wrap gap-3 items-center justify-between">
+            <span>Deep Alpha Copilot</span>
+            <span>Informational analysis only - not investment advice.</span>
         </div>
     </footer>
 
@@ -532,7 +529,7 @@
 
         const apiUrl = window.location.origin + '/chat';
         const scoreApiUrl = ticker => `${window.location.origin}/api/scores/${encodeURIComponent(ticker)}`;
-        const supportedTickers = ["INTC", "LAC", "MU", "CCJ", "URNM", "XOM", "CFFP", "NLR", "NUKZ", "URA", "NVDA", "MSFT", "LEU", "IREN", "CLS", "ANET", "OKLO", "QBTS", "NAK", "SMAR", "UNH", "RKLB", "FLNC", "ASST", "EOSE", "SNKE", "BE"];
+        const supportedTickers = ["TSM", "NVDA", "AMD", "AVGO", "ORCL", "MU", "CLS", "LEU", "SMR", "IREN", "EOSE", "MP", "LAC", "UAMY", "CRML", "NMG", "PPTA", "NVA", "NAK", "NB", "ALB"];
         const supportedTickerSet = new Set(supportedTickers);
         const previewTickerSet = new Set([]);
         const comingSoonBanner = document.getElementById('coming-soon-banner');
@@ -564,6 +561,9 @@
             "INOD": { name: "Innodata Inc", industry: "Information Technology Services" },
             "RR": { name: "Richtech Robotics Inc", industry: "Industrial Machinery" },
             "IREN": { name: "Iren Ltd", industry: "Utilities" },
+            "CLS": { name: "Celestica Inc", industry: "Electronics Manufacturing" },
+            "LEU": { name: "Centrus Energy Corp", industry: "Nuclear Fuel" },
+            "MP": { name: "MP Materials Corp", industry: "Rare Earth Mining" },
             "CIFR": { name: "Cipher Mining Inc", industry: "Cryptocurrency Mining" },
             "RIOT": { name: "Riot Platforms Inc", industry: "Cryptocurrency Mining" },
             "OKLO": { name: "Oklo Inc", industry: "Nuclear Energy" },
@@ -572,7 +572,18 @@
             "VST": { name: "Vistra Corp", industry: "Utilities" },
             "NXE": { name: "NexGen Energy Ltd", industry: "Uranium Mining" },
             "EOSE": { name: "Eos Energy Enterprises Inc", industry: "Energy Storage" },
-            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" }
+            "QS": { name: "QuantumScape Corp", industry: "Battery Technology" },
+            "ORCL": { name: "Oracle Corp", industry: "Software" },
+            "LAC": { name: "Lithium Americas Corp", industry: "Lithium Mining" },
+            "UAMY": { name: "United States Antimony Corp", industry: "Mining" },
+            "CRML": { name: "Critical Metals Corp", industry: "Mining" },
+            "NMG": { name: "Nouveau Monde Graphite", industry: "Graphite Mining" },
+            "PPTA": { name: "Perpetua Resources", industry: "Mining" },
+            "NVA": { name: "Nova Minerals Ltd", industry: "Mining" },
+            "NAK": { name: "Northern Dynasty Minerals", industry: "Mining" },
+            "NB": { name: "NioCorp Developments", industry: "Critical Minerals" },
+            "ALB": { name: "Albemarle Corp", industry: "Specialty Chemicals" },
+            "AMD": { name: "Advanced Micro Devices", industry: "Semiconductors" }
         };
 
         async function fetchWithNewsContext(question) {
@@ -736,10 +747,10 @@
         }
 
         function scoreColor(score) {
-            if (score === null || score === undefined) return 'bg-slate-200 text-slate-700';
-            if (score >= 7.5) return 'bg-green-100 text-green-800';
+            if (score === null || score === undefined) return 'bg-slate-100 text-slate-500';
+            if (score >= 7.5) return 'bg-slate-100 text-slate-900 font-bold';
             if (score >= 5.0) return 'bg-slate-100 text-slate-600';
-            return 'bg-red-100 text-red-800';
+            return 'bg-slate-100 text-slate-500';
         }
 
         function getScoreMethodology(scoreType, component) {
@@ -748,43 +759,43 @@
                     <div><strong>Data Sources:</strong> Yahoo Finance financials, SEC filings</div>
                     <div><strong>Time Period:</strong> Last 4 quarters for CAGR, latest quarter for margins</div>
                     <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Gross Margin (65%+ = 10pts), R&D Intensity (20%+ = 10pts), Industry Score (6-10pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 financial: `
                     <div><strong>Data Sources:</strong> Yahoo Finance fundamentals, company financials</div>
                     <div><strong>Time Period:</strong> Last 4 quarters for trends, latest values for ratios</div>
                     <div><strong>Calculation:</strong> Revenue CAGR (30%+ = 10pts), Net Margin (20%+ = 8.5pts), FCF/Debt (2x+ = 10pts), D/E (50- = 9.5pts), P/E (15- = 9.5pts), P/S (2- = 9pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 sentiment: `
                     <div><strong>Data Sources:</strong> Yahoo Finance news, Reddit API</div>
                     <div><strong>Time Period:</strong> Last 30 days (weighted by recency)</div>
                     <div><strong>Calculation:</strong> News sentiment via VADER analysis (0.45+ = 9.5pts), Reddit bullish ratio (0.4+ = 9.5pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 critical: `
                     <div><strong>Data Sources:</strong> Internal assessment framework</div>
                     <div><strong>Time Period:</strong> Static mapping based on strategic importance</div>
                     <div><strong>Calculation:</strong> Pre-defined criticality scores (5-10pts) based on industry and strategic positioning</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 leadership: `
                     <div><strong>Data Sources:</strong> Yahoo Finance officers, CEO profile reports</div>
                     <div><strong>Time Period:</strong> Current leadership data</div>
                     <div><strong>Calculation:</strong> CEO tenure (15+ yrs = 9.5pts), compensation (>$10M = 9.5pts), officer count (5+ = 7.5pts), reputation bonus</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 earnings: `
                     <div><strong>Data Sources:</strong> Quarterly earnings data, Yahoo Finance</div>
                     <div><strong>Time Period:</strong> Quarterly earnings history</div>
                     <div><strong>Calculation:</strong> EPS trend (30%+ = 10pts), Revenue trend (30%+ = 10pts), Consistency score (25+ = 10pts)</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `,
                 technical: `
                     <div><strong>Data Sources:</strong> Yahoo Finance price data</div>
                     <div><strong>Time Period:</strong> Latest trading data</div>
                     <div><strong>Calculation:</strong> RSI (30-70 = neutral), MACD crossover (±2pts), Moving average alignment (±3pts), Base score 5.0</div>
-                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`).join(', ')}</div>
+                    <div><strong>Inputs:</strong> ${Object.entries(component.inputs || {}).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `${k}: ${typeof v === 'number' ? v.toFixed(1) : v}`).join(', ')}</div>
                 `
             };
             return methodologies[scoreType] || '<div>Methodology not available</div>';
@@ -884,22 +895,22 @@
                 
                 if (avgSentiment > 0.1) {
                     sentimentLabel = 'Positive';
-                    sentimentColor = 'text-green-700';
-                    sentimentBg = 'bg-green-50 border-green-200';
+                    sentimentColor = 'text-slate-800';
+                    sentimentBg = 'bg-slate-50 border-slate-200';
                 } else if (avgSentiment < -0.1) {
                     sentimentLabel = 'Negative';
-                    sentimentColor = 'text-red-700';
-                    sentimentBg = 'bg-red-50 border-red-200';
+                    sentimentColor = 'text-slate-600';
+                    sentimentBg = 'bg-slate-50 border-slate-200';
                 } else {
                     sentimentLabel = 'Neutral';
-                    sentimentColor = 'text-slate-600';
+                    sentimentColor = 'text-slate-500';
                     sentimentBg = 'bg-slate-50 border-slate-200';
                 }
                 
                 const sources = [...new Set(events.map(e => e.source).filter(Boolean))];
                 const keyEvents = events.slice(0, 2).map(event => `
                     <li class="flex items-start space-x-2 text-xs">
-                        <span class="mt-1 inline-block h-1 w-1 rounded-full ${event.sentiment >= 0.2 ? 'bg-green-500' : event.sentiment <= -0.2 ? 'bg-red-500' : 'bg-slate-400'}"></span>
+                        <span class="mt-1 inline-block h-1 w-1 rounded-full bg-slate-400"></span>
                         <div class="flex-1">
                             <div class="flex items-start justify-between">
                                 <span class="text-slate-600 flex-1">${event.title.length > 50 ? event.title.substring(0, 50) + '...' : event.title}</span>
@@ -916,7 +927,7 @@
                                         ${event.source || 'Unknown'}
                             </span>
                         </div>
-                                <span class="text-xs ${event.sentiment > 0.1 ? 'text-green-600' : event.sentiment < -0.1 ? 'text-red-600' : 'text-slate-500'}">
+                                <span class="text-xs text-slate-500">
                                     ${event.sentiment > 0.1 ? '↗' : event.sentiment < -0.1 ? '↘' : '→'}
                                 </span>
                     </div>
@@ -1006,10 +1017,10 @@
 
         function getRecommendationColor(recommendation) {
             switch(recommendation) {
-                case 'Strong Buy': return 'bg-green-600 text-white';
-                case 'Buy': return 'bg-green-500 text-white';
-                case 'Hold': return 'bg-slate-500 text-white';
-                case 'Sell': return 'bg-red-500 text-white';
+                case 'Strong Buy': return 'bg-slate-800 text-white';
+                case 'Buy': return 'bg-slate-700 text-white';
+                case 'Hold': return 'bg-slate-400 text-white';
+                case 'Sell': return 'bg-slate-500 text-white';
                 default: return 'bg-slate-500 text-white';
             }
         }
@@ -1023,11 +1034,11 @@
 
         function getBenchmarkBadgeClass(color) {
             const colorMap = {
-                green: 'bg-green-100 text-green-700 border-green-300',
-                lightgreen: 'bg-green-50 text-green-600 border-green-200',
+                green: 'bg-slate-100 text-slate-700 border-slate-300',
+                lightgreen: 'bg-slate-50 text-slate-600 border-slate-200',
                 yellow: 'bg-slate-100 text-slate-600 border-slate-300',
-                orange: 'bg-amber-100 text-amber-700 border-amber-300',
-                red: 'bg-red-100 text-red-700 border-red-300'
+                orange: 'bg-slate-100 text-slate-600 border-slate-300',
+                red: 'bg-slate-100 text-slate-600 border-slate-300'
             };
             return colorMap[color] || 'bg-slate-100 text-slate-700 border-slate-300';
         }
@@ -1067,21 +1078,21 @@
                     // Color code the level
                     const levelEl = document.getElementById('fear-greed-level');
                     if (fgLevel.includes('Extreme Fear')) {
-                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-red-600 text-white';
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-slate-800 text-white';
                     } else if (fgLevel.includes('Fear')) {
-                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-orange-500 text-white';
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-slate-600 text-white';
                     } else if (fgLevel.includes('Greed')) {
-                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-green-600 text-white';
+                        levelEl.className = 'px-2 py-0.5 rounded text-xs bg-slate-500 text-white';
                     } else {
                         levelEl.className = 'px-2 py-0.5 rounded text-xs bg-slate-400 text-white';
                     }
                     
                     // Update VIX
-                    document.getElementById('vix-current').textContent = data.vix.current ? data.vix.current.toFixed(2) : 'N/A';
-                    
+                    document.getElementById('vix-current').textContent = data.vix.current ? data.vix.current.toFixed(1) : 'N/A';
+
                     // Update Put/Call
                     const pcRatio = data.put_call_ratio.current;
-                    document.getElementById('put-call-ratio').textContent = pcRatio.toFixed(2);
+                    document.getElementById('put-call-ratio').textContent = pcRatio.toFixed(1);
                     
                     // Update market phase
                     document.getElementById('market-phase').textContent = data.market_phase.phase;
@@ -1122,12 +1133,12 @@
                 `${current.benchmark_pe} (Placeholder)` : 
                 current.benchmark_pe;
             document.getElementById('pe-current').textContent = `Current: ${current.pe_ratio || 'N/A'}`;
-            document.getElementById('pe-benchmark').innerHTML = `Industry: ${peBenchmarkText}${isPlaceholder ? ' <span class="text-xs text-amber-600">(est.)</span>' : ''}`;
+            document.getElementById('pe-benchmark').innerHTML = `Industry: ${peBenchmarkText}${isPlaceholder ? ' <span class="text-xs text-slate-400">(est.)</span>' : ''}`;
             
             // Update P/S display with placeholder indicator (P/S is always placeholder currently)
             const psBenchmarkText = `${current.benchmark_ps} (Placeholder)`;
             document.getElementById('ps-current').textContent = `Current: ${current.ps_ratio || 'N/A'}`;
-            document.getElementById('ps-benchmark').innerHTML = `Industry: ${psBenchmarkText} <span class="text-xs text-amber-600">(est.)</span>`;
+            document.getElementById('ps-benchmark').innerHTML = `Industry: ${psBenchmarkText} <span class="text-xs text-slate-400">(est.)</span>`;
 
             // Assessment badges
             const peAssessment = data.analysis.pe_vs_industry;
@@ -1140,8 +1151,8 @@
             psEl.textContent = psAssessment;
 
             const getAssessmentClass = (assessment) => {
-                if (assessment === 'Undervalued') return 'bg-green-100 text-green-800';
-                if (assessment === 'Overvalued') return 'bg-red-100 text-red-800';
+                if (assessment === 'Undervalued') return 'bg-slate-200 text-slate-800 font-semibold';
+                if (assessment === 'Overvalued') return 'bg-slate-100 text-slate-500';
                 return 'bg-slate-100 text-slate-600';
             };
 
@@ -1344,7 +1355,7 @@
                 // Period Change
                 const changeEl = document.getElementById('trendChange');
                 const changeSign = trend.price_change_pct >= 0 ? '+' : '';
-                const changeColor = trend.price_change_pct >= 0 ? 'text-green-600' : 'text-red-600';
+                const changeColor = 'text-slate-800';
                 changeEl.className = `text-2xl font-bold ${changeColor}`;
                 changeEl.innerHTML = `${changeSign}${trend.price_change_pct}%<br><span class="text-sm font-normal text-slate-500">${changeSign}$${trend.price_change}</span>`;
 
@@ -1495,7 +1506,7 @@
                                     
                                     let labels = [`Price: $${price}`];
                                     if (event) {
-                                        labels.push(`Change: ${event.price_change >= 0 ? '+' : ''}${event.price_change.toFixed(2)}%`);
+                                        labels.push(`Change: ${event.price_change >= 0 ? '+' : ''}${event.price_change.toFixed(1)}%`);
                                         labels.push(`Event: ${event.title}`);
                                         if (event.link) {
                                             labels.push(`Source: ${event.source || 'Market Data'}`);
@@ -1838,218 +1849,175 @@
             const priceHistory = data.price_history || {};
 
             scoreboard.innerHTML = `
-                <div class="space-y-8">
-                    <!-- Hero Section: Quick Facts & Recommendation -->
-                    <div class="bg-slate-900 rounded-2xl p-8 text-white shadow-xl">
-                        <div class="grid lg:grid-cols-3 gap-8">
-                            <!-- Quick Facts -->
-                            <div class="lg:col-span-1">
-                                <h1 class="text-2xl font-bold mb-4">${company.name}</h1>
-                                <div class="space-y-3 text-slate-300">
-                                    <div class="flex justify-between">
-                                        <span class="text-sm">Ticker:</span>
-                                        <span class="font-mono font-semibold">${company.ticker}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-sm">Industry:</span>
-                                        <span>${industryComparison.industry || 'N/A'}</span>
-                                    </div>
-                                    ${quickFacts.revenue_ttm ? `
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">Revenue (TTM):</span>
-                                            <span>${formatCurrency(quickFacts.revenue_ttm)}</span>
-                                        </div>
-                                    ` : ''}
-                                    ${quickFacts.profit_margin ? `
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">Profit Margin:</span>
-                                            <span>${quickFacts.profit_margin.toFixed(1)}%</span>
-                                        </div>
-                                    ` : ''}
-                                    ${quickFacts.forward_pe ? `
-                                        <div class="flex justify-between">
-                                            <span class="text-sm">Forward P/E:</span>
-                                            <span>${quickFacts.forward_pe.toFixed(1)}x</span>
-                                        </div>
-                                    ` : ''}
-                                    <div class="pt-2">
-                                        <a href="https://finance.yahoo.com/quote/${company.ticker}" target="_blank" class="inline-flex items-center text-slate-400 hover:text-white text-sm">
-                                            View on Yahoo Finance
-                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                            </svg>
-                                        </a>
-                                    </div>
+                <div class="space-y-6">
+                    <!-- Hero: Company + Score + Thesis -->
+                    <div class="border-b border-slate-200 pb-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <div class="flex items-baseline gap-3">
+                                    <h1 class="text-xl font-bold text-slate-900">${company.name}</h1>
+                                    <span class="font-mono text-sm text-slate-400">${company.ticker}</span>
+                                    <span class="text-xs text-slate-400">${industryComparison.industry || ''}</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                                    ${quickFacts.market_cap ? `<span>Mkt Cap: ${formatCurrency(quickFacts.market_cap)}</span>` : ''}
+                                    ${quickFacts.revenue_ttm ? `<span>Rev: ${formatCurrency(quickFacts.revenue_ttm)}</span>` : ''}
+                                    ${quickFacts.profit_margin ? `<span>Margin: ${quickFacts.profit_margin.toFixed(1)}%</span>` : ''}
+                                    ${quickFacts.forward_pe ? `<span>Fwd P/E: ${quickFacts.forward_pe.toFixed(1)}x</span>` : ''}
+                                    <a href="https://finance.yahoo.com/quote/${company.ticker}" target="_blank" class="text-indigo-500 hover:text-indigo-600">Yahoo Finance &rarr;</a>
                                 </div>
                             </div>
-
-                            <!-- Business Model Description -->
-                            <div class="lg:col-span-1">
-                                <h3 class="text-lg font-semibold mb-4">Business Model</h3>
-                                <div class="bg-white/10 rounded-lg p-4">
-                                    <p class="text-sm text-slate-300 leading-relaxed">
-                                        ${quickFacts.business_model || 'Technology company providing products and services to various markets.'}
-                                    </p>
-                                </div>
-                                
-                                <!-- Key Metrics Summary -->
-                                <div class="mt-4 space-y-2 text-sm">
-                                    <div class="flex justify-between">
-                                        <span class="text-slate-400">Market Cap:</span>
-                                        <span class="font-semibold">${formatCurrency(quickFacts.market_cap)}</span>
-                                    </div>
-                                    ${quickFacts.employees ? `
-                                        <div class="flex justify-between">
-                                            <span class="text-slate-400">Employees:</span>
-                                            <span class="font-semibold">${quickFacts.employees.toLocaleString()}</span>
-                                        </div>
-                                    ` : ''}
-                                    ${quickFacts.founded ? `
-                                        <div class="flex justify-between">
-                                            <span class="text-slate-400">Founded:</span>
-                                            <span class="font-semibold">${quickFacts.founded}</span>
-                                        </div>
-                                    ` : ''}
-                                    <div class="flex justify-between">
-                                        <span class="text-slate-400">HQ:</span>
-                                        <span class="font-semibold">${quickFacts.hq_location || 'N/A'}</span>
-                                    </div>
-                                </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold text-slate-900 tabular-nums">${overall.score.toFixed(1)}<span class="text-base font-normal text-slate-400">/10</span></div>
+                                <div class="text-sm font-semibold text-slate-700 mt-1">${recommendation.recommendation || overall.recommendation}</div>
                             </div>
-
-                            <!-- Recommendation -->
-                            <div class="lg:col-span-1">
-                                <div class="text-center">
-                                    <div class="mb-4">
-                                        <div class="text-4xl font-bold mb-2">${overall.score.toFixed(1)}</div>
-                                        <div class="text-sm text-slate-300 uppercase tracking-wide">Overall Score</div>
-                                    </div>
-                                    <div class="mb-4">
-                                        <div class="px-6 py-3 ${getRecommendationColor(recommendation.recommendation || overall.recommendation)} rounded-lg font-bold text-lg">
-                                            ${recommendation.recommendation || overall.recommendation}
-                                        </div>
-                                    </div>
-                                    <div class="text-left text-sm space-y-2">
-                                        <div class="font-medium">Investment Thesis:</div>
-                                        <p class="text-slate-300 leading-relaxed">
-                                            ${recommendation.action || 'Strong fundamentals with positive momentum. Good risk/reward ratio.'}
-                                        </p>
-                                        <div class="font-medium">Timing:</div>
-                                        <p class="text-slate-300">
-                                            ${recommendation.timing || 'Consider buying now - reasonable valuation with positive technicals.'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4">
+                            <p class="text-sm text-slate-700 leading-relaxed">${recommendation.action || quickFacts.business_model || 'Analysis in progress.'}</p>
+                            ${recommendation.timing ? `<p class="text-xs text-slate-500 mt-2">Timing: ${recommendation.timing}</p>` : ''}
                         </div>
                     </div>
 
 
-            <!-- Price History Chart - Google Finance Style -->
+            <!-- Price History Chart - Collapsible -->
             ${priceHistory && priceHistory.price_data && priceHistory.price_data.length > 0 ? `
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-slate-800 flex items-center">
-                            <span class="mr-2">📈</span> Price History
-                        </h3>
-                        <!-- Google Finance style time period buttons -->
-                        <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
-                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1d">1D</button>
-                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1w">1W</button>
-                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
-                            <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
+                <details class="bg-white rounded-xl border border-slate-200 shadow-sm group">
+                    <summary class="p-6 cursor-pointer flex items-center justify-between select-none">
+                        <h3 class="text-lg font-semibold text-slate-800">Price History</h3>
+                        <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </summary>
+                    <div class="px-6 pb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1">
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1d">1D</button>
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1w">1W</button>
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors bg-white text-slate-800 shadow-sm" data-period="1m">1M</button>
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="6m">6M</button>
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="1y">1Y</button>
+                                <button class="time-period-btn px-3 py-1 text-sm rounded-md transition-colors text-slate-600 hover:bg-slate-200" data-period="2y">2Y</button>
+                            </div>
+                            <button id="refreshPriceChart" class="text-slate-500 hover:text-slate-700 text-sm font-medium">
+                                Refresh
+                            </button>
                         </div>
-                    </div>
-                    <!-- Trend Summary -->
-                    <div id="trendSummary" class="mb-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200" style="display: none;">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div>
-                                <div class="text-xs text-slate-500 mb-1">Period Change</div>
-                                <div id="trendChange" class="text-2xl font-bold"></div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500 mb-1">Current Price</div>
-                                <div id="trendCurrentPrice" class="text-2xl font-bold text-slate-800"></div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500 mb-1">Period High</div>
-                                <div id="trendHigh" class="text-lg font-semibold text-green-600"></div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-500 mb-1">Period Low</div>
-                                <div id="trendLow" class="text-lg font-semibold text-red-600"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between mb-4 text-xs">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex items-center">
-                                <span class="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
-                                <span class="text-slate-600">Positive Event</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="w-3 h-3 rounded-full bg-slate-400 mr-1"></span>
-                                <span class="text-slate-600">Neutral Event</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
-                                <span class="text-slate-600">Negative Event</span>
+                        <div id="trendSummary" class="mb-4 p-4 bg-slate-50 rounded-lg border border-slate-200" style="display: none;">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Period Change</div>
+                                    <div id="trendChange" class="text-2xl font-bold"></div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Current Price</div>
+                                    <div id="trendCurrentPrice" class="text-2xl font-bold text-slate-800"></div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Period High</div>
+                                    <div id="trendHigh" class="text-lg font-semibold text-slate-800"></div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">Period Low</div>
+                                    <div id="trendLow" class="text-lg font-semibold text-slate-800"></div>
+                                </div>
                             </div>
                         </div>
-                        <button id="refreshPriceChart" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                            Refresh Data
-                        </button>
+                        <div class="flex items-center justify-between mb-4 text-xs">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <span class="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
+                                    <span class="text-slate-600">Positive Event</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-3 h-3 rounded-full bg-slate-400 mr-1"></span>
+                                    <span class="text-slate-600">Neutral Event</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-3 h-3 rounded-full bg-red-500 mr-1"></span>
+                                    <span class="text-slate-600">Negative Event</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative" style="height: 350px;">
+                            <canvas id="priceChart"></canvas>
+                        </div>
                     </div>
-                    <div class="relative" style="height: 350px;">
-                        <canvas id="priceChart"></canvas>
-                    </div>
-                </div>
+                </details>
             ` : ''}
 
-            <!-- Valuation Metrics Charts -->
-            <div id="valuation-metrics-section" class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <span class="mr-2">📊</span> Valuation Metrics vs Industry
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- P/E Ratio Chart -->
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Earnings (P/E) Ratio</h4>
-                        <div class="relative" style="height: 250px;">
-                            <canvas id="peRatioChart"></canvas>
+            <!-- Valuation Metrics - Collapsible -->
+            <details id="valuation-metrics-section" class="bg-white rounded-xl border border-slate-200 shadow-sm group">
+                <summary class="p-6 cursor-pointer flex items-center justify-between select-none">
+                    <h3 class="text-lg font-semibold text-slate-800">Valuation Metrics vs Industry</h3>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="px-6 pb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Earnings (P/E) Ratio</h4>
+                            <div class="relative" style="height: 250px;">
+                                <canvas id="peRatioChart"></canvas>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
+                                <span id="pe-current">Current: --</span>
+                                <span id="pe-benchmark">Industry: --</span>
+                                <span id="pe-assessment" class="px-2 py-0.5 rounded"></span>
+                            </div>
                         </div>
-                        <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
-                            <span id="pe-current">Current: --</span>
-                            <span id="pe-benchmark">Industry: --</span>
-                            <span id="pe-assessment" class="px-2 py-0.5 rounded"></span>
+                        <div>
+                            <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Sales (P/S) Ratio</h4>
+                            <div class="relative" style="height: 250px;">
+                                <canvas id="psRatioChart"></canvas>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
+                                <span id="ps-current">Current: --</span>
+                                <span id="ps-benchmark">Industry: --</span>
+                                <span id="ps-assessment" class="px-2 py-0.5 rounded"></span>
+                            </div>
                         </div>
                     </div>
-                    <!-- P/S Ratio Chart -->
+                </div>
+            </details>
+
+            <!-- Performance Analysis - Collapsible -->
+            <details class="bg-white rounded-xl border border-slate-200 shadow-sm group">
+                <summary class="p-6 cursor-pointer flex items-center justify-between select-none">
+                    <h3 class="text-lg font-semibold text-slate-800">Performance Analysis vs Industry (${scoreBenchmarks.sector || 'Sector'})</h3>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </summary>
+                <div class="px-6 pb-6">
+                    <div class="grid gap-6 grid-cols-1 lg:grid-cols-2" id="scoreComparison"></div>
+                </div>
+            </details>
+
+            <!-- Investor Perspectives -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
                     <div>
-                        <h4 class="text-sm font-semibold text-slate-700 mb-3">Price-to-Sales (P/S) Ratio</h4>
-                        <div class="relative" style="height: 250px;">
-                            <canvas id="psRatioChart"></canvas>
-                        </div>
-                        <div class="mt-2 flex items-center justify-between text-xs text-slate-600">
-                            <span id="ps-current">Current: --</span>
-                            <span id="ps-benchmark">Industry: --</span>
-                            <span id="ps-assessment" class="px-2 py-0.5 rounded"></span>
+                        <h3 class="text-lg font-semibold text-slate-800">
+                            Investor Perspectives
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1">How would 12 legendary investors evaluate ${company.ticker}?</p>
+                    </div>
+                    <button id="persona-analyze-btn"
+                        onclick="loadPersonaAnalysis('${company.ticker}')"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        Run Analysis
+                    </button>
+                </div>
+                <div id="persona-panel" class="hidden mt-6">
+                    <div id="persona-loading" class="hidden py-12">
+                        <div class="flex flex-col items-center">
+                            <div class="relative">
+                                <div class="w-16 h-16 rounded-full border-4 border-slate-200 border-t-slate-600 animate-spin"></div>
+                            </div>
+                            <p class="mt-4 text-sm text-slate-600">Consulting 12 legendary investors...</p>
+                            <p class="mt-1 text-xs text-slate-400" id="persona-loading-status">This takes 15-30 seconds</p>
                         </div>
                     </div>
+                    <div id="persona-results"></div>
                 </div>
             </div>
 
-            <!-- Combined Performance Analysis & Scores -->
-            <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <h3 class="text-lg font-semibold text-slate-800 mb-6 flex items-center">
-                    <span class="mr-2">🏆</span> Performance Analysis vs Industry (${scoreBenchmarks.sector || 'Sector'})
-                </h3>
-                <div class="grid gap-6 grid-cols-1 lg:grid-cols-2" id="scoreComparison"></div>
-                    </div>
-                </div>
+            </div>
             `;
 
             // Render score comparison bars
@@ -2064,6 +2032,171 @@
                     setupPriceChartControls(company.ticker);
                 }
             }, 100);
+        }
+
+        // --- Investor Persona Functions ---
+        async function loadPersonaAnalysis(ticker) {
+            const btn = document.getElementById('persona-analyze-btn');
+            const panel = document.getElementById('persona-panel');
+            const loading = document.getElementById('persona-loading');
+            const results = document.getElementById('persona-results');
+            if (!panel || !loading || !results) return;
+
+            panel.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            results.innerHTML = '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>Analyzing...';
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            }
+
+            // Animated loading status messages
+            const statusEl = document.getElementById('persona-loading-status');
+            const statusMsgs = [
+                'Warming up the investment committee...',
+                'Buffett is checking the moat...',
+                'Burry is reading the footnotes...',
+                'Lynch is calculating the PEG ratio...',
+                'Graham is demanding margin of safety...',
+                'Druckenmiller is checking macro trends...',
+                'Almost there — synthesizing 12 viewpoints...',
+            ];
+            let msgIdx = 0;
+            const statusInterval = setInterval(() => {
+                if (statusEl && msgIdx < statusMsgs.length) {
+                    statusEl.textContent = statusMsgs[msgIdx++];
+                }
+            }, 3500);
+
+            try {
+                const response = await fetch(`/api/personas/${encodeURIComponent(ticker)}`);
+                const data = await response.json();
+                clearInterval(statusInterval);
+                loading.classList.add('hidden');
+
+                if (data.status === 'success') {
+                    renderPersonaResults(data.data);
+                } else {
+                    results.innerHTML = `<div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><p class="text-sm text-slate-600">${data.message || 'Analysis failed.'}</p></div>`;
+                }
+            } catch (err) {
+                clearInterval(statusInterval);
+                loading.classList.add('hidden');
+                results.innerHTML = `<div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><p class="text-sm text-slate-600">Error: ${err.message}</p></div>`;
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Re-Analyze';
+                    btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function getRecBadgeDark(rec) {
+            const r = (rec || '').toLowerCase();
+            if (r.includes('strong buy')) return 'bg-slate-800 text-white border-slate-700';
+            if (r.includes('buy')) return 'bg-slate-700 text-white border-slate-600';
+            if (r.includes('strong sell')) return 'bg-slate-300 text-slate-700 border-slate-400';
+            if (r.includes('sell')) return 'bg-slate-200 text-slate-600 border-slate-300';
+            return 'bg-slate-100 text-slate-600 border-slate-200';
+        }
+
+        function renderPersonaResults(data) {
+            const results = document.getElementById('persona-results');
+            if (!results || !data) return;
+
+            const summary = data.summary || {};
+            const personas = data.personas || [];
+            const total = (summary.buy_count || 0) + (summary.hold_count || 0) + (summary.sell_count || 0);
+            const buyPct = total > 0 ? ((summary.buy_count || 0) / total * 100) : 0;
+            const holdPct = total > 0 ? ((summary.hold_count || 0) / total * 100) : 0;
+            const sellPct = total > 0 ? ((summary.sell_count || 0) / total * 100) : 0;
+
+            const consensusColor = 'text-slate-900';
+            const consensusBg = 'bg-slate-50 border-slate-200';
+
+            // --- Hero Consensus Verdict ---
+            let html = `
+                <div class="${consensusBg} border rounded-xl p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <div class="text-xs uppercase tracking-widest text-slate-400 mb-1">Committee Consensus</div>
+                            <div class="text-3xl font-bold ${consensusColor}">${summary.consensus || 'Mixed'}</div>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-slate-800">${summary.buy_count || 0}</div>
+                                <div class="text-xs text-slate-500">Buy</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-slate-500">${summary.hold_count || 0}</div>
+                                <div class="text-xs text-slate-500">Hold</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-slate-400">${summary.sell_count || 0}</div>
+                                <div class="text-xs text-slate-500">Sell</div>
+                            </div>
+                            <div class="border-l border-slate-200 pl-6 text-center">
+                                <div class="text-2xl font-bold text-slate-800">${summary.average_conviction || 0}</div>
+                                <div class="text-xs text-slate-500">Avg Conviction</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Vote distribution bar -->
+                    <div class="mt-4 flex rounded-full overflow-hidden h-2.5">
+                        <div class="bg-slate-800 transition-all" style="width:${buyPct}%"></div>
+                        <div class="bg-slate-400 transition-all" style="width:${holdPct}%"></div>
+                        <div class="bg-slate-200 transition-all" style="width:${sellPct}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>${buyPct.toFixed(0)}% Buy</span>
+                        <span>${holdPct.toFixed(0)}% Hold</span>
+                        <span>${sellPct.toFixed(0)}% Sell</span>
+                    </div>
+                </div>
+            `;
+
+            // --- Persona Cards Grid ---
+            html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">';
+            for (const p of personas) {
+                const badgeClass = getRecBadgeDark(p.recommendation);
+                const convictionPct = Math.max(5, (p.conviction || 0) * 10);
+                const convictionColor = p.conviction >= 7 ? 'bg-slate-700' : p.conviction >= 4 ? 'bg-slate-400' : 'bg-slate-300';
+                html += `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:bg-slate-100 transition-colors">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-2xl">${p.avatar_emoji || ''}</span>
+                                <div>
+                                    <div class="font-semibold text-sm text-slate-800">${p.persona_name}</div>
+                                    <div class="text-[10px] text-slate-400 uppercase tracking-wider">${p.conviction}/10 conviction</div>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg border ${badgeClass}">${p.recommendation}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1 mb-3">
+                            <div class="${convictionColor} h-1 rounded-full transition-all" style="width:${convictionPct}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">${p.reasoning || ''}</p>
+                        <details class="text-xs group">
+                            <summary class="cursor-pointer text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1">
+                                <svg class="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                Bull & Bear Cases
+                            </summary>
+                            <div class="mt-2 space-y-2 text-slate-500 pl-4 border-l border-slate-200">
+                                <p><span class="text-slate-700 font-medium">Bull:</span> ${p.bull_case || 'N/A'}</p>
+                                <p><span class="text-slate-700 font-medium">Bear:</span> ${p.bear_case || 'N/A'}</p>
+                                <p><span class="text-slate-700 font-medium">Entry:</span> ${p.would_buy_at || 'N/A'}</p>
+                                ${(p.key_metrics_highlighted || []).length > 0 ? `<p><span class="text-slate-700 font-medium">Key Metrics:</span> ${p.key_metrics_highlighted.join(', ')}</p>` : ''}
+                            </div>
+                        </details>
+                    </div>
+                `;
+            }
+            html += '</div>';
+
+            results.innerHTML = html;
         }
 
         function generateKeyTakeaway(key, comp, componentScore) {
@@ -2188,15 +2321,15 @@
                             <div class="flex items-center space-x-3 flex-1">
                                 <h4 class="text-lg font-semibold text-slate-800">${label}</h4>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${scoreColor(componentScore.score)}">${comp.company_score.toFixed(1)}/10</span>
-                                <div class="group relative">
+                                <div class="info-trigger relative">
                                     <svg class="w-4 h-4 text-slate-400 hover:text-indigo-600 cursor-help transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                                     </svg>
-                                    <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-slate-900 text-white text-xs rounded-lg p-3 w-80 z-20 shadow-xl">
+                                    <div class="info-tooltip absolute bottom-full left-0 mb-2 hidden bg-slate-900 text-white text-xs rounded-lg p-3 w-80 z-20 shadow-xl">
                                         <div class="space-y-2">${methodology}</div>
                                         ${key === 'sentiment' ? `
                                             <div class="mt-3 pt-3 border-t border-slate-700">
-                                                <div class="font-semibold text-indigo-300 mb-2">📰 Recent Sources:</div>
+                                                <div class="font-semibold text-indigo-300 mb-2">Recent Sources:</div>
                                                 <div id="sentiment-links-${company.ticker}" class="space-y-1">
                                                     <div class="animate-pulse bg-slate-700 rounded h-3 w-full"></div>
                                                     <div class="animate-pulse bg-slate-700 rounded h-3 w-3/4"></div>
@@ -2212,9 +2345,9 @@
                     </div>
                         
                         <!-- Key Takeaway -->
-                        <div class="mb-4 p-3 bg-white border border-slate-200 border-l-4 border-l-indigo-600 rounded-lg">
-                            <p class="text-sm font-medium text-indigo-700">💡 Key Takeaway:</p>
-                            <p class="text-sm text-slate-600 mt-1">${keyTakeaway}</p>
+                        <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Key Takeaway</p>
+                            <p class="text-sm text-slate-600">${keyTakeaway}</p>
                         </div>
                         
                         <!-- Visual Comparison with consistent height -->
@@ -2231,7 +2364,7 @@
                                 <span class="text-slate-400">•</span>
                                 <span class="text-slate-600">Industry: ${comp.industry_avg ? comp.industry_avg.toFixed(1) : 'N/A'}</span>
                             </div>
-                            <span class="${(comp.difference || 0) >= 0 ? 'text-green-600' : 'text-red-600'} font-bold text-lg">
+                            <span class="text-slate-800 font-bold text-lg">
                                 ${(comp.difference || 0) >= 0 ? '+' : ''}${comp.difference ? comp.difference.toFixed(1) : '0.0'}
                             </span>
                         </div>
@@ -2244,14 +2377,26 @@
 
             container.innerHTML = html || '<p class="text-sm text-slate-500">No score data available for this company.</p>';
             
-            // Add event listeners for sentiment score hover
-            document.querySelectorAll('.group').forEach(group => {
-                group.addEventListener('mouseenter', async (e) => {
-                    const sentimentLinksDiv = group.querySelector('[id^="sentiment-links-"]');
+            // Add event listeners for info tooltips - only show one at a time
+            document.querySelectorAll('.info-trigger').forEach(trigger => {
+                const tooltip = trigger.querySelector('.info-tooltip');
+                if (!tooltip) return;
+
+                trigger.addEventListener('mouseenter', async () => {
+                    // Hide all other tooltips first
+                    document.querySelectorAll('.info-tooltip').forEach(t => t.classList.add('hidden'));
+                    tooltip.classList.remove('hidden');
+
+                    // Load sentiment links if applicable
+                    const sentimentLinksDiv = trigger.querySelector('[id^="sentiment-links-"]');
                     if (sentimentLinksDiv) {
                         const ticker = sentimentLinksDiv.id.replace('sentiment-links-', '');
                         await loadSentimentLinks(ticker, sentimentLinksDiv);
                     }
+                });
+
+                trigger.addEventListener('mouseleave', () => {
+                    tooltip.classList.add('hidden');
                 });
             });
         }
@@ -2325,7 +2470,7 @@
                 }
             } catch (error) {
                 console.error('Error loading sentiment links:', error);
-                container.innerHTML = '<div class="text-red-400 text-xs">Error loading sources</div>';
+                container.innerHTML = '<div class="text-slate-400 text-xs">Error loading sources</div>';
             }
         }
 
@@ -2403,17 +2548,17 @@
                     loadValuationMetrics(ticker);
                     loadSucceeded = true;
                 } else {
-                    scoreboard.innerHTML = `<p class="text-sm text-red-600">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
+                    scoreboard.innerHTML = `<p class="text-sm text-slate-500">Unable to load scores: ${data.message || 'Unknown error'}.</p>`;
                 }
             } catch (error) {
                 console.error('Error fetching scores:', error);
-                scoreboard.innerHTML = '<p class="text-sm text-red-600">Failed to load scorecard. Please try again later.</p>';
+                scoreboard.innerHTML = '<p class="text-sm text-slate-500">Failed to load scorecard. Please try again later.</p>';
             }
 
             if (isPreview) {
                 scoreboard.insertAdjacentHTML(
                     'afterbegin',
-                    `<div class="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm">
+                    `<div class="mb-4 bg-slate-50 border border-slate-200 text-slate-700 px-4 py-3 rounded-xl text-sm">
                         ${ticker} is part of our upcoming coverage. Data may be limited while we finalize the model.
                     </div>`
                 );
@@ -2476,10 +2621,33 @@
 
         async function handleTickerSelection(ticker) {
             if (!ticker) return;
+            dismissHero();
             if (!supportedTickerSet.has(ticker)) {
                 showUnsupportedTickerMessage(ticker);
                 return;
             }
+
+            // Highlight active row in universe table
+            document.querySelectorAll('.universe-row').forEach(row => {
+                if (row.dataset.ticker === ticker) {
+                    row.classList.add('bg-indigo-50', 'ring-1', 'ring-indigo-200');
+                } else {
+                    row.classList.remove('bg-indigo-50', 'ring-1', 'ring-indigo-200');
+                }
+            });
+            // Highlight active card in compact view
+            document.querySelectorAll('.universe-card').forEach(card => {
+                if (card.dataset.ticker === ticker) {
+                    card.classList.add('ring-1', 'ring-indigo-300', 'bg-indigo-50');
+                } else {
+                    card.classList.remove('ring-1', 'ring-indigo-300', 'bg-indigo-50');
+                }
+            });
+
+            // Show analysis sections
+            document.getElementById('scoreboard')?.classList.remove('hidden');
+            document.getElementById('standalone-news-section')?.classList.remove('hidden');
+            document.getElementById('standalone-flow-section')?.classList.remove('hidden');
 
             const isPreview = previewTickerSet.has(ticker);
             const loaded = await loadScoreboard(ticker);
@@ -2495,7 +2663,7 @@
             if (!loaded && scoreboard && !scoreboard.querySelector('.scoreboard-warning')) {
                 scoreboard.insertAdjacentHTML(
                     'afterbegin',
-                    `<div class="scoreboard-warning mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                    `<div class="scoreboard-warning mb-4 bg-slate-50 border border-slate-200 text-slate-600 px-4 py-3 rounded-xl text-sm">
                         We're still computing the full Deep Alpha scorecard for ${ticker}. Other data panels have been refreshed.
                     </div>`
                 );
@@ -2517,9 +2685,11 @@
             const ticker = scoreTickerInput.value.trim().toUpperCase();
             if (!ticker) return;
 
+            dismissHero();
             document.getElementById('comparison-section').classList.add('hidden');
             document.getElementById('scoreboard').classList.remove('hidden');
-            document.getElementById('score-table').classList.remove('hidden');
+            const scoreTable = document.getElementById('score-table');
+            if (scoreTable) scoreTable.classList.remove('hidden');
 
             await handleTickerSelection(ticker);
         });
@@ -2677,7 +2847,7 @@
                             </td>
                             <td class="px-4 py-2 text-sm text-slate-700">${metadata.name}</td>
                             <td class="px-4 py-2 text-sm text-slate-600">${metadata.industry}</td>
-                            <td class="px-4 py-2 text-sm ${row.score !== null ? 'text-slate-700' : 'text-slate-400'}">${row.score !== null ? row.score.toFixed(2) : '—'}</td>
+                            <td class="px-4 py-2 text-sm ${row.score !== null ? 'text-slate-700' : 'text-slate-400'}">${row.score !== null ? row.score.toFixed(1) : '—'}</td>
                             <td class="px-4 py-2 text-sm text-slate-700">${row.recommendation}</td>
                             <td class="px-4 py-2 text-sm text-slate-500">${row.confidence !== null ? row.confidence + '%' : '—'}</td>
                         </tr>
@@ -2704,23 +2874,23 @@
             }
         });
 
-        loadAllBtn.addEventListener('click', refreshCoverageTable);
+        if (loadAllBtn) loadAllBtn.addEventListener('click', refreshCoverageTable);
 
         // Multi-Stock Comparison Functionality
         let comparisonData = {};
         let comparisonCharts = {};
 
         // Comparison section toggle
-        document.getElementById('open-comparison').addEventListener('click', () => {
-            document.getElementById('comparison-section').classList.remove('hidden');
-            document.getElementById('scoreboard').classList.add('hidden');
-            document.getElementById('score-table').classList.add('hidden');
+        const openCompBtn = document.getElementById('open-comparison');
+        if (openCompBtn) openCompBtn.addEventListener('click', () => {
+            document.getElementById('comparison-section')?.classList.remove('hidden');
+            document.getElementById('scoreboard')?.classList.add('hidden');
         });
 
-        document.getElementById('close-comparison').addEventListener('click', () => {
-            document.getElementById('comparison-section').classList.add('hidden');
-            document.getElementById('scoreboard').classList.remove('hidden');
-            document.getElementById('score-table').classList.remove('hidden');
+        const closeCompBtn = document.getElementById('close-comparison');
+        if (closeCompBtn) closeCompBtn.addEventListener('click', () => {
+            document.getElementById('comparison-section')?.classList.add('hidden');
+            document.getElementById('scoreboard')?.classList.remove('hidden');
             
             // Clear comparison data to prevent interference
             comparisonData = {};
@@ -3106,11 +3276,11 @@
                     renderStandaloneNewsSection(result.data, ticker);
                 } else {
                     console.error('News API returned error:', result);
-                    container.innerHTML = `<p class="text-sm text-red-600">Failed to load news: ${result.message || 'Unknown error'}</p>`;
+                    container.innerHTML = `<p class="text-sm text-slate-500">Failed to load news: ${result.message || 'Unknown error'}</p>`;
                 }
             } catch (error) {
                 console.error('Error loading standalone news:', error);
-                container.innerHTML = `<p class="text-sm text-red-600">Error loading news data: ${error.message}</p>`;
+                container.innerHTML = `<p class="text-sm text-slate-500">Error loading news data: ${error.message}</p>`;
             }
         }
 
@@ -3177,19 +3347,19 @@
                 : 'Awaiting refreshed interpretation.';
 
             const sentimentBadgeClasses = {
-                Positive: "bg-emerald-100 text-emerald-700",
-                Negative: "bg-rose-100 text-rose-700",
-                Neutral: "bg-slate-200 text-slate-700"
+                Positive: "bg-slate-100 text-slate-700",
+                Negative: "bg-slate-100 text-slate-700",
+                Neutral: "bg-slate-100 text-slate-600"
             };
             const ratingColors = {
-                BUY: "bg-emerald-100 text-emerald-800 border border-emerald-300",
-                HOLD: "bg-amber-100 text-amber-800 border border-amber-300",
-                SELL: "bg-rose-100 text-rose-800 border border-rose-300"
+                BUY: "bg-slate-800 text-white border border-slate-700",
+                HOLD: "bg-slate-200 text-slate-700 border border-slate-300",
+                SELL: "bg-slate-100 text-slate-600 border border-slate-200"
             };
             const confidenceColors = {
-                HIGH: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-                MEDIUM: "bg-amber-50 text-amber-700 border border-amber-200",
-                LOW: "bg-slate-100 text-slate-700 border border-slate-200"
+                HIGH: "bg-slate-100 text-slate-700 border border-slate-200",
+                MEDIUM: "bg-slate-100 text-slate-600 border border-slate-200",
+                LOW: "bg-slate-50 text-slate-500 border border-slate-200"
             };
 
             let analysisHtml = '';
@@ -3202,10 +3372,10 @@
                 
                 // Quality tier badges
                 const qualityBadges = {
-                    'premium': { text: 'Premium Analysis', class: 'bg-purple-100 text-purple-700 border-purple-300' },
-                    'high': { text: 'High Quality Analysis', class: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
-                    'good': { text: 'Standard Analysis', class: 'bg-amber-100 text-amber-700 border-amber-300' },
-                    'basic': { text: 'Basic Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' },
+                    'premium': { text: 'Premium Analysis', class: 'bg-slate-800 text-white border-slate-700' },
+                    'high': { text: 'High Quality Analysis', class: 'bg-slate-700 text-white border-slate-600' },
+                    'good': { text: 'Standard Analysis', class: 'bg-slate-200 text-slate-700 border-slate-300' },
+                    'basic': { text: 'Basic Analysis', class: 'bg-slate-100 text-slate-600 border-slate-200' },
                     'standard': { text: 'Standard Analysis', class: 'bg-slate-100 text-slate-700 border-slate-300' }
                 };
                 const qualityBadge = qualityBadges[qualityTier] || qualityBadges['standard'];
@@ -3312,7 +3482,7 @@
                 analysisHtml = `
                     <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                         <div class="mb-3">
-                            <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Legacy Analysis</span>
+                            <span class="inline-block px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-xs font-semibold">Legacy Analysis</span>
                         </div>
                         <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(removePillarReferences(legacyAnalysis))}</p>
                         <p class="text-xs text-slate-500 mt-3 italic">Note: This is an older analysis format.</p>
@@ -3500,29 +3670,29 @@
                             <div class="mb-6">
                                 <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Ownership Summary</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                                        <div class="text-xs text-indigo-700 mb-1">Total Institutions</div>
-                                        <div class="text-2xl font-bold text-indigo-600">${inst.number_of_institutions || 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Holding shares</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Total Institutions</div>
+                                        <div class="text-2xl font-bold text-slate-800">${inst.number_of_institutions || 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Holding shares</div>
                                     </div>
-                                    <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                                        <div class="text-xs text-purple-700 mb-1">Total Shares Held</div>
-                                        <div class="text-2xl font-bold text-purple-600">${inst.total_institutional_shares ? (inst.total_institutional_shares / 1e9).toFixed(2) + 'B' : 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Institutional shares</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Total Shares Held</div>
+                                        <div class="text-2xl font-bold text-slate-800">${inst.total_institutional_shares ? (inst.total_institutional_shares / 1e9).toFixed(1) + 'B' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Institutional shares</div>
                                     </div>
-                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-                                        <div class="text-xs text-green-700 mb-1">Total Value Held</div>
-                                        <div class="text-2xl font-bold text-green-600">${inst.total_institutional_value ? '$' + (inst.total_institutional_value / 1e9).toFixed(2) + 'B' : 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Market value</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Total Value Held</div>
+                                        <div class="text-2xl font-bold text-slate-800">${inst.total_institutional_value ? '$' + (inst.total_institutional_value / 1e9).toFixed(1) + 'B' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Market value</div>
                                     </div>
-                                    <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                                        <div class="text-xs text-orange-700 mb-1">Ownership % ✅</div>
-                                        <div class="text-2xl font-bold text-orange-600">${inst.institutional_ownership_pct ? inst.institutional_ownership_pct.toFixed(1) + '%' : 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Of total shares</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Ownership %</div>
+                                        <div class="text-2xl font-bold text-slate-800">${inst.institutional_ownership_pct ? inst.institutional_ownership_pct.toFixed(1) + '%' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Of total shares</div>
                                     </div>
                                 </div>
-                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
-                                    <strong>✅ Factual Data:</strong> Institutional ownership from SEC 13F filings via Yahoo Finance. Updates quarterly (45 days after quarter end).
+                                <div class="mt-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-200">
+                                    <strong>Source:</strong> Institutional ownership from SEC 13F filings via Yahoo Finance. Updates quarterly (45 days after quarter end).
                                     Latest filing: ${inst.top_10_holders && inst.top_10_holders[0] ? inst.top_10_holders[0].date_reported.split(' ')[0] : 'N/A'}
                                 </div>
                             </div>
@@ -3539,28 +3709,28 @@
 
                         html += `
                             <div class="mb-6">
-                                <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Flow Changes (Recent Quarter) ✅</h4>
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Institutional Flow Changes (Recent Quarter)</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-                                        <div class="text-xs text-green-700 mb-1">Institutions Increased</div>
-                                        <div class="text-2xl font-bold text-green-600">${changes.institutions_increased || 0}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Bought more shares</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Institutions Increased</div>
+                                        <div class="text-2xl font-bold text-slate-800">${changes.institutions_increased || 0}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Bought more shares</div>
                                     </div>
-                                    <div class="bg-red-50 rounded-lg p-4 border border-red-200">
-                                        <div class="text-xs text-red-700 mb-1">Institutions Decreased</div>
-                                        <div class="text-2xl font-bold text-red-600">${changes.institutions_decreased || 0}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Sold shares</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Institutions Decreased</div>
+                                        <div class="text-2xl font-bold text-slate-800">${changes.institutions_decreased || 0}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Sold shares</div>
                                     </div>
-                                    <div class="bg-${isPositive ? 'green' : 'red'}-50 rounded-lg p-4 border border-${isPositive ? 'green' : 'red'}-200">
-                                        <div class="text-xs text-${isPositive ? 'green' : 'red'}-700 mb-1">Net Change</div>
-                                        <div class="text-2xl font-bold text-${isPositive ? 'green' : 'red'}-600">
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Net Change</div>
+                                        <div class="text-2xl font-bold text-slate-800">
                                             ${changes.net_change_pct >= 0 ? '+' : ''}${changes.net_change_pct}%
                                         </div>
-                                        <div class="text-xs text-slate-600 mt-1">${isPositive ? 'Net buying ↑' : 'Net selling ↓'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">${isPositive ? 'Net buying' : 'Net selling'}</div>
                                     </div>
                                 </div>
-                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
-                                    <strong>✅ Factual Data:</strong> ${changes.note}${changes.filing_quarter ? ` | Filing Period: <strong>${changes.filing_quarter}</strong>` : ''}
+                                <div class="mt-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-200">
+                                    <strong>Source:</strong> ${changes.note}${changes.filing_quarter ? ` | Filing Period: <strong>${changes.filing_quarter}</strong>` : ''}
                                 </div>
                             </div>
                         `;
@@ -3576,16 +3746,16 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         ${topBuyers.length > 0 ? `
                                             <div>
-                                                <div class="text-sm font-medium text-green-700 mb-2">Top Buyers</div>
+                                                <div class="text-sm font-medium text-slate-700 mb-2">Top Buyers</div>
                                                 <div class="space-y-2">
                                                     ${topBuyers.map(buyer => `
-                                                        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                                                        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
                                                             <div class="text-sm font-medium text-slate-800">${buyer.holder}</div>
                                                             <div class="text-xs text-slate-600 mt-1">
                                                                 +${(buyer.shares_change / 1e6).toFixed(1)}M shares (+${buyer.pct_change.toFixed(1)}%)
                                                             </div>
-                                                            <div class="text-xs text-green-600 font-semibold mt-1">
-                                                                +$${(buyer.value_change / 1e9).toFixed(2)}B
+                                                            <div class="text-xs text-slate-700 font-semibold mt-1">
+                                                                +$${(buyer.value_change / 1e9).toFixed(1)}B
                                                             </div>
                                                         </div>
                                                     `).join('')}
@@ -3594,16 +3764,16 @@
                                         ` : ''}
                                         ${topSellers.length > 0 ? `
                                             <div>
-                                                <div class="text-sm font-medium text-red-700 mb-2">Top Sellers</div>
+                                                <div class="text-sm font-medium text-slate-700 mb-2">Top Sellers</div>
                                                 <div class="space-y-2">
                                                     ${topSellers.map(seller => `
-                                                        <div class="bg-red-50 rounded-lg p-3 border border-red-200">
+                                                        <div class="bg-slate-50 rounded-lg p-3 border border-slate-200">
                                                             <div class="text-sm font-medium text-slate-800">${seller.holder}</div>
                                                             <div class="text-xs text-slate-600 mt-1">
                                                                 ${(seller.shares_change / 1e6).toFixed(1)}M shares (${seller.pct_change.toFixed(1)}%)
                                                             </div>
-                                                            <div class="text-xs text-red-600 font-semibold mt-1">
-                                                                $${(seller.value_change / 1e9).toFixed(2)}B
+                                                            <div class="text-xs text-slate-700 font-semibold mt-1">
+                                                                $${(seller.value_change / 1e9).toFixed(1)}B
                                                             </div>
                                                         </div>
                                                     `).join('')}
@@ -3623,55 +3793,51 @@
 
                         html += `
                             <div class="mb-6">
-                                <h4 class="text-md font-semibold text-slate-700 mb-3">Retail Flow Metrics (${retail.period_analyzed || '3mo'}) ⚠️ ESTIMATED</h4>
-                                <div class="mb-3 text-xs text-orange-700 bg-orange-50 p-3 rounded border border-orange-200">
-                                    <strong>⚠️ Estimated Data:</strong> Daily retail/institutional split is estimated using volume pattern heuristics. Yahoo Finance only provides factual quarterly institutional ownership (see above). For real-time order flow data, professional terminals like Bloomberg or Refinitiv are required.
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Retail Flow Metrics (${retail.period_analyzed || '3mo'}) — Estimated</h4>
+                                <div class="mb-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-200">
+                                    <strong>Estimated Data:</strong> Daily retail/institutional split is estimated using volume pattern heuristics. Yahoo Finance only provides factual quarterly institutional ownership (see above). For real-time order flow data, professional terminals like Bloomberg or Refinitiv are required.
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                                        <div class="text-xs text-indigo-700 mb-1">Avg Daily Volume ✅</div>
-                                        <div class="text-xl font-bold text-indigo-600">${(metrics.average_daily_volume / 1e6).toFixed(1)}M</div>
-                                        <div class="text-xs text-slate-600 mt-1">Shares per day (factual)</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Avg Daily Volume</div>
+                                        <div class="text-xl font-bold text-slate-800">${(metrics.average_daily_volume / 1e6).toFixed(1)}M</div>
+                                        <div class="text-xs text-slate-500 mt-1">Shares per day</div>
                                     </div>
-                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                                        <div class="text-xs text-indigo-700 mb-1">Retail Participation ⚠️</div>
-                                        <div class="text-xl font-bold text-indigo-600">${metrics.estimated_avg_retail_participation_pct?.toFixed(1) || 'N/A'}%</div>
-                                        <div class="text-xs text-slate-600 mt-1">Estimated average</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Retail Participation (est.)</div>
+                                        <div class="text-xl font-bold text-slate-800">${metrics.estimated_avg_retail_participation_pct?.toFixed(1) || 'N/A'}%</div>
+                                        <div class="text-xs text-slate-500 mt-1">Estimated average</div>
                                     </div>
-                                    <div class="bg-teal-50 rounded-lg p-4 border border-teal-200">
-                                        <div class="text-xs text-teal-700 mb-1 flex items-center justify-between">
-                                            <span>Net Flow Indicator ⚠️</span>
-                                            <button onclick="toggleMetricHelp('netFlowHelp')" class="ml-1 text-white bg-teal-600 hover:bg-teal-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1 flex items-center justify-between">
+                                            <span>Net Flow Indicator (est.)</span>
+                                            <button onclick="toggleMetricHelp('netFlowHelp')" class="ml-1 text-white bg-slate-500 hover:bg-slate-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
                                         </div>
-                                        <div class="text-xl font-bold ${
-                                            metrics.net_flow_indicator_pct > 5 ? 'text-green-600' :
-                                            metrics.net_flow_indicator_pct < -5 ? 'text-red-600' :
-                                            'text-indigo-600'
-                                        }">
+                                        <div class="text-xl font-bold text-slate-800">
                                             ${metrics.net_flow_indicator_pct?.toFixed(1) || 'N/A'}%
                                         </div>
-                                        <div class="text-xs text-slate-600 mt-1">${
+                                        <div class="text-xs text-slate-500 mt-1">${
                                             metrics.net_flow_indicator_pct > 5 ? 'Buying Pressure' :
                                             metrics.net_flow_indicator_pct < -5 ? 'Selling Pressure' :
                                             'Balanced'
                                         }</div>
-                                        <div id="netFlowHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-teal-300">
+                                        <div id="netFlowHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-slate-300">
                                             <strong>Formula:</strong> (Avg Inflow Volume - Avg Outflow Volume) / Avg Daily Volume × 100<br>
                                             <strong>Positive (>5%):</strong> Buying pressure (bullish)<br>
                                             <strong>Negative (<-5%):</strong> Selling pressure (bearish)<br>
                                             <strong>Balanced (-5% to 5%):</strong> Neutral (no clear pressure)
                                         </div>
                                     </div>
-                                    <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                                        <div class="text-xs text-amber-700 mb-1 flex items-center justify-between">
-                                            <span>Flow Pattern ⚠️</span>
-                                            <button onclick="toggleMetricHelp('flowPatternHelp')" class="ml-1 text-white bg-amber-600 hover:bg-amber-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1 flex items-center justify-between">
+                                            <span>Flow Pattern (est.)</span>
+                                            <button onclick="toggleMetricHelp('flowPatternHelp')" class="ml-1 text-white bg-slate-500 hover:bg-slate-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold transition-colors">?</button>
                                         </div>
-                                        <div class="text-lg font-bold text-amber-600">
+                                        <div class="text-lg font-bold text-slate-800">
                                             ${metrics.inflow_days_count || 0} / ${metrics.outflow_days_count || 0}
                                         </div>
-                                        <div class="text-xs text-slate-600 mt-1">Inflow / Outflow days</div>
-                                        <div id="flowPatternHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-amber-300">
+                                        <div class="text-xs text-slate-500 mt-1">Inflow / Outflow days</div>
+                                        <div id="flowPatternHelp" class="hidden mt-2 text-xs text-slate-700 bg-white p-2 rounded border border-slate-300">
                                             <strong>What it means:</strong> Count of positive vs negative price change days (last 30 days)<br>
                                             <strong>Example:</strong> 13/17 = 13 up days, 17 down days<br>
                                             <strong>More inflow days:</strong> Bullish sentiment<br>
@@ -3700,24 +3866,19 @@
                         // Retail Flow Interpretation
                         if (retail.interpretation) {
                             const interp = retail.interpretation;
-                            const trendColor = interp.retail_trend === 'increasing' ? 'green' :
-                                             interp.retail_trend === 'decreasing' ? 'red' : 'blue';
-                            const flowColor = interp.flow_direction === 'buying' ? 'green' :
-                                            interp.flow_direction === 'selling' ? 'red' : 'blue';
-
                             html += `
                                 <div class="mb-6">
                                     <h4 class="text-md font-semibold text-slate-700 mb-3">Retail Flow Analysis</h4>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div class="bg-${trendColor}-50 rounded-lg p-4 border border-${trendColor}-200">
-                                            <div class="text-xs text-${trendColor}-700 mb-1">Retail Trend</div>
-                                            <div class="text-lg font-bold text-${trendColor}-600 capitalize">${interp.retail_trend || 'N/A'}</div>
-                                            <div class="text-xs text-slate-600 mt-1">Activity level</div>
+                                        <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                            <div class="text-xs text-slate-500 mb-1">Retail Trend</div>
+                                            <div class="text-lg font-bold text-slate-800 capitalize">${interp.retail_trend || 'N/A'}</div>
+                                            <div class="text-xs text-slate-500 mt-1">Activity level</div>
                                         </div>
-                                        <div class="bg-${flowColor}-50 rounded-lg p-4 border border-${flowColor}-200">
-                                            <div class="text-xs text-${flowColor}-700 mb-1">Flow Direction</div>
-                                            <div class="text-lg font-bold text-${flowColor}-600 capitalize">${interp.flow_direction || 'N/A'}</div>
-                                            <div class="text-xs text-slate-600 mt-1">Sentiment</div>
+                                        <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                            <div class="text-xs text-slate-500 mb-1">Flow Direction</div>
+                                            <div class="text-lg font-bold text-slate-800 capitalize">${interp.flow_direction || 'N/A'}</div>
+                                            <div class="text-xs text-slate-500 mt-1">Sentiment</div>
                                         </div>
                                         <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
                                             <div class="text-xs text-slate-700 mb-1">Volume Pattern</div>
@@ -3738,7 +3899,7 @@
                         const holders = flowData.institutional.top_10_holders.slice(0, 5);
                         html += `
                             <div class="mb-6">
-                                <h4 class="text-md font-semibold text-slate-700 mb-3">Top 5 Institutional Holders ✅</h4>
+                                <h4 class="text-md font-semibold text-slate-700 mb-3">Top 5 Institutional Holders</h4>
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-slate-200">
                                         <thead class="bg-slate-50">
@@ -3757,9 +3918,9 @@
                             html += `
                                 <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}">
                                     <td class="px-4 py-2 text-sm text-slate-800">${holder.holder}</td>
-                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">${(holder.shares / 1e6).toFixed(2)}M</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">${(holder.shares / 1e6).toFixed(1)}M</td>
                                     <td class="px-4 py-2 text-sm text-slate-600 text-right">${holder.pct_out ? holder.pct_out.toFixed(1) + '%' : 'N/A'}</td>
-                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">$${(holder.value / 1e9).toFixed(2)}B</td>
+                                    <td class="px-4 py-2 text-sm text-slate-600 text-right">$${(holder.value / 1e9).toFixed(1)}B</td>
                                     <td class="px-4 py-2 text-sm text-slate-500 text-right">${holder.date_reported ? holder.date_reported.split(' ')[0] : 'N/A'}</td>
                                 </tr>
                             `;
@@ -3769,8 +3930,8 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div class="mt-3 text-xs text-green-700 bg-green-50 p-3 rounded border border-green-200">
-                                    <strong>✅ Factual Data:</strong> Top institutional holders from Yahoo Finance (SEC 13F filings), reported quarterly.
+                                <div class="mt-3 text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-200">
+                                    <strong>Source:</strong> Top institutional holders from Yahoo Finance (SEC 13F filings), reported quarterly.
                                 </div>
                             </div>
                         `;
@@ -3790,7 +3951,7 @@
                 }
             } catch (error) {
                 console.error('Error loading standalone flow data:', error);
-                container.innerHTML = '<p class="text-sm text-red-600">Error loading flow data.</p>';
+                container.innerHTML = '<p class="text-sm text-slate-500">Error loading flow data.</p>';
                 if (flowSummaryHeadline) {
                     flowSummaryHeadline.textContent = 'Flow summary unavailable';
                 }
@@ -3831,20 +3992,20 @@
                         // Summary statistics
                         html += `
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                                    <div class="text-xs text-purple-700 mb-1">Current Daily Usage</div>
-                                    <div class="text-2xl font-bold text-purple-600">${dailyUsage}</div>
-                                    <div class="text-xs text-slate-600 mt-1">Tokens per day</div>
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <div class="text-xs text-slate-500 mb-1">Current Daily Usage</div>
+                                    <div class="text-2xl font-bold text-slate-800">${dailyUsage}</div>
+                                    <div class="text-xs text-slate-500 mt-1">Tokens per day</div>
                                 </div>
-                                <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                                    <div class="text-xs text-indigo-700 mb-1">Weekly Usage</div>
-                                    <div class="text-2xl font-bold text-indigo-600">${weeklyUsage}</div>
-                                    <div class="text-xs text-slate-600 mt-1">Tokens per week</div>
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <div class="text-xs text-slate-500 mb-1">Weekly Usage</div>
+                                    <div class="text-2xl font-bold text-slate-800">${weeklyUsage}</div>
+                                    <div class="text-xs text-slate-500 mt-1">Tokens per week</div>
                                 </div>
-                                <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-                                    <div class="text-xs text-green-700 mb-1">YoY Growth</div>
-                                    <div class="text-2xl font-bold text-green-600">${yoyGrowth}</div>
-                                    <div class="text-xs text-slate-600 mt-1">Year over year</div>
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <div class="text-xs text-slate-500 mb-1">YoY Growth</div>
+                                    <div class="text-2xl font-bold text-slate-800">${yoyGrowth}</div>
+                                    <div class="text-xs text-slate-500 mt-1">Year over year</div>
                                 </div>
                             </div>
                         `;
@@ -3867,7 +4028,7 @@
                             `;
                         } else if (data.data_points && data.data_points.length > 0 && !hasPlot) {
                             html += `
-                                <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-4 text-sm">
+                                <div class="mb-6 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg p-4 text-sm">
                                     Token usage chart unavailable in this environment. Data points are still summarized below.
                                 </div>
                             `;
@@ -3878,25 +4039,25 @@
                         // Summary statistics
                         html += `
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                                    <div class="text-xs text-purple-700 mb-1">Total Tokens</div>
-                                    <div class="text-2xl font-bold text-purple-600">
-                                        ${typeof data.total_tokens === 'number' ? (data.total_tokens / 1e9).toFixed(2) + 'B' : 'N/A'}
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <div class="text-xs text-slate-500 mb-1">Total Tokens</div>
+                                    <div class="text-2xl font-bold text-slate-800">
+                                        ${typeof data.total_tokens === 'number' ? (data.total_tokens / 1e9).toFixed(1) + 'B' : 'N/A'}
                                     </div>
-                                    <div class="text-xs text-slate-600 mt-1">Last ${data.days || 365} days</div>
+                                    <div class="text-xs text-slate-500 mt-1">Last ${data.days || 365} days</div>
                                 </div>
                                 ${data.total_requests ? `
-                                    <div class="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                                        <div class="text-xs text-indigo-700 mb-1">Total Requests</div>
-                                        <div class="text-2xl font-bold text-indigo-600">${typeof data.total_requests === 'number' ? (data.total_requests / 1e6).toFixed(1) + 'M' : 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">API calls made</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Total Requests</div>
+                                        <div class="text-2xl font-bold text-slate-800">${typeof data.total_requests === 'number' ? (data.total_requests / 1e6).toFixed(1) + 'M' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">API calls made</div>
                                     </div>
                                 ` : ''}
                                 ${data.total_cost ? `
-                                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-                                        <div class="text-xs text-green-700 mb-1">Total Cost</div>
-                                        <div class="text-2xl font-bold text-green-600">$${typeof data.total_cost === 'number' ? (data.total_cost / 1000).toFixed(1) + 'K' : 'N/A'}</div>
-                                        <div class="text-xs text-slate-600 mt-1">Estimated spend</div>
+                                    <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                        <div class="text-xs text-slate-500 mb-1">Total Cost</div>
+                                        <div class="text-2xl font-bold text-slate-800">$${typeof data.total_cost === 'number' ? (data.total_cost / 1000).toFixed(1) + 'K' : 'N/A'}</div>
+                                        <div class="text-xs text-slate-500 mt-1">Estimated spend</div>
                                     </div>
                                 ` : ''}
                             </div>
@@ -3905,7 +4066,7 @@
                         // Daily usage chart (old format - show message)
                         if (data.daily_usage && data.daily_usage.length > 0) {
                             html += `
-                                <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-4 text-sm">
+                                <div class="mb-6 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg p-4 text-sm">
                                     Legacy data format detected. Please regenerate token usage data to see the visualization.
                                 </div>
                             `;
@@ -3963,8 +4124,21 @@
                 }
             } catch (error) {
                 console.error('Error loading standalone token usage:', error);
-                container.innerHTML = '<p class="text-sm text-red-600">Error loading token usage data.</p>';
+                container.innerHTML = '<p class="text-sm text-slate-500">Error loading token usage data.</p>';
             }
+        }
+
+        // --- Landing Hero ---
+        function dismissHero() {
+            const hero = document.getElementById('landing-hero');
+            if (hero) hero.style.display = 'none';
+        }
+
+        function startDemo() {
+            dismissHero();
+            const tickerInput = document.getElementById('score-ticker');
+            if (tickerInput) tickerInput.value = 'NVDA';
+            handleTickerSelection('NVDA');
         }
 
         // Load market conditions on page load
@@ -4031,22 +4205,298 @@
             }
         }
 
-        // Don't load all tickers immediately - wait for user input or start background loading after initial ticker
-        (async () => {
-            const initialTicker = scoreTickerInput.value.trim().toUpperCase() || 'NVDA';
-            if (initialTicker && supportedTickerSet.has(initialTicker)) {
-                await handleTickerSelection(initialTicker);
-                // Background loading will start automatically from handleTickerSelection
-            } else {
-                // If no valid initial ticker, start background loading after a delay
-                setTimeout(() => {
-                    if (!backgroundLoadingActive) {
-                        refreshCoverageTable().catch(err => {
-                            console.error('Background loading error:', err);
-                        });
-                    }
-                }, 1000);
+        // ==========================================
+        // Universe Overview Table
+        // ==========================================
+        let universeData = [];
+        let universeSortCol = 'score';
+        let universeSortAsc = false;
+        let universeScoreCache = {};
+
+        function formatMktCap(val) {
+            if (!val || val === 0) return '-';
+            if (val >= 1e12) return '$' + (val / 1e12).toFixed(1) + 'T';
+            if (val >= 1e9) return '$' + (val / 1e9).toFixed(1) + 'B';
+            if (val >= 1e6) return '$' + (val / 1e6).toFixed(0) + 'M';
+            return '$' + val.toLocaleString();
+        }
+
+        function fmtNum(v, decimals = 1) {
+            if (v === null || v === undefined || isNaN(v)) return '-';
+            return Number(v).toFixed(decimals);
+        }
+
+        function getSignalBadge(score, rec) {
+            if (!score && !rec) return '<span class="text-[11px] text-slate-300">--</span>';
+            const r = (rec || '').toLowerCase();
+            if (r.includes('strong buy') || score >= 8) return '<span class="text-[11px] font-semibold text-slate-800">Strong Buy</span>';
+            if (r.includes('buy') || score >= 7) return '<span class="text-[11px] font-semibold text-slate-700">Buy</span>';
+            if (r.includes('sell') || score < 4.5) return '<span class="text-[11px] font-semibold text-slate-700">Sell</span>';
+            return '<span class="text-[11px] font-medium text-slate-500">Hold</span>';
+        }
+
+        function renderUniverseTable() {
+            const tbody = document.getElementById('universe-tbody');
+            if (!tbody) return;
+            const showDetail = document.getElementById('show-detail-cols')?.checked || false;
+
+            // Toggle detail columns visibility
+            document.querySelectorAll('.detail-col').forEach(el => {
+                el.classList.toggle('hidden', !showDetail);
+            });
+
+            // Sort data
+            const sorted = [...universeData].sort((a, b) => {
+                let valA = a[universeSortCol];
+                let valB = b[universeSortCol];
+                if (valA === null || valA === undefined) valA = universeSortAsc ? Infinity : -Infinity;
+                if (valB === null || valB === undefined) valB = universeSortAsc ? Infinity : -Infinity;
+                if (typeof valA === 'string') return universeSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                return universeSortAsc ? valA - valB : valB - valA;
+            });
+
+            tbody.innerHTML = sorted.map(row => {
+                const chgColor = row.day_change_pct > 0 ? 'text-slate-800' : row.day_change_pct < 0 ? 'text-slate-800' : 'text-slate-400';
+                const chgPrefix = row.day_change_pct > 0 ? '+' : '';
+                const chgIndicator = row.day_change_pct > 0 ? '<span class="text-emerald-500 mr-0.5">&#9650;</span>' : row.day_change_pct < 0 ? '<span class="text-red-400 mr-0.5">&#9660;</span>' : '';
+                const scoreVal = row.score;
+                const scoreDisplay = scoreVal !== null && scoreVal !== undefined ? scoreVal.toFixed(1) : '-';
+                // Score: just bold text, small triangle indicator
+                const scoreColor = scoreVal >= 7.5 ? 'text-slate-900 font-bold' : scoreVal >= 5 ? 'text-slate-600 font-medium' : scoreVal ? 'text-slate-500' : 'text-slate-300';
+
+                return `
+                    <tr class="hover:bg-slate-50 cursor-pointer universe-row" data-ticker="${row.ticker}">
+                        <td class="px-4 py-2 font-mono text-xs font-semibold text-slate-800">${row.ticker}</td>
+                        <td class="px-4 py-2 text-xs text-slate-500 max-w-[160px] truncate" title="${row.name}">${row.name}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-800">${row.price ? '$' + fmtNum(row.price, 2) : '-'}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums ${chgColor}">${chgIndicator}${chgPrefix}${fmtNum(row.day_change_pct)}%</td>
+                        <td class="px-4 py-2 text-xs text-right text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${formatMktCap(row.market_cap)}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${fmtNum(row.pe_ratio)}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${fmtNum(row.forward_pe)}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${fmtNum(row.beta)}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${row.profit_margin !== null ? fmtNum(row.profit_margin) + '%' : '-'}</td>
+                        <td class="px-4 py-2 text-xs text-right tabular-nums text-slate-500 detail-col ${showDetail ? '' : 'hidden'}">${row.revenue_growth !== null ? fmtNum(row.revenue_growth) + '%' : '-'}</td>
+                        <td class="px-4 py-2 text-right"><span class="text-xs tabular-nums ${scoreColor}">${scoreDisplay}</span></td>
+                        <td class="px-4 py-2 text-center">${getSignalBadge(scoreVal, row.recommendation)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Add click handlers for rows
+            document.querySelectorAll('.universe-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const ticker = row.dataset.ticker;
+                    scoreTickerInput.value = ticker;
+                    handleTickerSelection(ticker);
+                    document.getElementById('scoreboard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        }
+
+        // Detail columns toggle
+        document.getElementById('show-detail-cols')?.addEventListener('change', renderUniverseTable);
+
+        let universePricesLoaded = false;
+
+        // Render compact card grid (initial state before prices load)
+        function renderUniverseCards() {
+            const container = document.getElementById('universe-cards');
+            if (!container) return;
+            container.innerHTML = universeData.map(row => {
+                const scoreVal = row.score;
+                const scoreText = scoreVal !== null && scoreVal !== undefined ? scoreVal.toFixed(1) : '';
+                const scoreBold = scoreVal >= 7.5 ? 'font-bold text-slate-900' : scoreVal >= 5 ? 'font-medium text-slate-600' : scoreVal ? 'text-slate-400' : 'text-slate-300';
+                return `
+                    <div class="universe-card rounded-lg border border-slate-100 hover:border-slate-300 hover:bg-slate-50 px-3 py-2.5 cursor-pointer transition-colors text-center" data-ticker="${row.ticker}">
+                        <div class="font-mono text-xs font-bold text-slate-800">${row.ticker}</div>
+                        <div class="text-[10px] text-slate-400 truncate mt-0.5">${row.name}</div>
+                        ${scoreText ? `<div class="text-sm mt-1 tabular-nums ${scoreBold}">${scoreText}</div>` : '<div class="text-[10px] text-slate-200 mt-1">--</div>'}
+                    </div>
+                `;
+            }).join('');
+
+            // Add click handlers
+            container.querySelectorAll('.universe-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const ticker = card.dataset.ticker;
+                    scoreTickerInput.value = ticker;
+                    handleTickerSelection(ticker);
+                    // Highlight active
+                    container.querySelectorAll('.universe-card').forEach(c => c.classList.remove('ring-1', 'ring-indigo-300', 'bg-indigo-50'));
+                    card.classList.add('ring-1', 'ring-indigo-300', 'bg-indigo-50');
+                });
+            });
+        }
+
+        // Populate initial skeleton rows from supportedTickers
+        function renderUniverseSkeleton() {
+            universeData = supportedTickers.map(t => {
+                const meta = companyMetadata[t] || { name: t };
+                return {
+                    ticker: t,
+                    name: meta.name || t,
+                    sector: 'Loading...',
+                    industry: meta.industry || '-',
+                    price: null, day_change_pct: null, market_cap: null,
+                    pe_ratio: null, forward_pe: null, beta: null,
+                    profit_margin: null, revenue_growth: null,
+                    dividend_yield: null, fifty_two_week_high: null, fifty_two_week_low: null,
+                    score: null, recommendation: null,
+                };
+            });
+            // Show cards initially; table stays hidden
+            renderUniverseCards();
+        }
+
+        async function loadUniverseData() {
+            const loadingEl = document.getElementById('universe-loading');
+            const progressEl = document.getElementById('universe-progress');
+            const loadBtn = document.getElementById('load-universe-btn');
+            if (loadingEl) loadingEl.classList.remove('hidden');
+            if (loadBtn) {
+                loadBtn.disabled = true;
+                loadBtn.classList.add('opacity-50');
             }
+
+            try {
+                const response = await fetch('/api/universe');
+                const result = await response.json();
+                if (result.status === 'success' && Array.isArray(result.data)) {
+                    // Merge with existing score data
+                    universeData = result.data.map(row => ({
+                        ...row,
+                        score: universeScoreCache[row.ticker]?.score || null,
+                        recommendation: universeScoreCache[row.ticker]?.recommendation || null,
+                    }));
+                    universePricesLoaded = true;
+                    // Switch from cards to full table
+                    const cardsEl = document.getElementById('universe-cards');
+                    const tableWrap = document.getElementById('universe-table-wrap');
+                    if (cardsEl) cardsEl.classList.add('hidden');
+                    if (tableWrap) tableWrap.classList.remove('hidden');
+                    renderUniverseTable();
+                }
+            } catch (err) {
+                console.error('Failed to load universe data:', err);
+            }
+
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (loadBtn) {
+                loadBtn.disabled = false;
+                loadBtn.classList.remove('opacity-50');
+                loadBtn.textContent = 'Refresh';
+            }
+
+            // After loading universe, start loading scores in background
+            loadUniverseScores();
+        }
+
+        async function loadUniverseScores() {
+            const progressEl = document.getElementById('universe-progress');
+            const batchSize = 3;
+            const tickers = universeData.map(d => d.ticker);
+
+            for (let i = 0; i < tickers.length; i += batchSize) {
+                const batch = tickers.slice(i, i + batchSize);
+                await Promise.all(batch.map(async (ticker) => {
+                    try {
+                        const resp = await fetch(scoreApiUrl(ticker));
+                        const data = await resp.json();
+                        if (data.status === 'success' && data.data?.overall) {
+                            const overall = data.data.overall;
+                            universeScoreCache[ticker] = {
+                                score: typeof overall.score === 'number' ? overall.score : null,
+                                recommendation: overall.recommendation || null,
+                            };
+                            // Update the row in universeData
+                            const rowIdx = universeData.findIndex(r => r.ticker === ticker);
+                            if (rowIdx !== -1) {
+                                universeData[rowIdx].score = universeScoreCache[ticker].score;
+                                universeData[rowIdx].recommendation = universeScoreCache[ticker].recommendation;
+                            }
+                            loadedTickers.add(ticker);
+                        }
+                    } catch (e) {
+                        console.warn(`Score fetch failed for ${ticker}:`, e);
+                    }
+                }));
+                // Re-render after each batch
+                if (universePricesLoaded) {
+                    renderUniverseTable();
+                } else {
+                    renderUniverseCards();
+                }
+                if (progressEl) progressEl.textContent = `${Math.min(i + batchSize, tickers.length)}/${tickers.length}`;
+                await new Promise(r => setTimeout(r, 50));
+            }
+            if (progressEl) progressEl.textContent = '';
+        }
+
+        // Sort handlers
+        document.querySelectorAll('.sort-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const col = header.dataset.sort;
+                if (universeSortCol === col) {
+                    universeSortAsc = !universeSortAsc;
+                } else {
+                    universeSortCol = col;
+                    universeSortAsc = false;
+                }
+                // Update active state
+                document.querySelectorAll('.sort-header').forEach(h => h.classList.remove('active'));
+                header.classList.add('active');
+                renderUniverseTable();
+            });
+        });
+
+        // Load Universe button
+        document.getElementById('load-universe-btn')?.addEventListener('click', loadUniverseData);
+
+        // Background score loader for cards view
+        async function loadCardScores() {
+            const batchSize = 4;
+            for (let i = 0; i < supportedTickers.length; i += batchSize) {
+                const batch = supportedTickers.slice(i, i + batchSize);
+                await Promise.all(batch.map(async (ticker) => {
+                    if (universeScoreCache[ticker]) return;
+                    try {
+                        const resp = await fetch(scoreApiUrl(ticker));
+                        const data = await resp.json();
+                        if (data.status === 'success' && data.data?.overall) {
+                            const overall = data.data.overall;
+                            universeScoreCache[ticker] = {
+                                score: typeof overall.score === 'number' ? overall.score : null,
+                                recommendation: overall.recommendation || null,
+                            };
+                            const rowIdx = universeData.findIndex(r => r.ticker === ticker);
+                            if (rowIdx !== -1) {
+                                universeData[rowIdx].score = universeScoreCache[ticker].score;
+                                universeData[rowIdx].recommendation = universeScoreCache[ticker].recommendation;
+                            }
+                            loadedTickers.add(ticker);
+                        }
+                    } catch (e) { /* skip */ }
+                }));
+                if (!universePricesLoaded) renderUniverseCards();
+                await new Promise(r => setTimeout(r, 50));
+            }
+        }
+
+        // ==========================================
+        // Initialization
+        // ==========================================
+        (async () => {
+            // Render skeleton universe cards immediately
+            renderUniverseSkeleton();
+
+            // Load market conditions
+            loadMarketConditions();
+
+            // Start loading scores into cards in background
+            loadCardScores();
+
+            // Don't auto-load any ticker — let the user choose from the grid
+            // If they submitted the form, handle it
             loadStandaloneTokenUsage();
         })();
     </script>

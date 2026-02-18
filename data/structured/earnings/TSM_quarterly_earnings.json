@@ -1,6 +1,22 @@
 [
   {
     "ticker": "TSM",
+    "period": "2025-12-31 00:00:00",
+    "revenue": null,
+    "earnings": null,
+    "net_income": null,
+    "eps": 97.5
+  },
+  {
+    "ticker": "TSM",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 989918318000.0,
+    "earnings": 588542829000.0,
+    "net_income": 452301407000.0,
+    "eps": 87.2
+  },
+  {
+    "ticker": "TSM",
     "period": "2025-06-30 00:00:00",
     "revenue": 933791869000.0,
     "earnings": 547369238000.0,
@@ -14,21 +30,5 @@
     "earnings": 493395076000.0,
     "net_income": 360732661000.0,
     "eps": 69.7
-  },
-  {
-    "ticker": "TSM",
-    "period": "2024-12-31 00:00:00",
-    "revenue": 868461179000.0,
-    "earnings": 512378187000.0,
-    "net_income": 359792224000.0,
-    "eps": 72.240746
-  },
-  {
-    "ticker": "TSM",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 759692143000.0,
-    "earnings": 439345666000.0,
-    "net_income": 325257571000.0,
-    "eps": 62.7
   }
 ]

@@ -1637,6 +1637,157 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
     except Exception as exc:  # pragma: no cover - unexpected errors bubbled to client
         return {"status": "error", "message": f"Unexpected error: {exc}"}
 
+@app.get("/api/universe")
+async def get_universe_overview():
+    """Return lightweight overview data for all tickers in the coverage universe."""
+    import yfinance as yf
+    from target_tickers import TARGET_TICKERS
+
+    def _fetch_universe():
+        tickers_data = []
+        # Batch download basic info for all tickers
+        for ticker in TARGET_TICKERS:
+            try:
+                stock = yf.Ticker(ticker)
+                info = stock.info or {}
+                price = info.get("currentPrice") or info.get("regularMarketPrice") or 0
+                prev_close = info.get("previousClose") or info.get("regularMarketPreviousClose") or 0
+                day_change_pct = ((price - prev_close) / prev_close * 100) if prev_close > 0 else 0
+
+                tickers_data.append({
+                    "ticker": ticker,
+                    "name": info.get("shortName") or info.get("longName") or ticker,
+                    "sector": info.get("sector") or "N/A",
+                    "industry": info.get("industry") or "N/A",
+                    "price": round(price, 2),
+                    "day_change_pct": round(day_change_pct, 2),
+                    "market_cap": info.get("marketCap") or 0,
+                    "pe_ratio": info.get("trailingPE"),
+                    "forward_pe": info.get("forwardPE"),
+                    "beta": info.get("beta"),
+                    "profit_margin": round((info.get("profitMargins") or 0) * 100, 1) if info.get("profitMargins") else None,
+                    "revenue_growth": round((info.get("revenueGrowth") or 0) * 100, 1) if info.get("revenueGrowth") else None,
+                    "dividend_yield": round((info.get("dividendYield") or 0) * 100, 2) if info.get("dividendYield") else None,
+                    "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
+                    "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
+                })
+            except Exception:
+                tickers_data.append({
+                    "ticker": ticker,
+                    "name": ticker,
+                    "sector": "N/A",
+                    "industry": "N/A",
+                    "price": 0,
+                    "day_change_pct": 0,
+                    "market_cap": 0,
+                    "pe_ratio": None,
+                    "forward_pe": None,
+                    "beta": None,
+                    "profit_margin": None,
+                    "revenue_growth": None,
+                    "dividend_yield": None,
+                    "fifty_two_week_high": None,
+                    "fifty_two_week_low": None,
+                })
+        return tickers_data
+
+    try:
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, _fetch_universe)
+        data = sanitize_for_json(data)
+        return {"status": "success", "data": data}
+    except Exception as exc:
+        return {"status": "error", "message": f"Universe fetch failed: {exc}"}
+
+@app.get("/api/personas/{ticker}")
+async def get_persona_analysis(ticker: str, personas: Optional[str] = None, context: Optional[str] = None):
+    """Run investor persona analysis for a ticker.
+
+    Optional query params:
+        personas: comma-separated persona IDs (e.g. ?personas=buffett,burry)
+        context: strategic/geopolitical context to factor into analysis
+    """
+    from app.scoring import compute_company_scores, analyze_all_personas
+
+    try:
+        loop = asyncio.get_event_loop()
+        scores_data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
+        persona_ids = [p.strip() for p in personas.split(",") if p.strip()] if personas else None
+        result = await loop.run_in_executor(
+            None, analyze_all_personas, scores_data, persona_ids, 4, context
+        )
+        result = sanitize_for_json(result)
+        return {"status": "success", "data": result}
+    except Exception as exc:
+        return {"status": "error", "message": f"Persona analysis failed: {exc}"}
+
+@app.post("/api/personas/{ticker}/reconcile")
+async def reconcile_personas(ticker: str, request: Request):
+    """Run full persona analysis + reconciliation for a ticker.
+
+    Accepts optional JSON body:
+        {"prompt": "...", "context": "strategic context..."}
+    """
+    from app.scoring import compute_company_scores, analyze_all_personas, run_reconciliation
+
+    try:
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        custom_prompt = body.get("prompt") if isinstance(body, dict) else None
+        strategic_context = body.get("context") if isinstance(body, dict) else None
+
+        loop = asyncio.get_event_loop()
+        scores_data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
+        persona_results = await loop.run_in_executor(
+            None, analyze_all_personas, scores_data, None, 4, strategic_context
+        )
+        reconciliation = await loop.run_in_executor(
+            None, run_reconciliation, persona_results, scores_data, custom_prompt
+        )
+
+        result = {
+            "personas": persona_results,
+            "reconciliation": reconciliation,
+        }
+        result = sanitize_for_json(result)
+        return {"status": "success", "data": result}
+    except Exception as exc:
+        return {"status": "error", "message": f"Reconciliation failed: {exc}"}
+
+@app.get("/api/forward-pe/{ticker}")
+async def get_forward_pe_analysis(ticker: str):
+    """Return forward P/E cross-referencing analysis for a ticker."""
+    from app.scoring import compute_company_scores, compute_forward_pe_reliability
+
+    try:
+        loop = asyncio.get_event_loop()
+        scores_data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
+        quick_facts = scores_data.get("quick_facts", {})
+        scores = scores_data.get("scores", {})
+
+        trailing_pe = quick_facts.get("pe_ratio")
+        forward_pe = quick_facts.get("forward_pe")
+        revenue_growth = quick_facts.get("revenue_growth_yoy")
+
+        financial_inputs = {}
+        fin_score = scores.get("financial")
+        if fin_score:
+            if hasattr(fin_score, "inputs"):
+                financial_inputs = fin_score.inputs if isinstance(fin_score.inputs, dict) else {}
+            elif isinstance(fin_score, dict):
+                financial_inputs = fin_score.get("inputs", {})
+
+        result = compute_forward_pe_reliability(
+            trailing_pe, forward_pe, revenue_growth, financial_inputs
+        )
+        result = sanitize_for_json(result)
+        return {"status": "success", "data": result}
+    except Exception as exc:
+        return {"status": "error", "message": f"Forward P/E analysis failed: {exc}"}
+
 @app.get("/api/price-history/{ticker}")
 async def get_price_history(ticker: str, period: str = "1m"):
     """Return price history with events for a specific time period."""

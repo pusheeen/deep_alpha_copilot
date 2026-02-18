@@ -1,6 +1,14 @@
 [
   {
     "ticker": "PPTA",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 0.0,
+    "earnings": -35694.0,
+    "net_income": -25756120.0,
+    "eps": -0.24
+  },
+  {
+    "ticker": "PPTA",
     "period": "2025-06-30 00:00:00",
     "revenue": 0.0,
     "earnings": -32257.0,
@@ -22,13 +30,5 @@
     "earnings": -30933.0,
     "net_income": -4299781.0,
     "eps": null
-  },
-  {
-    "ticker": "PPTA",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 0.0,
-    "earnings": -30886.0,
-    "net_income": -3564980.0,
-    "eps": -0.05
   }
 ]

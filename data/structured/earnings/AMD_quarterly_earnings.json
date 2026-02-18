@@ -1,6 +1,22 @@
 [
   {
     "ticker": "AMD",
+    "period": "2025-12-31 00:00:00",
+    "revenue": 10270000000.0,
+    "earnings": 5577000000.0,
+    "net_income": 1511000000.0,
+    "eps": null
+  },
+  {
+    "ticker": "AMD",
+    "period": "2025-09-30 00:00:00",
+    "revenue": 9246000000.0,
+    "earnings": 4780000000.0,
+    "net_income": 1243000000.0,
+    "eps": 0.75
+  },
+  {
+    "ticker": "AMD",
     "period": "2025-06-30 00:00:00",
     "revenue": 7685000000.0,
     "earnings": 3059000000.0,
@@ -14,21 +30,5 @@
     "earnings": 3736000000.0,
     "net_income": 709000000.0,
     "eps": 0.44
-  },
-  {
-    "ticker": "AMD",
-    "period": "2024-12-31 00:00:00",
-    "revenue": 7658000000.0,
-    "earnings": 3882000000.0,
-    "net_income": 482000000.0,
-    "eps": 0.29
-  },
-  {
-    "ticker": "AMD",
-    "period": "2024-09-30 00:00:00",
-    "revenue": 6819000000.0,
-    "earnings": 3419000000.0,
-    "net_income": 771000000.0,
-    "eps": 0.47
   }
 ]

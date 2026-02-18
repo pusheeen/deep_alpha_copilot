@@ -3,6 +3,8 @@
 # Generated from NASDAQ, NYSE, and AMEX exchanges
 # Note: This list includes all alphanumeric tickers. Further ETF filtering requires individual API calls.
 
-TARGET_TICKERS = ['TSM', 'NVDA','AMD','AVGO','ORCL','MU',
-                   'MP','LAC','UAMY','CRML','NMG','PPTA','NVA','NAK','NB','ALB']
-
+TARGET_TICKERS = [
+    'TSM', 'NVDA', 'AMD', 'AVGO', 'ORCL', 'MU', 'CLS',
+    'LEU', 'SMR', 'IREN', 'EOSE',
+    'MP', 'LAC', 'UAMY', 'CRML', 'NMG', 'PPTA', 'NVA', 'NAK', 'NB', 'ALB',
+]
