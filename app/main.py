@@ -2175,7 +2175,10 @@ async def scheduler_update_data(data_type: str, request: Request):
 async def get_data_status():
     """Return last updated timestamps for all data types, computed from actual files."""
     try:
-        from scheduler_jobs import UPDATE_SCHEDULES
+        try:
+            from scheduler_jobs import UPDATE_SCHEDULES
+        except ImportError:
+            UPDATE_SCHEDULES = {}
 
         def _newest_file_time(directory: Path, pattern: str = "*") -> Optional[datetime]:
             """Return the modification time of the newest file matching pattern."""
