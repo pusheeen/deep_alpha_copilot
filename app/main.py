@@ -2108,24 +2108,28 @@ async def scheduler_update_data(data_type: str, request: Request):
         return {"status": "error", "message": "Unauthorized"}
     
     try:
-        from scheduler_jobs import update_last_updated_timestamp
-        
         if data_type == "scoring_data":
-            # Update financial statements, earnings, prices (quarterly)
-            from fetch_data import fetch_financial_statements, fetch_quarterly_earnings, fetch_stock_prices
-            # This would call the actual fetch functions
-            update_last_updated_timestamp("scoring_data")
+            from fetch_data.prices import fetch_stock_prices
+            from fetch_data.financials import fetch_financial_statements
+            from fetch_data.earnings import fetch_quarterly_earnings
+            from target_tickers import TARGET_TICKERS
+            loop = asyncio.get_event_loop()
+            for ticker in TARGET_TICKERS:
+                try:
+                    await loop.run_in_executor(None, fetch_stock_prices, ticker)
+                    await loop.run_in_executor(None, fetch_financial_statements, ticker)
+                    await loop.run_in_executor(None, fetch_quarterly_earnings, ticker)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch scoring data for {ticker}: {e}")
             return {"status": "success", "message": f"Updated {data_type}"}
-        
+
         elif data_type == "sentiment_data":
-            # Update Reddit and X sentiment (weekly)
-            from fetch_data import fetch_reddit_sentiment, fetch_x_sentiment
-            update_last_updated_timestamp("sentiment_data")
+            from fetch_data.reddit import fetch_reddit_data
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, fetch_reddit_data)
             return {"status": "success", "message": f"Updated {data_type}"}
-        
+
         elif data_type == "news_data":
-            # Fetch latest news (past 72 hours, daily at 2am PST)
-            from app.main import fetch_realtime_news
             from target_tickers import TARGET_TICKERS
             loop = asyncio.get_event_loop()
             for ticker in TARGET_TICKERS:
@@ -2134,38 +2138,34 @@ async def scheduler_update_data(data_type: str, request: Request):
                     _save_cached_news(ticker, payload)
                 except Exception as e:
                     logger.warning(f"Failed to fetch news for {ticker}: {e}")
-            update_last_updated_timestamp("news_data")
             return {"status": "success", "message": f"Updated {data_type}"}
-        
+
         elif data_type == "institutional_flow":
-            # Update institutional flow data (quarterly)
-            from fetch_data import fetch_combined_flow_data
+            from fetch_data.flow_data import fetch_combined_flow_data
             from target_tickers import TARGET_TICKERS
-            from pathlib import Path
-            flow_dir = Path("data/unstructured/flow")
+            flow_dir = DATA_ROOT / "structured" / "flow_data"
+            loop = asyncio.get_event_loop()
             for ticker in TARGET_TICKERS:
                 try:
-                    fetch_combined_flow_data(ticker, flow_dir)
+                    await loop.run_in_executor(None, fetch_combined_flow_data, ticker, flow_dir)
                 except Exception as e:
                     logger.warning(f"Failed to fetch flow data for {ticker}: {e}")
-            update_last_updated_timestamp("institutional_flow")
             return {"status": "success", "message": f"Updated {data_type}"}
-        
+
         elif data_type == "momentum_data":
-            # Update price data and technical indicators (daily at 2am PST)
-            from fetch_data import fetch_stock_prices
+            from fetch_data.prices import fetch_stock_prices
             from target_tickers import TARGET_TICKERS
+            loop = asyncio.get_event_loop()
             for ticker in TARGET_TICKERS:
                 try:
-                    fetch_stock_prices(ticker)
+                    await loop.run_in_executor(None, fetch_stock_prices, ticker)
                 except Exception as e:
                     logger.warning(f"Failed to fetch momentum data for {ticker}: {e}")
-            update_last_updated_timestamp("momentum_data")
             return {"status": "success", "message": f"Updated {data_type}"}
-        
+
         else:
             return {"status": "error", "message": f"Unknown data type: {data_type}"}
-    
+
     except Exception as exc:
         logger.error(f"Error updating {data_type}: {exc}")
         return {"status": "error", "message": str(exc)}
@@ -2175,11 +2175,6 @@ async def scheduler_update_data(data_type: str, request: Request):
 async def get_data_status():
     """Return last updated timestamps for all data types, computed from actual files."""
     try:
-        try:
-            from scheduler_jobs import UPDATE_SCHEDULES
-        except ImportError:
-            UPDATE_SCHEDULES = {}
-
         def _newest_file_time(directory: Path, pattern: str = "*") -> Optional[datetime]:
             """Return the modification time of the newest file matching pattern."""
             if not directory.exists():
@@ -2271,18 +2266,6 @@ async def get_data_status():
                 "freshness": freshness["label"],
                 "freshness_color": freshness["color"],
             }
-
-        # Also include schedule info for compatibility
-        for data_type, schedule in UPDATE_SCHEDULES.items():
-            if data_type not in status:
-                status[data_type] = {
-                    "last_updated": None,
-                    "label": data_type.replace("_", " ").title(),
-                    "frequency": schedule["frequency"],
-                    "description": schedule["description"],
-                    "freshness": "unavailable",
-                    "freshness_color": "slate",
-                }
 
         return {"status": "success", "data": status}
     except Exception as exc:
