@@ -164,6 +164,13 @@
                     <span id="market-update-time" class="font-mono text-slate-400">Loading...</span>
                 </div>
             </div>
+            <!-- Data Freshness Strip -->
+            <div id="data-freshness-strip" class="mt-2 flex flex-wrap items-center gap-3 text-[10px] border-t border-slate-800 pt-2">
+                <span class="text-slate-500 font-medium uppercase tracking-wider">Data</span>
+                <div id="freshness-indicators" class="flex flex-wrap items-center gap-2">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
         </header>
 
         <!-- Landing Hero (first visit) -->
@@ -1837,6 +1844,52 @@
             }
         }
 
+        function buildTickerFreshnessHtml(freshness) {
+            if (!freshness || Object.keys(freshness).length === 0) return '';
+
+            const thresholds = {
+                prices: { max: 24, label: 'Prices' },
+                financials: { max: 2160, label: 'Financials' },
+                earnings: { max: 2160, label: 'Earnings' },
+                news: { max: 12, label: 'News' },
+                reddit: { max: 168, label: 'Reddit' },
+                twitter: { max: 168, label: 'X' },
+                flow: { max: 2160, label: 'Flow' },
+            };
+
+            let staleItems = [];
+            let allFresh = true;
+
+            for (const [key, config] of Object.entries(thresholds)) {
+                const info = freshness[key];
+                if (!info) continue;
+                const age = info.age_hours;
+                if (age > config.max * 3) {
+                    staleItems.push({ label: config.label, age, severity: 'critical' });
+                    allFresh = false;
+                } else if (age > config.max) {
+                    staleItems.push({ label: config.label, age, severity: 'stale' });
+                    allFresh = false;
+                }
+            }
+
+            if (allFresh) return '';
+
+            const formatAge = (hours) => {
+                if (hours >= 720) return `${Math.floor(hours / 720)}mo`;
+                if (hours >= 24) return `${Math.floor(hours / 24)}d`;
+                return `${Math.floor(hours)}h`;
+            };
+
+            const badges = staleItems.map(item => {
+                const dotClass = item.severity === 'critical' ? 'bg-red-400' : 'bg-amber-400';
+                const bgClass = item.severity === 'critical' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border ${bgClass}"><span class="w-1.5 h-1.5 rounded-full ${dotClass}"></span>${item.label} ${formatAge(item.age)}</span>`;
+            }).join(' ');
+
+            return `<div class="mt-3 flex flex-wrap items-center gap-2 text-[10px]"><span class="text-slate-400 font-medium uppercase tracking-wider">Data age:</span>${badges}</div>`;
+        }
+
         function renderScoreboard(data) {
             const company = data.company;
             const overall = data.overall;
@@ -1847,6 +1900,10 @@
             const industryComparison = data.industry_comparison || {};
             const scoreBenchmarks = data.score_benchmarks || {};
             const priceHistory = data.price_history || {};
+            const dataFreshness = data.data_freshness || {};
+
+            // Build compact freshness summary for this ticker
+            const freshnessHtml = buildTickerFreshnessHtml(dataFreshness);
 
             scoreboard.innerHTML = `
                 <div class="space-y-6">
@@ -1876,6 +1933,7 @@
                             <p class="text-sm text-slate-700 leading-relaxed">${recommendation.action || quickFacts.business_model || 'Analysis in progress.'}</p>
                             ${recommendation.timing ? `<p class="text-xs text-slate-500 mt-2">Timing: ${recommendation.timing}</p>` : ''}
                         </div>
+                        ${freshnessHtml}
                     </div>
 
 
@@ -3305,14 +3363,24 @@
                 const diffMs = now.getTime() - date.getTime();
                 const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
                 const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                
-                if (diffHours >= 12) {
-                    return `Last updated: ${date.toLocaleString()} (${diffHours}h ago - refresh due)`;
+                const diffDays = Math.floor(diffHours / 24);
+
+                let timeText, badgeHtml = '';
+                if (diffDays > 0) {
+                    timeText = `${diffDays}d ${diffHours % 24}h ago`;
                 } else if (diffHours > 0) {
-                    return `Last updated: ${date.toLocaleString()} (${diffHours}h ${diffMinutes}m ago)`;
+                    timeText = `${diffHours}h ${diffMinutes}m ago`;
                 } else {
-                    return `Last updated: ${date.toLocaleString()} (${diffMinutes}m ago)`;
+                    timeText = `${diffMinutes}m ago`;
                 }
+
+                if (diffHours >= 72) {
+                    badgeHtml = `<span class="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200"><span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Data may be outdated</span>`;
+                } else if (diffHours >= 12) {
+                    badgeHtml = `<span class="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Refresh due</span>`;
+                }
+
+                return `Updated ${timeText}${badgeHtml}`;
             };
             const deepAlphaCard = data.deep_alpha_analysis;
             const analysisGeneratedAt = data.analysis_generated_at ? new Date(data.analysis_generated_at) : null;
@@ -4153,19 +4221,20 @@
             try {
                 const response = await fetch('/api/data-status');
                 const result = await response.json();
-                
+
                 if (result.status === 'success' && result.data) {
                     const status = result.data;
-                    
+
                     // Update news section
-                    if (status.news_data && status.news_data.last_updated) {
-                        const newsUpdated = new Date(status.news_data.last_updated);
+                    const newsKey = status.news || status.news_data;
+                    if (newsKey && newsKey.last_updated) {
+                        const newsUpdated = new Date(newsKey.last_updated);
                         const newsElement = document.getElementById('news-last-updated');
                         if (newsElement) {
                             newsElement.textContent = `Last updated: ${formatDateTime(newsUpdated)} (Updates daily at 2am PST)`;
                         }
                     }
-                    
+
                     // Update flow data section
                     if (status.institutional_flow && status.institutional_flow.last_updated) {
                         const flowUpdated = new Date(status.institutional_flow.last_updated);
@@ -4174,19 +4243,66 @@
                             flowElement.textContent = `Last updated: ${formatDateTime(flowUpdated)} (Updates quarterly)`;
                         }
                     }
-                    
+
                     // Update scoring data (shown in scorecard)
-                    if (status.scoring_data && status.scoring_data.last_updated) {
-                        const scoringUpdated = new Date(status.scoring_data.last_updated);
+                    const scoringKey = status.scoring_data;
+                    if (scoringKey && scoringKey.last_updated) {
+                        const scoringUpdated = new Date(scoringKey.last_updated);
                         const scoringElement = document.getElementById('scoring-last-updated');
                         if (scoringElement) {
                             scoringElement.textContent = `Data updated: ${formatDateTime(scoringUpdated)} (Updates quarterly)`;
                         }
                     }
+
+                    // Render freshness indicators in header strip
+                    renderFreshnessStrip(status);
                 }
             } catch (error) {
                 console.error('Error loading data status:', error);
             }
+        }
+
+        function renderFreshnessStrip(status) {
+            const container = document.getElementById('freshness-indicators');
+            if (!container) return;
+
+            // Display order for the strip
+            const displayOrder = ['prices', 'news', 'reddit_sentiment', 'x_sentiment', 'financials', 'earnings', 'institutional_flow'];
+
+            const dotColors = {
+                fresh: 'bg-emerald-400',
+                stale: 'bg-amber-400',
+                critical: 'bg-red-400',
+                unavailable: 'bg-slate-500'
+            };
+            const textColors = {
+                fresh: 'text-emerald-400',
+                stale: 'text-amber-400',
+                critical: 'text-red-400',
+                unavailable: 'text-slate-500'
+            };
+
+            let html = '';
+            for (const key of displayOrder) {
+                const info = status[key];
+                if (!info) continue;
+                const freshness = info.freshness || 'unavailable';
+                const dot = dotColors[freshness] || dotColors.unavailable;
+                const textColor = textColors[freshness] || textColors.unavailable;
+                const label = info.label || key.replace(/_/g, ' ');
+                const lastUpdated = info.last_updated ? new Date(info.last_updated) : null;
+                const ageText = lastUpdated ? formatDateTime(lastUpdated) : 'No data';
+                const pulseClass = freshness === 'critical' ? 'signal-pulse' : '';
+                const tooltip = `${label}: ${ageText} (${info.frequency || ''})`;
+
+                html += `
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${freshness === 'critical' ? 'bg-red-900/30' : freshness === 'stale' ? 'bg-amber-900/20' : ''}" title="${tooltip}">
+                        <span class="w-1.5 h-1.5 rounded-full ${dot} ${pulseClass}"></span>
+                        <span class="${textColor} font-medium">${label}</span>
+                    </span>
+                `;
+            }
+            container.innerHTML = html;
         }
 
         function formatDateTime(date) {
@@ -4195,7 +4311,7 @@
             const diffMs = now.getTime() - date.getTime();
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
             const diffDays = Math.floor(diffHours / 24);
-            
+
             if (diffDays > 0) {
                 return `${date.toLocaleDateString()} ${date.toLocaleTimeString()} (${diffDays}d ago)`;
             } else if (diffHours > 0) {

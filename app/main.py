@@ -1631,6 +1631,29 @@ async def get_scores(ticker: str, news_only: bool = False, query: Optional[str] 
         data = await loop.run_in_executor(None, compute_company_scores, ticker.upper())
         # Sanitize data to handle NaN/infinity values
         data = sanitize_for_json(data)
+
+        # Attach per-ticker data freshness info
+        t = ticker.upper()
+        def _file_age_info(directory: Path, pattern: str) -> Optional[dict]:
+            if not directory.exists():
+                return None
+            files = sorted(directory.glob(pattern), key=lambda f: f.stat().st_mtime, reverse=True)
+            if not files:
+                return None
+            ts = datetime.fromtimestamp(files[0].stat().st_mtime, tz=timezone.utc)
+            age_hours = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
+            return {"last_updated": ts.isoformat(), "age_hours": round(age_hours, 1)}
+
+        data["data_freshness"] = {
+            "prices": _file_age_info(DATA_ROOT / "structured" / "prices", f"{t}_prices.csv"),
+            "financials": _file_age_info(DATA_ROOT / "structured" / "financials", f"{t}_financials*.json"),
+            "earnings": _file_age_info(DATA_ROOT / "structured" / "earnings", f"{t}_earnings*.json"),
+            "news": _file_age_info(DATA_ROOT / "unstructured" / "news", f"{t}_news_*.json"),
+            "reddit": _file_age_info(DATA_ROOT / "unstructured" / "reddit", f"{t}_reddit_posts_*.json"),
+            "twitter": _file_age_info(DATA_ROOT / "unstructured" / "x", f"{t}_x_posts_*.json"),
+            "flow": _file_age_info(DATA_ROOT / "structured" / "flow_data", f"{t}_flow_*.json"),
+        }
+
         return {"status": "success", "data": data}
     except ScoreComputationError as exc:
         return {"status": "error", "message": str(exc)}
@@ -2150,19 +2173,114 @@ async def scheduler_update_data(data_type: str, request: Request):
 
 @app.get("/api/data-status")
 async def get_data_status():
-    """Return last updated timestamps for all data types."""
+    """Return last updated timestamps for all data types, computed from actual files."""
     try:
-        from scheduler_jobs import get_last_updated_timestamp, UPDATE_SCHEDULES
-        
+        from scheduler_jobs import UPDATE_SCHEDULES
+
+        def _newest_file_time(directory: Path, pattern: str = "*") -> Optional[datetime]:
+            """Return the modification time of the newest file matching pattern."""
+            if not directory.exists():
+                return None
+            files = sorted(directory.glob(pattern), key=lambda f: f.stat().st_mtime, reverse=True)
+            if not files:
+                return None
+            return datetime.fromtimestamp(files[0].stat().st_mtime, tz=timezone.utc)
+
+        def _freshness_status(last_updated: Optional[datetime], max_age_hours: float) -> dict:
+            """Compute freshness status: fresh / stale / critical."""
+            if not last_updated:
+                return {"label": "unavailable", "color": "slate"}
+            now = datetime.now(timezone.utc)
+            age_hours = (now - last_updated).total_seconds() / 3600
+            if age_hours <= max_age_hours:
+                return {"label": "fresh", "color": "emerald"}
+            elif age_hours <= max_age_hours * 3:
+                return {"label": "stale", "color": "amber"}
+            else:
+                return {"label": "critical", "color": "red"}
+
+        # Scan actual data directories
+        prices_dir = DATA_ROOT / "structured" / "prices"
+        financials_dir = DATA_ROOT / "structured" / "financials"
+        earnings_dir = DATA_ROOT / "structured" / "earnings"
+        news_dir = DATA_ROOT / "unstructured" / "news"
+        reddit_dir = DATA_ROOT / "unstructured" / "reddit"
+        x_dir = DATA_ROOT / "unstructured" / "x"
+        flow_dir = DATA_ROOT / "structured" / "flow_data"
+
+        # Max age thresholds (hours)
+        thresholds = {
+            "prices": 24,          # 1 day
+            "financials": 2160,    # 90 days
+            "earnings": 2160,      # 90 days
+            "news": 12,            # 12 hours
+            "reddit_sentiment": 6, # 6 hours
+            "x_sentiment": 6,      # 6 hours
+            "institutional_flow": 2160,  # 90 days
+        }
+
+        data_categories = {
+            "prices": {
+                "last_updated": _newest_file_time(prices_dir, "*_prices.csv"),
+                "label": "Prices",
+                "frequency": "Daily",
+            },
+            "financials": {
+                "last_updated": _newest_file_time(financials_dir, "*.json"),
+                "label": "Financials",
+                "frequency": "Quarterly",
+            },
+            "earnings": {
+                "last_updated": _newest_file_time(earnings_dir, "*.json"),
+                "label": "Earnings",
+                "frequency": "Quarterly",
+            },
+            "news": {
+                "last_updated": _newest_file_time(news_dir, "*_news_*.json"),
+                "label": "News",
+                "frequency": "Daily",
+            },
+            "reddit_sentiment": {
+                "last_updated": _newest_file_time(reddit_dir, "*_reddit_posts_*.json"),
+                "label": "Reddit",
+                "frequency": "Weekly",
+            },
+            "x_sentiment": {
+                "last_updated": _newest_file_time(x_dir, "*_x_posts_*.json"),
+                "label": "X / Twitter",
+                "frequency": "Weekly",
+            },
+            "institutional_flow": {
+                "last_updated": _newest_file_time(flow_dir, "*_flow_*.json"),
+                "label": "Flow Data",
+                "frequency": "Quarterly",
+            },
+        }
+
         status = {}
-        for data_type, schedule in UPDATE_SCHEDULES.items():
-            last_updated = get_last_updated_timestamp(data_type)
-            status[data_type] = {
-                "last_updated": last_updated.isoformat() if last_updated else None,
-                "frequency": schedule["frequency"],
-                "description": schedule["description"]
+        for key, info in data_categories.items():
+            ts = info["last_updated"]
+            freshness = _freshness_status(ts, thresholds[key])
+            status[key] = {
+                "last_updated": ts.isoformat() if ts else None,
+                "label": info["label"],
+                "frequency": info["frequency"],
+                "freshness": freshness["label"],
+                "freshness_color": freshness["color"],
             }
-        
+
+        # Also include schedule info for compatibility
+        for data_type, schedule in UPDATE_SCHEDULES.items():
+            if data_type not in status:
+                status[data_type] = {
+                    "last_updated": None,
+                    "label": data_type.replace("_", " ").title(),
+                    "frequency": schedule["frequency"],
+                    "description": schedule["description"],
+                    "freshness": "unavailable",
+                    "freshness_color": "slate",
+                }
+
         return {"status": "success", "data": status}
     except Exception as exc:
         logger.error(f"Error getting data status: {exc}")
