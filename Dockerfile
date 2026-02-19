@@ -21,6 +21,7 @@ COPY main.py ./
 COPY bigquery_uploader.py ./
 COPY bigquery_schemas.py ./
 COPY email_notifier.py ./
+COPY scheduler_jobs.py ./
 
 # Create /tmp/data directory for Cloud Storage cache
 RUN mkdir -p /tmp/data && ln -s /tmp/data /app/data
