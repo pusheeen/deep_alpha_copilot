@@ -24,7 +24,7 @@
 - **OS**: macOS (Darwin 24.5.0)
 - **Python**: 3.13.2
 - **Virtual Environment**: ✅ Active at `/venv/`
-- **Working Directory**: `/Users/luying/Documents/deep_alpha_copilot`
+- **Working Directory**: `/path/to/deep_alpha_copilot`
 
 ### Dependencies Verified
 All required packages installed and working:
@@ -132,7 +132,7 @@ All 7 core endpoints tested and working:
 #### Test 3.1: Data Directory Detection
 **Status**: ✅ PASSED
 **Details**:
-- Correctly detected: `/Users/luying/Documents/deep_alpha_copilot/data`
+- Correctly detected: `/path/to/deep_alpha_copilot/data`
 - Environment-aware detection working
 - All subdirectories accessible
 

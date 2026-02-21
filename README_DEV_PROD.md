@@ -34,7 +34,7 @@ This project has **two separate applications** for different purposes:
 ### Step 1: Clone and Install Dependencies
 
 ```bash
-cd /Users/luying/Documents/deep_alpha_copilot
+cd /path/to/deep_alpha_copilot
 
 # Create virtual environment
 python3 -m venv venv

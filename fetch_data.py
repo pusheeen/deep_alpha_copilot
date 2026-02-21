@@ -1427,9 +1427,9 @@ def scrape_reddit_with_praw() -> List[Dict[str, Any]]:
     # Initialize Reddit API client
     try:
         reddit_client = praw.Reddit(
-            client_id=os.getenv('REDDIT_CLIENT_ID', "9RrzkLg9kN06g-kpti2ncw"),
-            client_secret=os.getenv('REDDIT_CLIENT_SECRET', "OH0pyFbl8T2ykN0IeAC1m5uNUu287A"),
-            user_agent=os.getenv('REDDIT_USER_AGENT', "FinancialAgent/1.0 by u/Feeling-Berry5335")
+            client_id=os.getenv('REDDIT_CLIENT_ID', ""),
+            client_secret=os.getenv('REDDIT_CLIENT_SECRET', ""),
+            user_agent=os.getenv('REDDIT_USER_AGENT', "FinancialAgent/1.0")
         )
 
         # Test authentication

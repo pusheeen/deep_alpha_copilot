@@ -69,7 +69,7 @@ If using Cloud Run with Secret Manager for API keys:
 
 ```bash
 # SEC API User Agent
-echo -n "Ying Lu yinglu1985.shanghai@gmail.com" | \
+echo -n "YourName your.email@example.com" | \
     gcloud secrets create SEC_USER_AGENT --data-file=-
 
 # Reddit API
@@ -91,7 +91,7 @@ echo -n "your_gemini_api_key" | \
 ## Step 6: Deploy to Cloud Run
 
 ```bash
-cd /Users/luying/Documents/deep_alpha_copilot
+cd /path/to/deep_alpha_copilot
 
 # Deploy
 gcloud run deploy deep-alpha-copilot \

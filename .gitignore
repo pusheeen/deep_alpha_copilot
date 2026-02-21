@@ -83,3 +83,9 @@ reports/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# PID files
+*.pid
+
+# Backup files
+*.bak

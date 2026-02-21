@@ -5,7 +5,7 @@
 Your OpenRouter API key has been added to `.env`:
 
 ```bash
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=your-openrouter-api-key-here
 ```
 
 ## 🔄 Fallback Chain

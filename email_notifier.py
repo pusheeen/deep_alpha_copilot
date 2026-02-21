@@ -25,7 +25,7 @@ class EmailNotifier:
         self.smtp_port = 587
         self.sender_email = os.getenv("EMAIL_SENDER")
         self.sender_password = os.getenv("EMAIL_PASSWORD")  # App-specific password
-        self.recipient_email = os.getenv("EMAIL_RECIPIENT", "yinglu1985.shanghai@gmail.com")
+        self.recipient_email = os.getenv("EMAIL_RECIPIENT", "")
 
     def send_summary_email(self, summary_stats, errors=None):
         """

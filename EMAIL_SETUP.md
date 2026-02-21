@@ -1,6 +1,6 @@
 # Email Notification Setup Guide
 
-Your BigQuery data pipeline now sends daily summary emails to `yinglu1985.shanghai@gmail.com` after each run.
+Your BigQuery data pipeline now sends daily summary emails to `recipient@example.com` after each run.
 
 ## Prerequisites
 
@@ -27,20 +27,20 @@ You need a Gmail account that will send the emails. This can be any Gmail accoun
 
 ### 3. Update Your .env File
 
-Edit `/Users/luying/Documents/deep_alpha_copilot/.env` and add:
+Edit `/path/to/deep_alpha_copilot/.env` and add:
 
 ```bash
 # Email Notification Settings
 EMAIL_SENDER=your-gmail-address@gmail.com  # The Gmail account sending emails
 EMAIL_PASSWORD=xxxxxxxxxxxxxxxx  # The 16-character app password (no spaces)
-EMAIL_RECIPIENT=yinglu1985.shanghai@gmail.com
+EMAIL_RECIPIENT=recipient@example.com
 ```
 
 **Example:**
 ```bash
-EMAIL_SENDER=yinglu08fall@gmail.com
+EMAIL_SENDER=your-gmail@gmail.com
 EMAIL_PASSWORD=abcdabcdabcdabcd
-EMAIL_RECIPIENT=yinglu1985.shanghai@gmail.com
+EMAIL_RECIPIENT=recipient@example.com
 ```
 
 ## Test the Email Notification
@@ -48,11 +48,11 @@ EMAIL_RECIPIENT=yinglu1985.shanghai@gmail.com
 Run the test script to verify email sending works:
 
 ```bash
-cd /Users/luying/Documents/deep_alpha_copilot
+cd /path/to/deep_alpha_copilot
 python3 email_notifier.py
 ```
 
-You should receive a test email at `yinglu1985.shanghai@gmail.com` with sample statistics.
+You should receive a test email at `recipient@example.com` with sample statistics.
 
 ## What the Email Contains
 
@@ -82,7 +82,7 @@ The email is sent in both plain text and HTML formats, so it looks good in any e
 
 ### Manual Run
 ```bash
-cd /Users/luying/Documents/deep_alpha_copilot
+cd /path/to/deep_alpha_copilot
 python3 fetch_and_upload.py
 ```
 
@@ -99,7 +99,7 @@ crontab -e
 
 2. Add this line:
 ```
-0 6 * * * cd /Users/luying/Documents/deep_alpha_copilot && /usr/local/bin/python3 fetch_and_upload.py >> /Users/luying/Documents/deep_alpha_copilot/cron.log 2>&1
+0 6 * * * cd /path/to/deep_alpha_copilot && /usr/local/bin/python3 fetch_and_upload.py >> /path/to/deep_alpha_copilot/cron.log 2>&1
 ```
 
 3. Save and exit
@@ -142,7 +142,7 @@ This will:
 
 ## Customizing the Email
 
-To customize the email content, edit `/Users/luying/Documents/deep_alpha_copilot/email_notifier.py`:
+To customize the email content, edit `/path/to/deep_alpha_copilot/email_notifier.py`:
 
 - `_generate_html_report()` - HTML email format
 - `_generate_text_report()` - Plain text email format

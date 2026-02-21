@@ -88,7 +88,7 @@ This indicates:
    pkill -f "run_server.py"
    
    # Start server with API keys
-   export OPENAI_API_KEY="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"
+   export OPENAI_API_KEY="your-openai-api-key-here"
    python3 run_server.py
    ```
 
@@ -109,7 +109,7 @@ This indicates:
 
 4. **Run LLM Judge Evaluation**
    ```bash
-   export OPENAI_API_KEY="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"
+   export OPENAI_API_KEY="your-openai-api-key-here"
    python3 run_chatbot_evaluation.py
    ```
 
