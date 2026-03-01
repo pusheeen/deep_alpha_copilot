@@ -1,8 +1,19 @@
 /**
- * Scores a website across multiple criteria based on flow results and page audits.
+ * Scores a website across multiple criteria based on:
+ * - HTTP-level flow results (API testing)
+ * - Static HTML page audits (cheerio-based)
+ * - Browser testing results (Playwright — what users actually see)
+ *
  * Generalized — works for any website, evaluates against the provided spec.
  */
-import type { StepResult, PageAudit, SiteConfig, FeedbackReport } from './types.js';
+import type {
+  StepResult,
+  PageAudit,
+  SiteConfig,
+  FeedbackReport,
+  BrowserPageResult,
+  BrowserFlowResult,
+} from './types.js';
 
 interface ScoreEntry {
   score: number;
@@ -13,18 +24,21 @@ interface ScoreEntry {
 export function generateReport(
   config: SiteConfig,
   flowResults: StepResult[],
-  pageAudits: PageAudit[]
+  pageAudits: PageAudit[],
+  browserPages: BrowserPageResult[] = [],
+  browserFlows: BrowserFlowResult[] = []
 ): FeedbackReport {
   const scores: Record<string, ScoreEntry> = {};
   const critical: string[] = [];
   const improvements: string[] = [];
   const positives: string[] = [];
+  const hasBrowser = browserPages.length > 0 || browserFlows.length > 0;
 
   // ── 1. Usability ───────────────────────────────────────────────────
 
   const usability: ScoreEntry = { score: 0, max: 20, notes: [] };
 
-  // Do all flows pass?
+  // HTTP-level flows
   const flowGroups = groupBy(flowResults, (r) => r.flow);
   for (const [name, results] of Object.entries(flowGroups)) {
     const allPass = results.every((r) => r.success);
@@ -59,7 +73,6 @@ export function generateReport(
 
   const design: ScoreEntry = { score: 0, max: 15, notes: [] };
 
-  // Consistent nav across pages
   const pagesWithNav = pageAudits.filter((a) => a.has_nav).length;
   if (pagesWithNav === pageAudits.length) {
     design.score += 3;
@@ -69,51 +82,47 @@ export function generateReport(
     design.score += 1;
     design.notes.push(`Navigation present on ${pagesWithNav}/${pageAudits.length} pages`);
     improvements.push('Add consistent navigation to all pages');
-  } else {
+  } else if (pageAudits.length > 0) {
     design.notes.push('No navigation element found on any page');
     critical.push('No <nav> element found — users have no way to navigate between sections');
   }
 
-  // Footer
   const pagesWithFooter = pageAudits.filter((a) => a.has_footer).length;
   if (pagesWithFooter > 0) {
     design.score += 1;
     design.notes.push('Footer present');
-  } else {
+  } else if (pageAudits.length > 0) {
     design.notes.push('No footer on any page');
     improvements.push('Add a footer with helpful links (about, privacy, contact)');
   }
 
-  // Semantic HTML
   const semanticPages = pageAudits.filter((a) => a.uses_semantic_html);
-  if (semanticPages.length === pageAudits.length) {
+  if (pageAudits.length > 0 && semanticPages.length === pageAudits.length) {
     design.score += 3;
     design.notes.push('Good semantic HTML usage');
     positives.push('Uses semantic HTML elements throughout');
-  } else {
+  } else if (semanticPages.length > 0) {
     design.score += 1;
     improvements.push('Use more semantic HTML (main, article, section) for better structure');
   }
 
-  // Headings structure
   const pagesWithHeadings = pageAudits.filter((a) => a.heading_count > 0).length;
-  if (pagesWithHeadings === pageAudits.length) {
+  if (pageAudits.length > 0 && pagesWithHeadings === pageAudits.length) {
     design.score += 2;
     design.notes.push('All pages have headings');
-  } else {
+  } else if (pageAudits.length > 0) {
     improvements.push('Ensure every page has a clear heading hierarchy');
   }
 
-  // Images with alt text
   const totalImages = pageAudits.reduce((s, a) => s + a.image_count, 0);
   const missingAlts = pageAudits.reduce((s, a) => s + a.images_without_alt, 0);
-  if (totalImages === 0) {
+  if (totalImages === 0 && pageAudits.length > 0) {
     design.notes.push('No images found — consider adding visual elements');
     improvements.push('Add images/icons to improve visual appeal and engagement');
-  } else if (missingAlts === 0) {
+  } else if (missingAlts === 0 && totalImages > 0) {
     design.score += 2;
     positives.push('All images have alt text');
-  } else {
+  } else if (totalImages > 0) {
     design.score += 1;
     improvements.push(`${missingAlts} images missing alt text`);
   }
@@ -125,39 +134,42 @@ export function generateReport(
   const perf: ScoreEntry = { score: 0, max: 15, notes: [] };
 
   const timingResults = flowResults.filter((r) => r.action === 'timing');
-  const timingPass = timingResults.filter((r) => r.success).length;
-  perf.score += Math.round((timingPass / Math.max(timingResults.length, 1)) * 10);
-  perf.notes.push(`${timingPass}/${timingResults.length} timing checks pass`);
+  if (timingResults.length > 0) {
+    const timingPass = timingResults.filter((r) => r.success).length;
+    perf.score += Math.round((timingPass / timingResults.length) * 10);
+    perf.notes.push(`${timingPass}/${timingResults.length} HTTP timing checks pass`);
 
-  if (timingResults.some((r) => !r.success)) {
-    const slow = timingResults.filter((r) => !r.success);
-    for (const s of slow) {
-      improvements.push(`${s.url} is slow: ${s.actual}`);
+    if (timingResults.some((r) => !r.success)) {
+      const slow = timingResults.filter((r) => !r.success);
+      for (const s of slow) {
+        improvements.push(`${s.url} is slow: ${s.actual}`);
+      }
     }
   }
 
-  // Page sizes
-  const avgSize = pageAudits.reduce((s, a) => s + a.html_size_bytes, 0) / Math.max(pageAudits.length, 1);
-  if (avgSize < 100_000) {
-    perf.score += 3;
-    perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB — lightweight`);
-    positives.push('Pages are lightweight and fast to transfer');
-  } else if (avgSize < 500_000) {
-    perf.score += 1;
-    perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB`);
-  } else {
-    perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB — too large`);
-    critical.push('Pages are too large — consider code splitting and lazy loading');
-  }
+  // Static page sizes
+  if (pageAudits.length > 0) {
+    const avgSize = pageAudits.reduce((s, a) => s + a.html_size_bytes, 0) / pageAudits.length;
+    if (avgSize < 100_000) {
+      perf.score += 3;
+      perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB — lightweight`);
+      positives.push('Pages are lightweight and fast to transfer');
+    } else if (avgSize < 500_000) {
+      perf.score += 1;
+      perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB`);
+    } else {
+      perf.notes.push(`Average HTML size: ${Math.round(avgSize / 1024)}KB — too large`);
+      critical.push('Pages are too large — consider code splitting and lazy loading');
+    }
 
-  // JS bundles
-  const avgBundles = pageAudits.reduce((s, a) => s + a.js_bundle_count, 0) / Math.max(pageAudits.length, 1);
-  if (avgBundles <= 5) {
-    perf.score += 2;
-    perf.notes.push(`Average JS bundles per page: ${avgBundles.toFixed(1)}`);
-  } else {
-    perf.notes.push(`High JS bundle count: ${avgBundles.toFixed(1)} per page`);
-    improvements.push('Reduce JavaScript bundle count for faster loading');
+    const avgBundles = pageAudits.reduce((s, a) => s + a.js_bundle_count, 0) / pageAudits.length;
+    if (avgBundles <= 5) {
+      perf.score += 2;
+      perf.notes.push(`Average JS bundles per page: ${avgBundles.toFixed(1)}`);
+    } else {
+      perf.notes.push(`High JS bundle count: ${avgBundles.toFixed(1)} per page`);
+      improvements.push('Reduce JavaScript bundle count for faster loading');
+    }
   }
 
   scores['performance'] = perf;
@@ -167,7 +179,6 @@ export function generateReport(
   const spec: ScoreEntry = { score: 0, max: 20, notes: [] };
   const specText = config.spec.toLowerCase();
 
-  // Check: user login
   if (specText.includes('log in') || specText.includes('login')) {
     const loginFlow = flowGroups['login'] || flowGroups['registration'];
     if (loginFlow && loginFlow.every((r) => r.success)) {
@@ -180,7 +191,6 @@ export function generateReport(
     }
   }
 
-  // Check: news aggregation
   if (specText.includes('news')) {
     const feedFlow = flowGroups['browse_feed'];
     if (feedFlow && feedFlow.some((r) => r.success)) {
@@ -192,7 +202,6 @@ export function generateReport(
     }
   }
 
-  // Check: tl;dr summary
   if (specText.includes('tl;dr') || specText.includes('summary')) {
     const feedResults = flowResults.filter((r) => r.flow === 'browse_feed' && r.details);
     let hasSummaries = false;
@@ -214,7 +223,6 @@ export function generateReport(
     }
   }
 
-  // Check: clickbait detection
   if (specText.includes('clickbait') || specText.includes('click bait')) {
     const feedResults = flowResults.filter((r) => r.flow === 'browse_feed' && r.details);
     let hasClickbait = false;
@@ -235,14 +243,12 @@ export function generateReport(
     }
   }
 
-  // Check: fresh news (72 hours)
   if (specText.includes('fresh') || specText.includes('72 hours')) {
     spec.score += 2;
     spec.notes.push('72-hour freshness filter is configured in code');
     positives.push('News freshness filter (72 hours) is built in');
   }
 
-  // Check: multiple sources (google news, emails, bookmarks)
   if (specText.includes('email') || specText.includes('bookmark')) {
     const sourcesFlow = flowGroups['manage_sources'];
     if (sourcesFlow && sourcesFlow.some((r) => r.success)) {
@@ -254,7 +260,6 @@ export function generateReport(
     }
   }
 
-  // Check: cache / fast loading
   if (specText.includes('cache') || specText.includes('fast')) {
     spec.score += 2;
     spec.notes.push('TTL-based caching is implemented (15 min default, 1 hour for summaries)');
@@ -267,24 +272,21 @@ export function generateReport(
 
   const errors: ScoreEntry = { score: 0, max: 10, notes: [] };
 
-  // Check API error responses are JSON
   const failedApis = flowResults.filter((r) => r.action === 'api_call' && !r.success);
-  if (failedApis.length === 0) {
+  if (failedApis.length === 0 && flowResults.length > 0) {
     errors.score += 5;
     errors.notes.push('No API errors encountered during testing');
-  } else {
-    const jsonErrors = failedApis.filter((r) => r.actual.startsWith('Error:'));
+  } else if (failedApis.length > 0) {
     errors.score += 2;
     errors.notes.push(`${failedApis.length} API errors — all returned structured error messages`);
   }
 
-  // Check pages return proper status codes
   const pageResults = flowResults.filter((r) => r.action === 'fetch_page');
   const allPagesOk = pageResults.every((r) => r.success);
-  if (allPagesOk) {
+  if (allPagesOk && pageResults.length > 0) {
     errors.score += 5;
     errors.notes.push('All page loads successful');
-  } else {
+  } else if (pageResults.length > 0) {
     const failedPages = pageResults.filter((r) => !r.success);
     errors.score += 2;
     for (const p of failedPages) {
@@ -298,39 +300,41 @@ export function generateReport(
 
   const a11y: ScoreEntry = { score: 0, max: 10, notes: [] };
 
-  const totalAria = pageAudits.reduce((s, a) => s + a.aria_attributes, 0);
-  if (totalAria > 5) {
-    a11y.score += 3;
-    a11y.notes.push(`${totalAria} ARIA attributes found`);
-  } else {
-    a11y.notes.push(`Only ${totalAria} ARIA attributes — add more for screen readers`);
-    improvements.push('Add ARIA labels, roles, and descriptions for screen reader support');
-  }
+  if (pageAudits.length > 0) {
+    const totalAria = pageAudits.reduce((s, a) => s + a.aria_attributes, 0);
+    if (totalAria > 5) {
+      a11y.score += 3;
+      a11y.notes.push(`${totalAria} ARIA attributes found`);
+    } else {
+      a11y.notes.push(`Only ${totalAria} ARIA attributes — add more for screen readers`);
+      improvements.push('Add ARIA labels, roles, and descriptions for screen reader support');
+    }
 
-  const allHaveViewport = pageAudits.every((a) => a.has_viewport_meta);
-  if (allHaveViewport) {
-    a11y.score += 2;
-    a11y.notes.push('Viewport meta tag present on all pages');
-  }
+    const allHaveViewport = pageAudits.every((a) => a.has_viewport_meta);
+    if (allHaveViewport) {
+      a11y.score += 2;
+      a11y.notes.push('Viewport meta tag present on all pages');
+    }
 
-  const totalUnlabeled = pageAudits.reduce(
-    (s, a) => s + a.interactive_elements_without_labels, 0
-  );
-  if (totalUnlabeled === 0) {
-    a11y.score += 3;
-    a11y.notes.push('All form inputs have labels or placeholders');
-    positives.push('Good form accessibility — inputs have labels');
-  } else {
-    a11y.score += 1;
-    improvements.push(`${totalUnlabeled} form inputs lack proper labels`);
-  }
+    const totalUnlabeled = pageAudits.reduce(
+      (s, a) => s + a.interactive_elements_without_labels, 0
+    );
+    if (totalUnlabeled === 0) {
+      a11y.score += 3;
+      a11y.notes.push('All form inputs have labels or placeholders');
+      positives.push('Good form accessibility — inputs have labels');
+    } else {
+      a11y.score += 1;
+      improvements.push(`${totalUnlabeled} form inputs lack proper labels`);
+    }
 
-  const allHaveMeta = pageAudits.every((a) => a.has_meta_description);
-  if (allHaveMeta) {
-    a11y.score += 2;
-    a11y.notes.push('All pages have meta descriptions');
-  } else {
-    improvements.push('Add meta descriptions to all pages for SEO');
+    const allHaveMeta = pageAudits.every((a) => a.has_meta_description);
+    if (allHaveMeta) {
+      a11y.score += 2;
+      a11y.notes.push('All pages have meta descriptions');
+    } else {
+      improvements.push('Add meta descriptions to all pages for SEO');
+    }
   }
 
   scores['accessibility'] = a11y;
@@ -339,7 +343,6 @@ export function generateReport(
 
   const content: ScoreEntry = { score: 0, max: 10, notes: [] };
 
-  // Check if feed returns real articles
   const feedWithDetails = flowResults.filter(
     (r) => r.flow === 'browse_feed' && r.details
   );
@@ -350,7 +353,6 @@ export function generateReport(
       content.score += 3;
       content.notes.push(`Feed returns ${articles.length} real articles`);
 
-      // Check freshness
       const now = Date.now();
       const freshArticles = articles.filter((a) => {
         const pub = a.published_at as string;
@@ -365,7 +367,6 @@ export function generateReport(
         );
       }
 
-      // Check for real titles
       const titled = articles.filter((a) => {
         const title = (a.original_title as string) || '';
         return title.length > 10;
@@ -385,6 +386,126 @@ export function generateReport(
 
   scores['content_quality'] = content;
 
+  // ── 8. Browser Testing (NEW — only if Playwright data available) ──
+
+  if (hasBrowser) {
+    const browser: ScoreEntry = { score: 0, max: 20, notes: [] };
+
+    // 8a: Page rendering quality
+    const pagesWithContent = browserPages.filter((p) => p.has_visible_content);
+    if (browserPages.length > 0) {
+      const contentRatio = pagesWithContent.length / browserPages.length;
+      const contentScore = Math.round(contentRatio * 4);
+      browser.score += contentScore;
+      browser.notes.push(
+        `${pagesWithContent.length}/${browserPages.length} pages have visible rendered content`
+      );
+      if (pagesWithContent.length === browserPages.length) {
+        positives.push('All pages render visible content in browser');
+      } else {
+        const empty = browserPages.filter((p) => !p.has_visible_content);
+        for (const p of empty) {
+          critical.push(`${p.page_path} has no visible content when rendered in browser`);
+        }
+      }
+    }
+
+    // 8b: Raw HTML leaks (the exact bug the user spotted)
+    const pagesWithLeaks = browserPages.filter((p) => p.has_raw_html_leak);
+    if (pagesWithLeaks.length === 0 && browserPages.length > 0) {
+      browser.score += 4;
+      browser.notes.push('No raw HTML leaking into rendered content');
+      positives.push('Clean content rendering — no HTML entities or tags visible to users');
+    } else {
+      for (const p of pagesWithLeaks) {
+        critical.push(
+          `${p.page_path}: Raw HTML leaking into visible content — ` +
+          `snippets: ${p.raw_html_snippets.slice(0, 3).map((s) => `"${s.slice(0, 80)}"`).join(', ')}`
+        );
+      }
+      browser.notes.push(`${pagesWithLeaks.length} pages have raw HTML leaking into visible text`);
+    }
+
+    // 8c: Console errors
+    const totalConsoleErrors = browserPages.reduce((s, p) => s + p.console_errors.length, 0);
+    if (totalConsoleErrors === 0 && browserPages.length > 0) {
+      browser.score += 3;
+      browser.notes.push('No JavaScript console errors');
+      positives.push('Zero console errors across all pages');
+    } else if (totalConsoleErrors > 0) {
+      browser.notes.push(`${totalConsoleErrors} console errors across all pages`);
+      for (const p of browserPages) {
+        for (const err of p.console_errors.slice(0, 3)) {
+          improvements.push(`Console error on ${p.page_path}: ${err.slice(0, 150)}`);
+        }
+      }
+    }
+
+    // 8d: Network errors
+    const totalNetErrors = browserPages.reduce((s, p) => s + p.network_errors.length, 0);
+    if (totalNetErrors === 0 && browserPages.length > 0) {
+      browser.score += 2;
+      browser.notes.push('No failed network requests');
+    } else if (totalNetErrors > 0) {
+      browser.notes.push(`${totalNetErrors} failed network requests`);
+      for (const p of browserPages) {
+        for (const err of p.network_errors.slice(0, 3)) {
+          improvements.push(`Network error on ${p.page_path}: ${err.slice(0, 150)}`);
+        }
+      }
+    }
+
+    // 8e: Broken images
+    const totalBroken = browserPages.reduce((s, p) => s + p.broken_images.length, 0);
+    if (totalBroken > 0) {
+      browser.notes.push(`${totalBroken} broken images detected`);
+      for (const p of browserPages) {
+        for (const img of p.broken_images) {
+          improvements.push(`Broken image on ${p.page_path}: ${img}`);
+        }
+      }
+    } else if (browserPages.length > 0) {
+      browser.score += 1;
+      browser.notes.push('No broken images');
+    }
+
+    // 8f: Empty containers
+    const totalEmpty = browserPages.reduce((s, p) => s + p.empty_containers.length, 0);
+    if (totalEmpty > 0) {
+      browser.notes.push(`${totalEmpty} empty content containers found`);
+      for (const p of browserPages) {
+        for (const c of p.empty_containers) {
+          improvements.push(`Empty container on ${p.page_path}: ${c}`);
+        }
+      }
+    }
+
+    // 8g: Browser flow results
+    if (browserFlows.length > 0) {
+      const passedFlows = browserFlows.filter((f) => f.success);
+      const flowScore = Math.round((passedFlows.length / browserFlows.length) * 6);
+      browser.score += flowScore;
+      browser.notes.push(
+        `${passedFlows.length}/${browserFlows.length} browser user flows pass`
+      );
+
+      for (const flow of browserFlows) {
+        if (flow.success) {
+          positives.push(`Browser flow "${flow.flow_name}" completes successfully (${flow.duration_ms}ms)`);
+        } else {
+          const failedSteps = flow.steps.filter((s) => !s.success);
+          for (const s of failedSteps) {
+            critical.push(
+              `Browser flow "${flow.flow_name}" failed at "${s.step.description}": ${s.error || 'unknown'}`
+            );
+          }
+        }
+      }
+    }
+
+    scores['browser_testing'] = browser;
+  }
+
   // ── Calculate Overall Score ────────────────────────────────────────
 
   const totalScore = Object.values(scores).reduce((s, e) => s + e.score, 0);
@@ -401,7 +522,9 @@ export function generateReport(
     improvements,
     positives,
     flowResults,
-    pageAudits
+    pageAudits,
+    browserPages,
+    browserFlows
   );
 
   return {
@@ -411,6 +534,8 @@ export function generateReport(
     generated_at: new Date().toISOString(),
     flow_results: flowResults,
     page_audits: pageAudits,
+    browser_page_results: browserPages.length > 0 ? browserPages : undefined,
+    browser_flow_results: browserFlows.length > 0 ? browserFlows : undefined,
     scores,
     overall_score,
     critical_issues: critical,
@@ -428,14 +553,18 @@ function generateDetailedFeedback(
   improvements: string[],
   positives: string[],
   flowResults: StepResult[],
-  pageAudits: PageAudit[]
+  pageAudits: PageAudit[],
+  browserPages: BrowserPageResult[],
+  browserFlows: BrowserFlowResult[]
 ): string {
   const lines: string[] = [];
+  const hasBrowser = browserPages.length > 0;
 
   lines.push(`# User Simulator Feedback Report: ${config.site_name}`);
   lines.push(`**Generated**: ${new Date().toISOString()}`);
   lines.push(`**Site**: ${config.base_url}`);
   lines.push(`**Overall Score**: ${overall}/100`);
+  lines.push(`**Testing mode**: ${hasBrowser ? 'Full (HTTP + Browser/Playwright)' : 'HTTP-only'}`);
   lines.push('');
 
   lines.push('## Spec Compliance');
@@ -479,87 +608,165 @@ function generateDetailedFeedback(
     lines.push('');
   }
 
-  // Flow details
-  lines.push('## Flow Test Results');
-  const flowGroups = groupBy(flowResults, (r) => r.flow);
-  for (const [name, results] of Object.entries(flowGroups)) {
-    const passCount = results.filter((r) => r.success).length;
-    lines.push(`### ${name} (${passCount}/${results.length} pass)`);
-    for (const r of results) {
-      const icon = r.success ? 'PASS' : 'FAIL';
-      lines.push(`- [${icon}] \`${r.url}\` — ${r.actual}`);
+  // HTTP Flow details
+  if (flowResults.length > 0) {
+    lines.push('## HTTP Flow Test Results');
+    const flowGroups = groupBy(flowResults, (r) => r.flow);
+    for (const [name, results] of Object.entries(flowGroups)) {
+      const passCount = results.filter((r) => r.success).length;
+      lines.push(`### ${name} (${passCount}/${results.length} pass)`);
+      for (const r of results) {
+        const icon = r.success ? 'PASS' : 'FAIL';
+        lines.push(`- [${icon}] \`${r.url}\` — ${r.actual}`);
+      }
+      lines.push('');
+    }
+  }
+
+  // Browser Flow details
+  if (browserFlows.length > 0) {
+    lines.push('## Browser Flow Test Results');
+    lines.push('*These tests use a real browser (Playwright/Chromium) — they fill forms, click buttons, and navigate like a real user.*');
+    lines.push('');
+    for (const flow of browserFlows) {
+      const passCount = flow.steps.filter((s) => s.success).length;
+      const icon = flow.success ? 'PASS' : 'FAIL';
+      lines.push(`### ${flow.flow_name} [${icon}] (${passCount}/${flow.steps.length} steps, ${flow.duration_ms}ms)`);
+      for (const s of flow.steps) {
+        const sIcon = s.success ? 'PASS' : 'FAIL';
+        const detail = s.error ? ` — ${s.error}` : '';
+        lines.push(`- [${sIcon}] ${s.step.description} (${s.duration_ms}ms)${detail}`);
+        if (s.screenshot_path) {
+          lines.push(`  - Screenshot: \`${s.screenshot_path}\``);
+        }
+      }
+      lines.push('');
+    }
+  }
+
+  // Page audits (static)
+  if (pageAudits.length > 0) {
+    lines.push('## Static HTML Audit Summary');
+    for (const audit of pageAudits) {
+      lines.push(`### ${audit.url}`);
+      lines.push(`- Status: ${audit.status}`);
+      lines.push(`- Load time: ${audit.timing_ms}ms`);
+      lines.push(`- HTML size: ${Math.round(audit.html_size_bytes / 1024)}KB`);
+      lines.push(`- Headings: ${audit.heading_count}, Links: ${audit.link_count}, Forms: ${audit.form_count}`);
+      lines.push(`- Images: ${audit.image_count} (${audit.images_without_alt} missing alt)`);
+      lines.push(`- ARIA attributes: ${audit.aria_attributes}`);
+      lines.push(`- Semantic HTML: ${audit.uses_semantic_html ? 'Yes' : 'No'}`);
+      lines.push(`- Nav: ${audit.has_nav ? 'Yes' : 'No'}, Footer: ${audit.has_footer ? 'Yes' : 'No'}`);
+      lines.push('');
+    }
+  }
+
+  // Browser page audits (rendered)
+  if (browserPages.length > 0) {
+    lines.push('## Browser Rendering Audit');
+    lines.push('*Pages rendered in headless Chromium — what users actually see after JavaScript executes.*');
+    lines.push('');
+    for (const bp of browserPages) {
+      lines.push(`### ${bp.page_path}`);
+      lines.push(`- Browser load time: ${bp.load_time_ms}ms`);
+      lines.push(`- Rendered HTML size: ${Math.round(bp.rendered_html_size / 1024)}KB`);
+      lines.push(`- Has visible content: ${bp.has_visible_content ? 'Yes' : '**NO**'}`);
+      lines.push(`- Raw HTML leak: ${bp.has_raw_html_leak ? '**YES** — HTML entities or tags visible in content' : 'No'}`);
+      if (bp.raw_html_snippets.length > 0) {
+        lines.push('  - Leaked snippets:');
+        for (const s of bp.raw_html_snippets.slice(0, 5)) {
+          lines.push(`    - \`${s.slice(0, 120)}\``);
+        }
+      }
+      lines.push(`- Console errors: ${bp.console_errors.length}`);
+      if (bp.console_errors.length > 0) {
+        for (const e of bp.console_errors.slice(0, 5)) {
+          lines.push(`  - \`${e.slice(0, 150)}\``);
+        }
+      }
+      lines.push(`- Network errors: ${bp.network_errors.length}`);
+      if (bp.network_errors.length > 0) {
+        for (const e of bp.network_errors.slice(0, 5)) {
+          lines.push(`  - \`${e.slice(0, 150)}\``);
+        }
+      }
+      lines.push(`- Broken images: ${bp.broken_images.length}`);
+      lines.push(`- Empty containers: ${bp.empty_containers.length}`);
+      lines.push(`- Interactive elements: ${bp.interactive_elements_count}`);
+      lines.push(`- Clickable elements: ${bp.clickable_elements_count}`);
+      if (bp.screenshot_path) {
+        lines.push(`- Screenshot: \`${bp.screenshot_path}\``);
+      }
+      lines.push('');
+
+      // Preview of visible text
+      if (bp.visible_text) {
+        const preview = bp.visible_text.replace(/\n+/g, ' ').trim().slice(0, 300);
+        lines.push(`  > Visible text preview: "${preview}..."`);
+        lines.push('');
+      }
+    }
+  }
+
+  // Dynamic UX recommendations (based on actual observations)
+  lines.push('## UX Recommendations');
+  lines.push('');
+
+  // Navigation — only recommend if actually missing
+  const hasConsistentNav = pageAudits.length > 0 && pageAudits.every((a) => a.has_nav);
+  if (!hasConsistentNav && pageAudits.length > 0) {
+    lines.push('### Navigation');
+    const missingNav = pageAudits.filter((a) => !a.has_nav).map((a) => a.url);
+    lines.push(`- Missing navigation on: ${missingNav.join(', ')}`);
+    lines.push('');
+  }
+
+  // Content issues from browser
+  if (browserPages.some((p) => p.has_raw_html_leak)) {
+    lines.push('### Content Sanitization');
+    lines.push('- Raw HTML entities or tags are leaking into visible text');
+    lines.push('- Strip HTML from RSS/API content before displaying');
+    lines.push('- Decode HTML entities (&amp; &lt; &gt; etc.) in content snippets');
+    lines.push('');
+  }
+
+  if (browserPages.some((p) => !p.has_visible_content)) {
+    lines.push('### Empty Pages');
+    const empties = browserPages.filter((p) => !p.has_visible_content);
+    for (const p of empties) {
+      lines.push(`- ${p.page_path} renders with no visible content — check if client-side data fetching works`);
     }
     lines.push('');
   }
 
-  // Page audits
-  lines.push('## Page Audit Summary');
-  for (const audit of pageAudits) {
-    lines.push(`### ${audit.url}`);
-    lines.push(`- Status: ${audit.status}`);
-    lines.push(`- Load time: ${audit.timing_ms}ms`);
-    lines.push(`- HTML size: ${Math.round(audit.html_size_bytes / 1024)}KB`);
-    lines.push(`- Headings: ${audit.heading_count}, Links: ${audit.link_count}, Forms: ${audit.form_count}`);
-    lines.push(`- Images: ${audit.image_count} (${audit.images_without_alt} missing alt)`);
-    lines.push(`- ARIA attributes: ${audit.aria_attributes}`);
-    lines.push(`- Semantic HTML: ${audit.uses_semantic_html ? 'Yes' : 'No'}`);
-    lines.push(`- Nav: ${audit.has_nav ? 'Yes' : 'No'}, Footer: ${audit.has_footer ? 'Yes' : 'No'}`);
+  if (browserPages.some((p) => p.console_errors.length > 0)) {
+    lines.push('### JavaScript Errors');
+    lines.push('- Fix console errors to prevent broken functionality:');
+    for (const p of browserPages) {
+      for (const err of p.console_errors.slice(0, 3)) {
+        lines.push(`  - ${p.page_path}: ${err.slice(0, 120)}`);
+      }
+    }
     lines.push('');
   }
 
-  // UX recommendations
-  lines.push('## Detailed UX Recommendations');
-  lines.push('');
-  lines.push('### Navigation & Information Architecture');
-  const hasConsistentNav = pageAudits.every((a) => a.has_nav);
-  if (!hasConsistentNav) {
-    lines.push('- Add a persistent navigation bar to login/register pages so users can always find their way back');
+  // Performance
+  const avgBrowserLoad = browserPages.length > 0
+    ? browserPages.reduce((s, p) => s + p.load_time_ms, 0) / browserPages.length
+    : 0;
+  const avgStaticLoad = pageAudits.length > 0
+    ? pageAudits.reduce((s, a) => s + a.timing_ms, 0) / pageAudits.length
+    : 0;
+
+  if (avgBrowserLoad > 0 || avgStaticLoad > 0) {
+    lines.push('### Performance');
+    if (avgStaticLoad > 0) lines.push(`- Average HTTP response time: ${Math.round(avgStaticLoad)}ms`);
+    if (avgBrowserLoad > 0) lines.push(`- Average browser render time: ${Math.round(avgBrowserLoad)}ms (includes JS execution)`);
+    if (avgBrowserLoad > 3000) {
+      lines.push('- Pages take too long to render — optimize JavaScript bundle size and data fetching');
+    }
+    lines.push('');
   }
-  if (!pageAudits.some((a) => a.has_footer)) {
-    lines.push('- Add a footer with links: About, Privacy Policy, Contact, Help');
-  }
-  lines.push('');
-
-  lines.push('### Visual Design');
-  if (!pageAudits.some((a) => a.image_count > 0)) {
-    lines.push('- Add a logo/icon to strengthen brand identity');
-    lines.push('- Consider adding article thumbnail images when available');
-    lines.push('- Add empty-state illustrations for when no articles match');
-  }
-  lines.push('- Add visual loading skeletons instead of spinners for perceived performance');
-  lines.push('- Add dark mode toggle — many news readers prefer dark mode');
-  lines.push('');
-
-  lines.push('### Content & Features');
-  lines.push('- Add article read time estimates');
-  lines.push('- Add bookmark/save functionality for individual articles');
-  lines.push('- Add a "Mark as read" feature to track what the user has already seen');
-  lines.push('- Show source credibility or reliability indicators');
-  lines.push('- Add a "Refresh" button with last-updated timestamp');
-  lines.push('- Consider adding article categories/tags for filtering');
-  lines.push('');
-
-  lines.push('### Performance');
-  const avgTiming = pageAudits.reduce((s, a) => s + a.timing_ms, 0) / Math.max(pageAudits.length, 1);
-  lines.push(`- Average page load: ${Math.round(avgTiming)}ms`);
-  if (avgTiming > 1000) {
-    lines.push('- Consider implementing ISR (Incremental Static Regeneration) for the feed page');
-    lines.push('- Add stale-while-revalidate headers for API responses');
-  }
-  lines.push('- Implement infinite scroll or pagination for the feed');
-  lines.push('');
-
-  lines.push('### Mobile Experience');
-  lines.push('- Ensure topic filter pills are horizontally scrollable on mobile');
-  lines.push('- Make article cards touch-friendly with adequate tap targets');
-  lines.push('- Add pull-to-refresh on mobile');
-  lines.push('');
-
-  lines.push('### Error Handling & Empty States');
-  lines.push('- Add friendly error messages with retry buttons');
-  lines.push('- Add empty state screens with helpful guidance');
-  lines.push('- Show toast notifications for actions (source added, bookmark imported, etc.)');
-  lines.push('');
 
   return lines.join('\n');
 }

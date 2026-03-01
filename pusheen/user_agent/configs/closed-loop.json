@@ -100,6 +100,47 @@
       ]
     }
   ],
+  "browser_flows": [
+    {
+      "name": "register_via_ui",
+      "steps": [
+        { "action": "goto", "url": "/register", "description": "Navigate to registration page" },
+        { "action": "assert_visible", "selector": "form", "description": "Registration form is visible" },
+        { "action": "fill", "selector": "#reg-email", "value": "browsertest_{timestamp}@test.com", "description": "Fill email field" },
+        { "action": "fill", "selector": "#reg-username", "value": "browsertest_{timestamp}", "description": "Fill username field" },
+        { "action": "fill", "selector": "#reg-password", "value": "BrowserTest123", "description": "Fill password field" },
+        { "action": "click", "selector": "button[type='submit']", "description": "Click submit button" },
+        { "action": "wait", "timeout": 3000, "description": "Wait for registration to complete" }
+      ]
+    },
+    {
+      "name": "login_via_ui",
+      "steps": [
+        { "action": "goto", "url": "/login", "description": "Navigate to login page" },
+        { "action": "assert_visible", "selector": "form", "description": "Login form is visible" },
+        { "action": "fill", "selector": "#login-email", "value": "browsertest_{timestamp}@test.com", "description": "Fill email field" },
+        { "action": "fill", "selector": "#login-password", "value": "BrowserTest123", "description": "Fill password field" },
+        { "action": "click", "selector": "button[type='submit']", "description": "Click login button" },
+        { "action": "wait", "timeout": 3000, "description": "Wait for login to complete" }
+      ]
+    },
+    {
+      "name": "browse_feed_ui",
+      "steps": [
+        { "action": "goto", "url": "/feed", "description": "Navigate to feed page" },
+        { "action": "wait", "timeout": 8000, "description": "Wait for articles to load" },
+        { "action": "assert_visible", "selector": "article, [class*='article'], [class*='card'], [class*='skeleton']", "description": "Article cards or loading skeletons are visible", "timeout": 10000 }
+      ]
+    },
+    {
+      "name": "manage_sources_ui",
+      "steps": [
+        { "action": "goto", "url": "/sources", "description": "Navigate to sources page" },
+        { "action": "wait", "timeout": 3000, "description": "Wait for page to render" },
+        { "action": "assert_visible", "selector": "button, form, [class*='source']", "description": "Source management UI is visible" }
+      ]
+    }
+  ],
   "pages_to_audit": ["/", "/login", "/register", "/feed", "/sources"],
   "evaluation_criteria": [
     "usability",

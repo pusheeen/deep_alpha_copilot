@@ -1,8 +1,66 @@
+export interface BrowserFlow {
+  name: string;
+  steps: BrowserStep[];
+}
+
+export interface BrowserStep {
+  action: 'goto' | 'click' | 'fill' | 'wait' | 'screenshot' | 'assert_visible' | 'assert_text' | 'select';
+  /** CSS selector for click/fill/assert targets */
+  selector?: string;
+  /** Value for fill actions */
+  value?: string;
+  /** URL for goto actions */
+  url?: string;
+  /** Description of what this step does */
+  description: string;
+  /** Milliseconds for wait actions */
+  timeout?: number;
+  /** Expected text for assert_text */
+  expected_text?: string;
+}
+
+export interface BrowserPageResult {
+  url: string;
+  page_path: string;
+  screenshot_path: string | null;
+  load_time_ms: number;
+  console_errors: string[];
+  console_warnings: string[];
+  network_errors: string[];
+  visible_text: string;
+  rendered_html_size: number;
+  has_visible_content: boolean;
+  has_raw_html_leak: boolean;
+  raw_html_snippets: string[];
+  broken_images: string[];
+  overlapping_elements: string[];
+  empty_containers: string[];
+  interactive_elements_count: number;
+  clickable_elements_count: number;
+}
+
+export interface BrowserFlowResult {
+  flow_name: string;
+  steps: BrowserStepResult[];
+  screenshots: string[];
+  success: boolean;
+  duration_ms: number;
+}
+
+export interface BrowserStepResult {
+  step: BrowserStep;
+  success: boolean;
+  duration_ms: number;
+  error?: string;
+  screenshot_path?: string;
+}
+
 export interface SiteConfig {
   site_name: string;
   base_url: string;
   spec: string;
   flows: Flow[];
+  browser_flows?: BrowserFlow[];
   pages_to_audit: string[];
   evaluation_criteria: string[];
 }
@@ -70,6 +128,8 @@ export interface FeedbackReport {
   generated_at: string;
   flow_results: StepResult[];
   page_audits: PageAudit[];
+  browser_page_results?: BrowserPageResult[];
+  browser_flow_results?: BrowserFlowResult[];
   scores: Record<string, { score: number; max: number; notes: string[] }>;
   overall_score: number;
   critical_issues: string[];
