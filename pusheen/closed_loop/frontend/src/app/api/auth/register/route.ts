@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getStore } from '@/lib/db';
 import { hashPassword, createToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -20,24 +20,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getDb();
+    const store = getStore();
 
-    // Check existing email
-    const existingEmail = db
-      .prepare('SELECT id FROM users WHERE email = ?')
-      .get(email);
-    if (existingEmail) {
+    if (store.getUserByEmail(email)) {
       return NextResponse.json(
         { error: 'Email already registered' },
         { status: 400 }
       );
     }
 
-    // Check existing username
-    const existingUsername = db
-      .prepare('SELECT id FROM users WHERE username = ?')
-      .get(username);
-    if (existingUsername) {
+    if (store.getUserByUsername(username)) {
       return NextResponse.json(
         { error: 'Username already taken' },
         { status: 400 }
@@ -45,19 +37,13 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await hashPassword(password);
-    const result = db
-      .prepare(
-        'INSERT INTO users (email, username, hashed_password) VALUES (?, ?, ?)'
-      )
-      .run(email, username, hashed);
-
-    const userId = result.lastInsertRowid as number;
-    const token = await createToken(userId);
+    const user = store.insertUser(email, username, hashed);
+    const token = await createToken(user.id);
 
     return NextResponse.json({
       access_token: token,
       token_type: 'bearer',
-      user: { id: userId, email, username },
+      user: { id: user.id, email, username },
     });
   } catch (e) {
     console.error('Register error:', e);

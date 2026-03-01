@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromHeaders } from '@/lib/auth';
-import { getDb } from '@/lib/db';
+import { getStore } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   const userId = await getUserIdFromHeaders(req.headers);
@@ -17,17 +17,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const db = getDb();
-  const result = db
-    .prepare(
-      'INSERT INTO user_sources (user_id, source_type, name, config) VALUES (?, ?, ?, ?)'
-    )
-    .run(userId, source_type, name, JSON.stringify(config));
+  const store = getStore();
+  const source = store.insertSource(userId, source_type, name, config);
 
   return NextResponse.json({
-    id: result.lastInsertRowid,
-    source_type,
-    name,
+    id: source.id,
+    source_type: source.source_type,
+    name: source.name,
     config,
   });
 }
@@ -44,12 +40,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'id is required' }, { status: 400 });
   }
 
-  const db = getDb();
-  const result = db
-    .prepare('DELETE FROM user_sources WHERE id = ? AND user_id = ?')
-    .run(parseInt(sourceId, 10), userId);
+  const store = getStore();
+  const deleted = store.deleteSource(parseInt(sourceId, 10), userId);
 
-  if (result.changes === 0) {
+  if (!deleted) {
     return NextResponse.json({ error: 'Source not found' }, { status: 404 });
   }
 

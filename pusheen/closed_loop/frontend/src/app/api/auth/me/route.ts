@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, User } from '@/lib/db';
+import { getStore } from '@/lib/db';
 import { getUserIdFromHeaders } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
@@ -8,14 +8,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const db = getDb();
-  const user = db
-    .prepare('SELECT id, email, username, created_at FROM users WHERE id = ?')
-    .get(userId) as Omit<User, 'hashed_password'> | undefined;
+  const store = getStore();
+  const user = store.getUserById(userId);
 
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  return NextResponse.json(user);
+  return NextResponse.json({
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    created_at: user.created_at,
+  });
 }

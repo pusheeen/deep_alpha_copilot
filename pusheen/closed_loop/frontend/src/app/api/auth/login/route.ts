@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, User } from '@/lib/db';
+import { getStore } from '@/lib/db';
 import { verifyPassword, createToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -13,10 +13,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const db = getDb();
-    const user = db
-      .prepare('SELECT * FROM users WHERE email = ?')
-      .get(email) as User | undefined;
+    const store = getStore();
+    const user = store.getUserByEmail(email);
 
     if (!user) {
       return NextResponse.json(

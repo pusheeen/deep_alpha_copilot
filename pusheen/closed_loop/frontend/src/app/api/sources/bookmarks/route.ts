@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromHeaders } from '@/lib/auth';
-import { getDb } from '@/lib/db';
-import { batchSummarize } from '@/lib/summarizer';
+import { getStore } from '@/lib/db';
 import { Article } from '@/lib/news-fetcher';
 
 function parseBookmarksHtml(html: string): Array<{
@@ -69,18 +68,11 @@ export async function POST(req: NextRequest) {
 
   const bookmarks = parseBookmarksHtml(html);
 
-  // Save to DB
-  const db = getDb();
-  const insert = db.prepare(
-    'INSERT INTO bookmarks (user_id, url, title, folder) VALUES (?, ?, ?, ?)'
-  );
-
-  const insertMany = db.transaction((bms: typeof bookmarks) => {
-    for (const bm of bms) {
-      insert.run(userId, bm.url, bm.title, bm.folder);
-    }
-  });
-  insertMany(bookmarks);
+  // Save to store
+  const store = getStore();
+  for (const bm of bookmarks) {
+    store.insertBookmark(userId, bm.url, bm.title, bm.folder);
+  }
 
   // Convert to articles
   const articles: Article[] = bookmarks.slice(0, 30).map((bm) => ({

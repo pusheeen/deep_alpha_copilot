@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromHeaders } from '@/lib/auth';
-import { getDb, UserSource } from '@/lib/db';
+import { getStore } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const userId = await getUserIdFromHeaders(req.headers);
@@ -8,10 +8,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const db = getDb();
-  const sources = db
-    .prepare('SELECT * FROM user_sources WHERE user_id = ?')
-    .all(userId) as UserSource[];
+  const store = getStore();
+  const sources = store.getSourcesByUser(userId);
 
   return NextResponse.json(
     sources.map((s) => ({
