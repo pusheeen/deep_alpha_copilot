@@ -1,0 +1,138 @@
+/**
+ * AI summarization & anti-clickbait title generation.
+ * Uses OpenAI-compatible API (OpenAI, OpenRouter, etc.).
+ */
+import OpenAI from 'openai';
+import { cacheGet, cacheSet, makeCacheKey } from './cache';
+import { Article, extractArticleContent } from './news-fetcher';
+
+let openaiClient: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || '',
+      baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    });
+  }
+  return openaiClient;
+}
+
+const SYSTEM_PROMPT = `You are a news analyst. Given an article's original title and content, produce:
+
+1. **generated_title** — A concise, accurate, non-clickbait title that faithfully represents the article's actual content. Remove sensationalism, vague teasers, and emotional manipulation. Keep it informative.
+2. **summary** — A TL;DR of 2-3 sentences capturing the key facts. No fluff.
+3. **clickbait_score** — A float from 0.0 (not clickbait) to 1.0 (extreme clickbait) rating how clickbaity the ORIGINAL title is.
+4. **is_clickbait** — Boolean, true if clickbait_score >= 0.6.
+
+Respond ONLY with valid JSON matching this schema:
+{
+  "generated_title": "string",
+  "summary": "string",
+  "clickbait_score": 0.0,
+  "is_clickbait": false
+}`;
+
+interface SummaryResult {
+  generated_title: string;
+  summary: string;
+  clickbait_score: number;
+  is_clickbait: boolean;
+}
+
+export async function summarizeArticle(
+  originalTitle: string,
+  content: string,
+  url: string
+): Promise<SummaryResult> {
+  const cacheKey = makeCacheKey('summary', { url });
+  const cached = cacheGet<SummaryResult>(cacheKey);
+  if (cached) return cached;
+
+  if (!process.env.OPENAI_API_KEY) {
+    // Fallback: no API key
+    const result: SummaryResult = {
+      generated_title: originalTitle,
+      summary:
+        content.length > 200 ? content.slice(0, 200) + '...' : content,
+      clickbait_score: 0,
+      is_clickbait: false,
+    };
+    cacheSet(cacheKey, result, 3600000);
+    return result;
+  }
+
+  const client = getOpenAI();
+  const model = process.env.SUMMARIZATION_MODEL || 'gpt-4o-mini';
+
+  try {
+    const resp = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Original title: ${originalTitle}\n\nArticle content:\n${content.slice(0, 3000)}`,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+    });
+
+    let raw = resp.choices[0]?.message?.content?.trim() || '';
+    // Handle markdown code blocks
+    if (raw.startsWith('```')) {
+      raw = raw.split('\n').slice(1).join('\n').replace(/```$/, '').trim();
+    }
+
+    const result: SummaryResult = JSON.parse(raw);
+    cacheSet(cacheKey, result, 3600000);
+    return result;
+  } catch (e) {
+    console.error(`Summarization failed for "${url}":`, e);
+    return {
+      generated_title: originalTitle,
+      summary:
+        content.length > 200 ? content.slice(0, 200) + '...' : content,
+      clickbait_score: 0,
+      is_clickbait: false,
+    };
+  }
+}
+
+export async function batchSummarize(
+  articles: Article[]
+): Promise<Article[]> {
+  const BATCH_SIZE = 5;
+  const enriched: Article[] = [];
+
+  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+    const batch = articles.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (article) => {
+        let content = article.content_snippet || '';
+        if (!content || content.length < 50) {
+          content = await extractArticleContent(article.original_url);
+          article.content_snippet = content;
+        }
+
+        const result = await summarizeArticle(
+          article.original_title,
+          content,
+          article.original_url
+        );
+
+        return {
+          ...article,
+          generated_title: result.generated_title,
+          summary: result.summary,
+          clickbait_score: result.clickbait_score,
+          is_clickbait: result.is_clickbait,
+        };
+      })
+    );
+    enriched.push(...results);
+  }
+
+  return enriched;
+}
