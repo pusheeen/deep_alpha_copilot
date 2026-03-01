@@ -1,7 +1,10 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const DB_PATH = path.join(process.cwd(), 'closed_loop.db');
+// On Vercel serverless, only /tmp is writable. Locally use project root.
+const IS_VERCEL = !!process.env.VERCEL;
+const DB_DIR = IS_VERCEL ? '/tmp' : process.cwd();
+const DB_PATH = path.join(DB_DIR, 'closed_loop.db');
 
 let db: Database.Database | null = null;
 
