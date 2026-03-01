@@ -23,7 +23,7 @@ export default function SearchBox({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className="w-full" role="search" aria-label="Search news">
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
           <svg
@@ -31,6 +31,7 @@ export default function SearchBox({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -40,16 +41,22 @@ export default function SearchBox({
             />
           </svg>
         </div>
+        <label htmlFor="news-search" className="sr-only">
+          Search news topics
+        </label>
         <input
+          id="news-search"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
+          aria-label="Search news topics"
           className="block w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-24 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-100"
         />
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
+          aria-label="Submit search"
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {isLoading ? 'Searching...' : 'Search'}

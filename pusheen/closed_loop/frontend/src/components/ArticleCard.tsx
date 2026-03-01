@@ -15,6 +15,12 @@ function timeAgo(dateStr: string | null): string {
   return `${diffDays}d ago`;
 }
 
+function estimateReadTime(text: string): string {
+  const words = text.split(/\s+/).length;
+  const mins = Math.max(1, Math.ceil(words / 200));
+  return `${mins} min read`;
+}
+
 function sourceLabel(type: string): string {
   switch (type) {
     case 'google_news': return 'Google News';
@@ -38,67 +44,84 @@ function sourceColor(type: string): string {
 export default function ArticleCard({ article }: { article: Article }) {
   const displayTitle = article.generated_title || article.original_title;
   const isClickbait = article.is_clickbait;
+  const readTime = estimateReadTime(
+    article.summary || article.content_snippet || article.original_title
+  );
 
   return (
-    <a
-      href={article.original_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition hover:border-gray-200 hover:shadow-md"
-    >
-      <div className="mb-3 flex items-center gap-2">
-        <span
-          className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${sourceColor(article.source_type)}`}
-        >
-          {sourceLabel(article.source_type)}
-        </span>
-        {article.category && (
-          <span className="rounded-full bg-gray-50 px-2.5 py-0.5 text-xs text-gray-500">
-            {article.category}
-          </span>
-        )}
-        {isClickbait && (
-          <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
-            Clickbait detected
-          </span>
-        )}
-        <span className="ml-auto text-xs text-gray-400">
-          {timeAgo(article.published_at)}
-        </span>
-      </div>
-
-      <h3 className="mb-2 text-base font-semibold leading-snug text-gray-900 group-hover:text-brand-600">
-        {displayTitle}
-      </h3>
-
-      {isClickbait && article.original_title !== displayTitle && (
-        <p className="mb-2 text-xs italic text-gray-400 line-through">
-          Original: {article.original_title}
-        </p>
-      )}
-
-      {article.summary && (
-        <p className="mb-3 text-sm leading-relaxed text-gray-600">
-          {article.summary}
-        </p>
-      )}
-
-      <div className="flex items-center gap-3 text-xs text-gray-400">
-        {article.author && <span>By {article.author}</span>}
-        {article.clickbait_score !== undefined && article.clickbait_score > 0 && (
+    <article className="group rounded-xl border border-gray-100 bg-white shadow-sm transition hover:border-gray-200 hover:shadow-md">
+      <a
+        href={article.original_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-5"
+        aria-label={`Read article: ${displayTitle}`}
+      >
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <span
-            className={`${
-              article.clickbait_score >= 0.6
-                ? 'text-red-400'
-                : article.clickbait_score >= 0.3
-                  ? 'text-yellow-500'
-                  : 'text-green-500'
-            }`}
+            className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${sourceColor(article.source_type)}`}
           >
-            Clickbait: {Math.round(article.clickbait_score * 100)}%
+            {sourceLabel(article.source_type)}
           </span>
+          {article.category && (
+            <span className="rounded-full bg-gray-50 px-2.5 py-0.5 text-xs text-gray-500">
+              {article.category}
+            </span>
+          )}
+          {isClickbait && (
+            <span
+              className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600"
+              role="status"
+            >
+              Clickbait detected
+            </span>
+          )}
+          <span className="ml-auto flex items-center gap-2 text-xs text-gray-400">
+            <span>{readTime}</span>
+            {article.published_at && (
+              <>
+                <span aria-hidden="true">&middot;</span>
+                <time dateTime={article.published_at}>
+                  {timeAgo(article.published_at)}
+                </time>
+              </>
+            )}
+          </span>
+        </div>
+
+        <h3 className="mb-2 text-base font-semibold leading-snug text-gray-900 group-hover:text-brand-600">
+          {displayTitle}
+        </h3>
+
+        {isClickbait && article.original_title !== displayTitle && (
+          <p className="mb-2 text-xs italic text-gray-400 line-through">
+            Original: {article.original_title}
+          </p>
         )}
-      </div>
-    </a>
+
+        {article.summary && (
+          <p className="mb-3 text-sm leading-relaxed text-gray-600">
+            {article.summary}
+          </p>
+        )}
+
+        <div className="flex items-center gap-3 text-xs text-gray-400">
+          {article.author && <span>By {article.author}</span>}
+          {article.clickbait_score !== undefined && article.clickbait_score > 0 && (
+            <span
+              className={`${
+                article.clickbait_score >= 0.6
+                  ? 'text-red-400'
+                  : article.clickbait_score >= 0.3
+                    ? 'text-yellow-500'
+                    : 'text-green-500'
+              }`}
+            >
+              Clickbait: {Math.round(article.clickbait_score * 100)}%
+            </span>
+          )}
+        </div>
+      </a>
+    </article>
   );
 }

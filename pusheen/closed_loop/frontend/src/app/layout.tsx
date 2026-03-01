@@ -15,8 +15,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
-        <AuthProvider>{children}</AuthProvider>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className="flex min-h-screen flex-col bg-gray-50 text-gray-900 antialiased">
+        <AuthProvider>
+          <div className="flex min-h-screen flex-col">
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
