@@ -50,11 +50,12 @@ export async function summarizeArticle(
   if (cached) return cached;
 
   if (!process.env.OPENAI_API_KEY) {
-    // Fallback: no API key
+    // Fallback: no API key — strip any residual HTML from content
+    const clean = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     const result: SummaryResult = {
       generated_title: originalTitle,
       summary:
-        content.length > 200 ? content.slice(0, 200) + '...' : content,
+        clean.length > 200 ? clean.slice(0, 200) + '...' : clean || '',
       clickbait_score: 0,
       is_clickbait: false,
     };
@@ -90,10 +91,11 @@ export async function summarizeArticle(
     return result;
   } catch (e) {
     console.error(`Summarization failed for "${url}":`, e);
+    const clean = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     return {
       generated_title: originalTitle,
       summary:
-        content.length > 200 ? content.slice(0, 200) + '...' : content,
+        clean.length > 200 ? clean.slice(0, 200) + '...' : clean || '',
       clickbait_score: 0,
       is_clickbait: false,
     };

@@ -78,6 +78,35 @@ function parseRssXml(xml: string): Array<{
   return items;
 }
 
+/** Strip HTML tags and decode common entities */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Remove trailing "- Source Name" that Google News appends to titles */
+function cleanTitle(title: string): string {
+  // Google News format: "Article Title - Source Name"
+  // Only strip if the dash+source is at the end and source is short
+  const dashIdx = title.lastIndexOf(' - ');
+  if (dashIdx > 0) {
+    const source = title.slice(dashIdx + 3);
+    // Source names are typically short (< 40 chars) and don't contain dashes
+    if (source.length < 40 && !source.includes(' - ')) {
+      return title.slice(0, dashIdx).trim();
+    }
+  }
+  return title;
+}
+
 export async function fetchGoogleNews(
   topics?: string[]
 ): Promise<Article[]> {
@@ -103,12 +132,12 @@ export async function fetchGoogleNews(
         if (!isFresh(item.pubDate)) continue;
         allArticles.push({
           source_type: 'google_news',
-          original_title: item.title,
+          original_title: cleanTitle(stripHtml(item.title)),
           original_url: item.link,
           published_at: item.pubDate,
           author: item.author || undefined,
           category: topic,
-          content_snippet: item.description,
+          content_snippet: stripHtml(item.description),
         });
       }
     } catch (e) {
@@ -148,11 +177,11 @@ export async function fetchRssFeed(feedUrl: string): Promise<Article[]> {
       if (!isFresh(item.pubDate)) continue;
       articles.push({
         source_type: 'rss',
-        original_title: item.title,
+        original_title: cleanTitle(stripHtml(item.title)),
         original_url: item.link,
         published_at: item.pubDate,
         author: item.author || undefined,
-        content_snippet: item.description,
+        content_snippet: stripHtml(item.description),
       });
     }
   } catch (e) {

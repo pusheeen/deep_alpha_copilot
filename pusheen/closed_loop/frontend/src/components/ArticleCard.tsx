@@ -99,9 +99,9 @@ export default function ArticleCard({ article }: { article: Article }) {
           </p>
         )}
 
-        {article.summary && (
-          <p className="mb-3 text-sm leading-relaxed text-gray-600">
-            {article.summary}
+        {(article.summary || article.content_snippet) && (
+          <p className="mb-3 line-clamp-3 text-sm leading-relaxed text-gray-600">
+            {article.summary || article.content_snippet}
           </p>
         )}
 
