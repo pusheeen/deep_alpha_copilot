@@ -14,15 +14,14 @@ export default function Navbar() {
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link
-          href={user ? '/feed' : '/login'}
+          href="/feed"
           className="flex items-center gap-2 text-lg font-bold tracking-tight text-gray-900"
-          aria-label="Closed Loop — go to home"
+          aria-label="Sift — go to home"
         >
           <svg className="h-6 w-6 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M8 12a4 4 0 1 1 8 0 4 4 0 0 1-8 0z" />
+            <path d="M3 4h18l-7 8v6l-4 2V12L3 4z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Closed Loop
+          Sift
         </Link>
 
         <div className="flex items-center gap-4">

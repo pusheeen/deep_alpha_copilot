@@ -1,5 +1,5 @@
 """
-Closed Loop — News Aggregator API
+Sift — News Aggregator API
 
 FastAPI backend that fetches, summarizes, and de-clickbaits news from
 Google News, email newsletters, Chrome bookmarks, and custom RSS feeds.
@@ -20,18 +20,18 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting Closed Loop API...")
+    logger.info("Starting Sift API...")
     await init_db()
     logger.info("Database initialized.")
     yield
     # Cleanup
     news_cache.clear()
     summary_cache.clear()
-    logger.info("Shutting down Closed Loop API.")
+    logger.info("Shutting down Sift API.")
 
 
 app = FastAPI(
-    title="Closed Loop — News Aggregator",
+    title="Sift — News Aggregator",
     description="AI-powered news aggregator with anti-clickbait summarization",
     version="1.0.0",
     lifespan=lifespan,
@@ -58,4 +58,4 @@ app.include_router(sources.router)
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "closed-loop"}
+    return {"status": "ok", "service": "sift"}

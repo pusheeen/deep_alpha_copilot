@@ -25,7 +25,6 @@ export function useNewsFeed() {
 
   const fetchFeed = useCallback(
     async (options?: { topics?: string; limit?: number; search?: string }) => {
-      if (!token) return;
       setIsLoading(true);
       setError(null);
 
@@ -35,8 +34,11 @@ export function useNewsFeed() {
         if (topicsOrSearch) params.set('topics', topicsOrSearch);
         if (options?.limit) params.set('limit', String(options.limit));
 
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const res = await fetch(`/api/news/feed?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         });
 
         if (!res.ok) {

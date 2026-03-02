@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'Closed Loop — News Without the Noise',
+  title: 'Sift — News Without the Noise',
   description:
     'AI-powered news aggregator that cuts through clickbait and gives you TL;DR summaries from Google News, emails, and bookmarks.',
 };

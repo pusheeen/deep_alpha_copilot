@@ -31,16 +31,10 @@ export default function FeedPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login');
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (user) {
+    if (!authLoading) {
       doFetch({ limit: 25 });
     }
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const doFetch = async (opts: Parameters<typeof fetchFeed>[0]) => {
     await fetchFeed(opts);
@@ -75,7 +69,7 @@ export default function FeedPage() {
     }
   };
 
-  if (authLoading || !user) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner />

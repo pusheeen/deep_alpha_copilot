@@ -4,11 +4,7 @@ import { fetchGoogleNews, fetchRssFeed } from '@/lib/news-fetcher';
 import { batchSummarize } from '@/lib/summarizer';
 
 export async function GET(req: NextRequest) {
-  const userId = await getUserIdFromHeaders(req.headers);
-  if (!userId) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
-
+  // Feed is public — auth is only needed for personalization (POST with custom feeds)
   const { searchParams } = new URL(req.url);
   const topics = searchParams.get('topics');
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);

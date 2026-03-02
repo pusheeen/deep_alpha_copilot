@@ -28,6 +28,14 @@ const DEFAULT_TOPICS = [
   'world news',
 ];
 
+// Reliable RSS feeds as fallbacks when Google News is unavailable
+const FALLBACK_RSS_FEEDS = [
+  { url: 'https://feeds.reuters.com/reuters/topNews', name: 'Reuters' },
+  { url: 'https://feeds.bbci.co.uk/news/rss.xml', name: 'BBC News' },
+  { url: 'https://feeds.arstechnica.com/arstechnica/index', name: 'Ars Technica' },
+  { url: 'https://hnrss.org/frontpage', name: 'Hacker News' },
+];
+
 function isFresh(publishedAt: string | null): boolean {
   if (!publishedAt) return true;
   const pub = new Date(publishedAt);
@@ -122,7 +130,7 @@ export async function fetchGoogleNews(
     const url = `https://news.google.com/rss/search?q=${query}&hl=en-US&gl=US&ceid=US:en`;
     try {
       const resp = await fetch(url, {
-        headers: { 'User-Agent': 'ClosedLoop/1.0 NewsAggregator' },
+        headers: { 'User-Agent': 'Sift/1.0 NewsAggregator' },
         signal: AbortSignal.timeout(15000),
       });
       if (!resp.ok) return;
@@ -147,6 +155,18 @@ export async function fetchGoogleNews(
 
   await Promise.all(fetches);
 
+  // If Google News returned nothing, fetch from fallback RSS feeds
+  if (allArticles.length === 0) {
+    console.warn('Google News returned 0 articles, using fallback RSS feeds');
+    const fallbackFetches = FALLBACK_RSS_FEEDS.map((feed) =>
+      fetchRssFeed(feed.url).catch(() => [] as Article[])
+    );
+    const fallbackResults = await Promise.all(fallbackFetches);
+    for (const articles of fallbackResults) {
+      allArticles.push(...articles);
+    }
+  }
+
   // Deduplicate by URL
   const seen = new Set<string>();
   const deduped = allArticles.filter((a) => {
@@ -167,7 +187,7 @@ export async function fetchRssFeed(feedUrl: string): Promise<Article[]> {
   const articles: Article[] = [];
   try {
     const resp = await fetch(feedUrl, {
-      headers: { 'User-Agent': 'ClosedLoop/1.0 NewsAggregator' },
+      headers: { 'User-Agent': 'Sift/1.0 NewsAggregator' },
       signal: AbortSignal.timeout(15000),
     });
     if (!resp.ok) return articles;
@@ -199,7 +219,7 @@ export async function extractArticleContent(url: string): Promise<string> {
 
   try {
     const resp = await fetch(url, {
-      headers: { 'User-Agent': 'ClosedLoop/1.0 NewsAggregator' },
+      headers: { 'User-Agent': 'Sift/1.0 NewsAggregator' },
       signal: AbortSignal.timeout(15000),
       redirect: 'follow',
     });

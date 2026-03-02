@@ -29,7 +29,7 @@ async def _get_client() -> httpx.AsyncClient:
         _client = httpx.AsyncClient(
             timeout=httpx.Timeout(15.0),
             follow_redirects=True,
-            headers={"User-Agent": "ClosedLoop/1.0 NewsAggregator"},
+            headers={"User-Agent": "Sift/1.0 NewsAggregator"},
         )
     return _client
 
