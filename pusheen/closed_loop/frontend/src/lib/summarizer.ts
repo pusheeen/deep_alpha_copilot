@@ -1,21 +1,23 @@
 /**
  * AI summarization & anti-clickbait title generation.
- * Uses OpenAI-compatible API (OpenAI, OpenRouter, etc.).
+ * Uses Gemini Flash via its OpenAI-compatible endpoint.
  */
 import OpenAI from 'openai';
 import { cacheGet, cacheSet, makeCacheKey } from './cache';
 import { Article, extractArticleContent } from './news-fetcher';
 
-let openaiClient: OpenAI | null = null;
+let geminiClient: OpenAI | null = null;
 
-function getOpenAI(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || '',
-      baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+function getGeminiClient(): OpenAI {
+  if (!geminiClient) {
+    geminiClient = new OpenAI({
+      apiKey: process.env.GEMINI_API_KEY || '',
+      baseURL:
+        process.env.GEMINI_BASE_URL ||
+        'https://generativelanguage.googleapis.com/v1beta/openai/',
     });
   }
-  return openaiClient;
+  return geminiClient;
 }
 
 const SYSTEM_PROMPT = `You are a news analyst. Given an article's original title and content, produce:
@@ -49,8 +51,8 @@ export async function summarizeArticle(
   const cached = cacheGet<SummaryResult>(cacheKey);
   if (cached) return cached;
 
-  if (!process.env.OPENAI_API_KEY) {
-    // Fallback: no API key — strip any residual HTML from content
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn('GEMINI_API_KEY not set — skipping AI summarization');
     const clean = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     const result: SummaryResult = {
       generated_title: originalTitle,
@@ -63,8 +65,8 @@ export async function summarizeArticle(
     return result;
   }
 
-  const client = getOpenAI();
-  const model = process.env.SUMMARIZATION_MODEL || 'gpt-4o-mini';
+  const client = getGeminiClient();
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
   try {
     const resp = await client.chat.completions.create({
