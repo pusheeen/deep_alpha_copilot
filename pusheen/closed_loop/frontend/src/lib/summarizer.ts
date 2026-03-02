@@ -1,6 +1,6 @@
 /**
  * AI summarization & anti-clickbait title generation.
- * Uses Gemini Flash via its OpenAI-compatible endpoint.
+ * Uses Gemini 2.0 Flash via its OpenAI-compatible endpoint.
  */
 import OpenAI from 'openai';
 import { cacheGet, cacheSet, makeCacheKey } from './cache';
